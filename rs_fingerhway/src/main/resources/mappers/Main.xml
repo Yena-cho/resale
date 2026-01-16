@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MainDao">	
+	
+	<select id="login" resultType="UserInfoVO">
+		SELECT
+				A.USER_ID
+			,	A.USER_NM
+			,	A.USER_PSWD
+			,	A.INIT_PSWD
+			,	A.POSITION
+			,	B.BELONG_NM AS BELONG
+			,	A.BELONG_ID
+			,	A.DEPT
+			,	A.PHONE_NUM1
+			,	A.PHONE_NUM2
+			,	A.PHONE_NUM3
+			,	A.MOBILE_NUM1
+			,	A.MOBILE_NUM2
+			,	A.MOBILE_NUM3
+			,	A.EMAIL_ADDR
+			,	A.MEMO
+			,	A.REG_DT
+			,	A.AUTH_GRP_CD
+			,	CASE WHEN A.AUTH_GRP_CD = 'M' THEN '마스터'
+					 WHEN A.AUTH_GRP_CD = 'W' THEN '작업자'
+					 WHEN A.AUTH_GRP_CD = 'S' THEN '조회용'
+					 ELSE ''
+					 END AS AUTH_GRP_CD_NM
+			,	A.LAST_CONN_DTTM
+			,	A.USE_YN
+			,	B.BELONG_PHONE_NUM1
+			,	B.BELONG_PHONE_NUM2
+			,	B.BELONG_PHONE_NUM3
+		FROM
+				TB_USER	A
+			INNER JOIN TB_BELONG_INFO B ON A.BELONG_ID = B.BELONG_ID
+		WHERE
+				A.USER_ID	= #{userId}
+			AND	A.USER_PSWD	= #{userPswd}
+	</select>
+	
+	<update id="updateUserLastConnDttm">
+		UPDATE	TB_USER
+		SET
+				LAST_CONN_DTTM	= DATE_FORMAT(now(), '%Y%m%d%H%i%s')
+		WHERE
+				USER_ID		= #{userId}
+			AND	USE_YN		= 'Y'
+	</update>
+	
+	<select id="selectAuthMenu" resultType="MenuInfoVO">
+		SELECT 
+				B.MENU_ID
+			,	B.MENU_NM
+			,	B.MENU_LVL
+			,	B.IND
+			,	B.MENU_URL
+			,	A.DEFAULT_YN
+		FROM	TB_AUTH_MENU A
+				INNER JOIN TB_MENU B ON A.MENU_ID = B.MENU_ID
+		WHERE	A.AUTH_GRP_CD = #{authGrpCd}
+			AND	B.MENU_LVL = '0'
+			AND	B.USE_YN = 'Y'
+		ORDER BY	DISP_SEQ
+	</select>
+	
+	<select id="selectSubMenu" resultType="MenuInfoVO">
+		SELECT 
+				B.MENU_ID
+			,	B.MENU_NM
+			,	B.MENU_LVL
+			,	B.IND
+			,	B.MENU_URL
+		FROM	TB_AUTH_MENU A
+				INNER JOIN TB_MENU B ON A.MENU_ID = B.MENU_ID
+		WHERE	A.AUTH_GRP_CD = #{authGrpCd}
+			AND B.UPPER_MENU_ID = #{menuId}
+			AND	B.USE_YN = 'Y'
+		ORDER BY	DISP_SEQ
+	</select>
+	
+</mapper>

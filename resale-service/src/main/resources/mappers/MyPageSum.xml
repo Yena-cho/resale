@@ -1,0 +1,574 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MyPageSum">
+	<!-- 월별 수수료 집계 -->
+	<select id="getXmonthSum" resultType="MyPageSumDTO">
+		SELECT
+			(ROW_NUMBER() OVER()) AS RN,
+			MONTH,
+			COALESCE(NOTICNT, 0) NOTICNT,
+			COALESCE(NOTIAMT, 0) NOTIAMT,
+			COALESCE(NOTIFEE, 0) NOTIFEE,
+			COALESCE(RCPCNT, 0) RCPCNT,
+			COALESCE(RCPAMT, 0) RCPAMT,
+			COALESCE(RCPFEE, 0) RCPFEE,
+			COALESCE(SMSCNT, 0) SMSCNT,
+			COALESCE(SMSFEE, 0) SMSFEE,
+			COALESCE(LMSCNT, 0) LMSCNT,
+			COALESCE(LMSFEE, 0) LMSFEE,
+			COALESCE(PRNCNT, 0) PRNCNT,
+			COALESCE(PRNFEE, 0) PRNFEE,
+			(COALESCE(NOTIFEE, 0) + COALESCE(RCPFEE, 0) + COALESCE(SMSFEE, 0) + COALESCE(LMSFEE, 0) + COALESCE(PRNFEE, 0)) AS SUMFEE,
+			RCP_ST                                                               AS RCPST,
+			COALESCE(ATCNT, 0) ATCNT,
+    		COALESCE(ATFEE, 0) ATFEE
+		FROM XMONTHSUM
+		WHERE CHACD = #{chaCd}
+		AND MONTH BETWEEN #{startDate} and #{endDate}
+		ORDER BY MONTH DESC
+	</select>
+	
+	<!-- 월별 수수료 집계 카운트 -->
+	<select id="getXmonthSumCount" resultType="java.util.HashMap">
+		SELECT COUNT(*) CNT
+		FROM XMONTHSUM
+		WHERE CHACD = #{chaCd}
+	    AND MONTH BETWEEN #{startDate} and #{endDate}
+	</select>
+	
+	<!-- 현재달 이용현황 -->
+	<select id="getXmonthState" resultType="MyPageSumDTO">
+		SELECT MONTH, NOTICNT, NOTIFEE, SMSCNT, SMSFEE, LMSCNT, LMSFEE, RCPCNT, RCPFEE, (NOTIFEE + SMSFEE + LMSFEE + RCPFEE + PRNFEE)  SUMFEE, PRNCNT, PRNFEE, ATCNT, ATFEE
+		 FROM ( SELECT CHA.CHACD													AS CHACD
+						 , MAS.MASMONTH												AS MONTH
+						 , COALESCE(MAS.NOTICNT, 0)									AS NOTICNT
+						 , CASE WHEN MAS.NOTICNT = 0 THEN 0
+							 WHEN MAS.NOTICNT &lt; CHA.NOTMINLIMIT THEN CHA.NOTMINFEE
+							 ELSE (MAS.NOTICNT * CHA.NOTCNTFEE)
+						   END													   	AS NOTIFEE
+						 , COALESCE(SMSLMS.SMSCNT, 0) 					      		AS SMSCNT
+						 , COALESCE((SMSLMS.SMSCNT * 20), 0)						AS SMSFEE
+						 , COALESCE(SMSLMS.LMSCNT, 0)						    	AS LMSCNT
+						 , COALESCE((SMSLMS.LMSCNT * 40), 0)				  		AS LMSFEE
+						 , COALESCE(RCP.RCPCNT, 0)						        	AS RCPCNT
+						 , COALESCE((RCP.RCPCNT * CHA.RCPCNTFEE), 0)				AS RCPFEE
+						 , COALESCE(MASREQ.SENDCNT, 0)								AS PRNCNT
+						 , COALESCE((MASREQ.SENDCNT * 50), 0)						AS PRNFEE
+						 , COALESCE(AT.ATCNT, 0)									AS ATCNT
+           				 , COALESCE((AT.ATCNT * 20), 0)								AS ATFEE
+			   FROM XCHALIST CHA LEFT OUTER JOIN ( SELECT COUNT(NOTIMASCD)  NOTICNT
+															  , #{nowMonth} MASMONTH
+															  , #{chaCd}    CHACD
+												   FROM XNOTIMAS
+												   WHERE CHACD = #{chaCd}
+												   AND SUBSTR(MASDAY, 1, 6) = #{nowMonth}
+												   AND NOTIMASST != 'PA00'
+												   AND NOTI_CAN_YN = 'N') MAS ON CHA.CHACD = MAS.CHACD
+								  LEFT OUTER JOIN ( SELECT DISTINCT SMSCNT, LMSCNT, CHACD
+													FROM ( SELECT SUM(CASE TYPE  WHEN '0' THEN  1  ELSE 0 END) OVER ()    SMSCNT
+																, SUM(CASE TYPE  WHEN '1' THEN  1  ELSE 0 END) OVER ()    LMSCNT
+																, #{chaCd} CHACD
+														   FROM SMSREQ
+														   WHERE TO_CHAR(REGDT, 'YYYYMM') = #{nowMonth}
+														   AND CHACD = #{chaCd}
+														   AND STATUS != '3' ) T1
+												  ) SMSLMS ON MAS.CHACD = SMSLMS.CHACD
+								  LEFT OUTER JOIN ( SELECT COUNT(*) RCPCNT , #{chaCd} CHACD
+													FROM XRCPMAS
+												    WHERE CHACD = #{chaCd}
+													AND SUBSTR(PAYDAY, 1, 6) = #{nowMonth}
+													AND RCPMASST = 'PA03'
+													AND SVECD = 'VAS'
+												  ) RCP ON CHA.CHACD = RCP.CHACD
+								  LEFT OUTER JOIN ( SELECT SUM(SENDCNT)	SENDCNT, #{chaCd} CHACD
+													FROM XNOTIMASREQ
+												    WHERE CHACD = #{chaCd}
+													AND REQST = 'BR02'
+													AND RES_STS_CD = 'N13000'
+													AND SUBSTR(FILEDT, 1, 6) = #{nowMonth}
+												  ) MASREQ ON CHA.CHACD = MASREQ.CHACD
+								 LEFT OUTER JOIN (SELECT DISTINCT ATCNT, CHACD
+												  FROM (SELECT COUNT(*) ATCNT, #{chaCd} CHACD
+														FROM ATREQ
+														WHERE TO_CHAR(SENDDATE, 'YYYYMM') = #{nowMonth}
+														AND CHACD = #{chaCd}
+														AND SENDSTATUSCD = '1') T2
+												 ) AT ON MAS.CHACD = AT.CHACD
+			  WHERE CHA.CHACD = #{chaCd}
+			) T
+	</select>
+	
+	<!-- 수수료 출금 내역 -->
+	<select id="getXmonthSumInfo" resultType="MyPageSumDTO">
+		SELECT MONTH /*청구월*/
+			,RCP_DT AS RCPDT /*출금일시(납부일시)*/
+			,RCP_ST AS RCPST /*출금결과상태 [출금완료(OST03), 출금실패(OST04)]*/
+			,COALESCE(CASE RCP_ST  WHEN 'OST01' THEN  '출금미신청'  WHEN 'OST02' THEN  '출금신청'  WHEN 'OST03' THEN  '출금완료'  WHEN 'OST04' THEN  '출금실패' END,'출금예정') AS RCPSTNM
+			,(COALESCE(NOTIFEE, 0) + COALESCE(RCPFEE, 0) + COALESCE(RCPBNKFEE, 0) + COALESCE(SMSFEE, 0) + COALESCE(LMSFEE, 0)) AS SUMFEE
+			,FINISHYN
+		FROM XMONTHSUM
+		WHERE CHACD = #{chaCd}
+		AND MONTH BETWEEN #{startDate} and #{endDate}
+		ORDER BY MONTH DESC
+	</select>
+	
+	<!-- 일별 수수료 집계 -->
+	<select id="getXDaySum" resultType="MyPageSumDTO">
+		SELECT OBJSUMDAY
+			,NOTICNT 
+			,NOTIAMT 
+			,RCPCNT 
+			,RCPAMT 
+			,SMSCNT
+	        ,SMSFEE
+	        ,LMSCNT
+	        ,LMSFEE
+		FROM(SELECT COALESCE(TMP.NOTIDAY, DSS.SMSDAY) AS OBJSUMDAY
+					,COALESCE (TMP.NOTICNT, 0) NOTICNT
+					,COALESCE (NOTIAMT, 0) NOTIAMT
+					,COALESCE (RCPCNT, 0) RCPCNT
+					,COALESCE (RCPAMT, 0) RCPAMT
+					,COALESCE (SMSCNT, 0) SMSCNT
+                    ,COALESCE (SMSFEE, 0) SMSFEE
+                    ,COALESCE (LMSCNT, 0) LMSCNT
+                    ,COALESCE (LMSFEE, 0) LMSFEE
+			FROM(SELECT COALESCE(DSN.NOTIDAY, DSR.RCPDAY) AS NOTIDAY
+						,COALESCE (NOTICNT, 0) NOTICNT
+						,COALESCE (NOTIAMT, 0) NOTIAMT
+						,COALESCE (RCPCNT, 0) RCPCNT
+						,COALESCE (RCPAMT, 0) RCPAMT
+				FROM(SELECT NOTIDAY
+						,COALESCE(NOTICNT, 0) NOTICNT
+						,COALESCE(NOTIAMT, 0) NOTIAMT
+					FROM XDAYSUMNOTI /** 일별청구집계**/
+					WHERE CHACD = #{chaCd} AND SUBSTR (NOTIDAY, 1, 6) = #{month}) DSN 
+					FULL OUTER JOIN 
+					(SELECT RCPDAY 
+						,COALESCE(RCPCNT, 0) RCPCNT
+						,COALESCE(RCPAMT, 0) RCPAMT
+					FROM XDAYSUMRCP /**일별 가상계좌 수납집계**/
+					WHERE CHACD = #{chaCd} AND SUBSTR (RCPDAY, 1, 6) = #{month}) DSR 
+					ON DSN.NOTIDAY = DSR.RCPDAY 
+				) TMP
+			FULL OUTER JOIN 
+			(SELECT SMSDAY
+				,COALESCE(SMSCNT, 0) SMSCNT
+				,COALESCE(SMSCNT, 0)*20 SMSFEE
+				,COALESCE(LMSCNT, 0) LMSCNT
+				,COALESCE(LMSCNT, 0)*40 LMSFEE
+			 FROM XDAYSUMSMS
+			 WHERE CHACD = #{chaCd} AND SUBSTR (SMSDAY, 1, 6) = #{month}) DSS
+			 ON TMP.NOTIDAY = DSS.SMSDAY
+		) T ORDER BY OBJSUMDAY DESC
+	</select>
+	
+	<!-- 다모아 이용료 영수증-->
+	<select id="getRcpBill" resultType="MyPageSumDTO">
+		SELECT A.CHACD,
+				B.CHANAME ,
+				A.MONTH,
+			   (SELECT MIN(BDATE) 
+				FROM BUSINESS_DAYS 
+				WHERE FLAG = 'Y' 
+				AND BDATE >= TO_CHAR(TO_TIMESTAMP(A.MONTH,'YYYYMM') + interval '1 month', 'YYYYMM') || '10') AS FEEDT,
+					COALESCE(A.NOTICNT,0) 	AS NOTICNT,
+					COALESCE(A.NOTIFEE, 0) 	AS NOTIFEE,
+					COALESCE(A.RCPCNT, 0) 	AS RCPCNT,
+					COALESCE(A.RCPFEE, 0) 	AS RCPFEE,
+					COALESCE(A.RCPBNKFEE,0) AS RCPBNKFEE,
+					COALESCE(A.SMSCNT,0) 	AS SMSCNT,
+					COALESCE(A.SMSFEE,0) 	AS SMSFEE,
+					COALESCE(A.LMSCNT,0) 	AS LMSCNT,
+					COALESCE(A.LMSFEE,0) 	AS LMSFEE,
+					B.FEEACCNO
+		FROM XMONTHSUM A, XCHALIST B 
+		WHERE A.CHACD = B.CHACD  
+		AND A.CHACD = #{chaCd}
+		AND A.MONTH = #{month}
+	</select>
+	
+	<!-- 일별 수납 현황-->
+	<select id="getDayRcpState" resultType="MyPageSumDTO">
+		SELECT
+		    PAYDAY
+		    ,SUM(VASCNT) AS VASCNT
+		    ,SUM(VASAMT) AS VASAMT
+		    ,SUM(DCSCNT) AS DCSCNT
+		    ,SUM(DCSAMT) AS DCSAMT
+		    ,SUM(OCDCNT) AS OCDCNT
+		    ,SUM(OCDAMT) AS OCDAMT
+            ,SUM(DCDCNT) AS DCDCNT
+		    ,SUM(DCDAMT) AS DCDAMT
+		    ,SUM(TOTCNT) AS TOTCNT
+		    ,SUM(TOTAMT) AS TOTAMT
+		    ,SUM(CASHCNT) AS CASHCNT
+		    ,SUM(CASHAMT) AS CASHAMT
+		FROM(
+			SELECT
+				B.PAYDAY /*수납일자*/
+				,COUNT(CASE WHEN B.SVECD = 'VAS' THEN 1 END) AS VASCNT
+				,COALESCE(SUM(CASE WHEN B.SVECD = 'VAS' THEN B.RCPAMT END),0) AS VASAMT
+				,COUNT(CASE WHEN B.SVECD IN('DCS', 'DVA') THEN 1 END) AS DCSCNT
+				,COALESCE(SUM(CASE WHEN B.SVECD IN('DCS', 'DVA') THEN B.RCPAMT END),0) AS DCSAMT
+				,COUNT(CASE WHEN B.SVECD ='OCD' THEN 1 END) AS OCDCNT
+				,COALESCE(SUM(CASE WHEN B.SVECD ='OCD' THEN B.RCPAMT END),0) AS OCDAMT
+				,COUNT(CASE WHEN B.SVECD ='DCD' THEN 1 END) AS DCDCNT
+				,COALESCE(SUM(CASE WHEN B.SVECD ='DCD' THEN B.RCPAMT END),0) AS DCDAMT
+				,COUNT(CASE WHEN B.SVECD IN('VAS','DCS','DVA','DCD','OCD') THEN 1 END) AS TOTCNT /*총건수*/
+				,COALESCE(SUM(CASE WHEN B.SVECD IN('VAS','DCS','DVA','DCD','OCD') THEN B.RCPAMT END),0) AS TOTAMT /*합계*/
+				,0 AS CASHCNT
+				,0 AS CASHAMT
+				,'' AS APPDAY
+			FROM XNOTIMAS A, XRCPMAS B
+			WHERE A.CHACD = B.CHACD
+			AND A.NOTIMASCD = B.NOTIMASCD
+			AND A.NOTIMASST != 'PA00'
+			AND B.RCPMASST = 'PA03'
+			AND	A.NOTI_CAN_YN = 'N'
+			AND A.CHACD = #{chaCd}
+			GROUP BY B.PAYDAY
+		UNION
+			SELECT
+				C.APPDAY AS PAYDAY
+				,0 AS VASCNT
+				,0 AS VASAMT
+				,0 AS DCSCNT
+				,0 AS DCSAMT
+				,0 AS OCDCNT
+				,0 AS OCDAMT
+				,0 AS DCDCNT
+				,0 AS DCDAMT
+				,0 AS TOTCNT /*총건수*/
+				,0 AS TOTAMT /*합계*/
+				,COUNT(C.XCASHAMT) AS CASHCNT
+				,SUM(C.XCASHAMT) AS CASHAMT
+				,C.APPDAY
+			FROM XNOTIMAS A, XRCPMAS B
+			,(SELECT
+				CASE WHEN JOB IS NULL THEN RCPAMT
+					WHEN JOB = 'I' THEN RCPAMT
+					WHEN JOB = 'U'THEN RCPAMT2 END AS XCASHAMT
+			   ,RCPMASCD
+			   ,APPDAY
+			FROM XCASHMAS WHERE CASHMASST='ST03' AND DISABLED = 'N') C
+			WHERE A.CHACD = B.CHACD
+			AND A.NOTIMASCD = B.NOTIMASCD
+			AND B.RCPMASCD = C.RCPMASCD
+			AND A.NOTIMASST != 'PA00'
+			AND B.RCPMASST = 'PA03'
+			AND	A.NOTI_CAN_YN = 'N'
+			AND A.CHACD = #{chaCd}
+			GROUP BY B.PAYDAY, C.APPDAY
+		) T
+		WHERE PAYDAY BETWEEN #{startDate} AND #{endDate}
+		GROUP BY PAYDAY
+		ORDER BY PAYDAY DESC
+	</select>
+	
+	<!-- 일별 수납 카운트-->
+	<select id="getDayRcpTotal" resultType="MyPageSumDTO">
+		SELECT
+		    SUM(VASCNT) AS VASCNT
+		    ,SUM(VASAMT) AS VASAMT
+		    ,SUM(DCSCNT) AS DCSCNT
+		    ,SUM(DCSAMT) AS DCSAMT
+		    ,SUM(OCDCNT) AS OCDCNT
+		    ,SUM(OCDAMT) AS OCDAMT
+            ,SUM(DCDCNT) AS DCDCNT
+		    ,SUM(DCDAMT) AS DCDAMT
+		    ,SUM(TOTCNT) AS TOTCNT
+		    ,SUM(TOTAMT) AS TOTAMT
+		    ,SUM(CASHCNT) AS CASHCNT
+		    ,SUM(CASHAMT) AS CASHAMT
+		FROM(
+			SELECT B.PAYDAY /*수납일자*/
+				,COUNT(CASE WHEN B.SVECD = 'VAS' THEN 1 END) AS VASCNT
+				,COALESCE(SUM(CASE WHEN B.SVECD = 'VAS' THEN B.RCPAMT END),0) AS VASAMT
+				,COUNT(CASE WHEN B.SVECD IN('DCS', 'DVA') THEN 1 END) AS DCSCNT
+				,COALESCE(SUM(CASE WHEN B.SVECD IN('DCS', 'DVA') THEN B.RCPAMT END),0) AS DCSAMT
+				,COUNT(CASE WHEN B.SVECD ='OCD' THEN 1 END) AS OCDCNT
+				,COALESCE(SUM(CASE WHEN B.SVECD ='OCD' THEN B.RCPAMT END),0) AS OCDAMT
+				,COUNT(CASE WHEN B.SVECD ='DCD' THEN 1 END) AS DCDCNT
+				,COALESCE(SUM(CASE WHEN B.SVECD ='DCD' THEN B.RCPAMT END),0) AS DCDAMT
+				,COUNT(CASE WHEN B.SVECD IN('VAS','DCS','DVA','DCD','OCD') THEN 1 END) AS TOTCNT /*총건수*/
+				,COALESCE(SUM(CASE WHEN B.SVECD IN('VAS','DCS','DVA','DCD','OCD') THEN B.RCPAMT END),0) AS TOTAMT /*합계*/
+				,0 AS CASHCNT
+				,0 AS CASHAMT
+				,'' AS APPDAY
+			FROM XRCPMAS B
+			WHERE B.RCPMASST = 'PA03'
+			AND B.CHACD = #{chaCd}
+			AND B.PAYDAY BETWEEN #{startDate} AND #{endDate}
+			GROUP BY B.PAYDAY
+		UNION
+			SELECT C.APPDAY AS PAYDAY
+				,0 AS VASCNT
+				,0 AS VASAMT
+				,0 AS DCSCNT
+				,0 AS DCSAMT
+				,0 AS OCDCNT
+				,0 AS OCDAMT
+				,0 AS DCDCNT
+				,0 AS DCDAMT
+				,0 AS TOTCNT /*총건수*/
+				,0 AS TOTAMT /*합계*/
+				,COUNT(C.XCASHAMT) AS CASHCNT
+				,SUM(C.XCASHAMT) AS CASHAMT
+				,C.APPDAY
+			FROM XNOTIMAS A, XRCPMAS B
+				,(SELECT CASE WHEN JOB IS NULL THEN RCPAMT
+					 WHEN JOB = 'I' THEN RCPAMT
+					 WHEN JOB = 'U'THEN RCPAMT2 END AS XCASHAMT
+				   ,RCPMASCD
+				   ,APPDAY
+			 FROM XCASHMAS WHERE CASHMASST='ST03' AND DISABLED = 'N') C
+			 WHERE A.CHACD = B.CHACD
+			 AND A.NOTIMASCD = B.NOTIMASCD
+			 AND B.RCPMASCD = C.RCPMASCD
+			 AND A.NOTIMASST != 'PA00'
+			 AND B.RCPMASST != 'PA03'
+			 AND A.NOTI_CAN_YN = 'N'
+			 AND A.CHACD = #{chaCd}
+			 AND C.APPDAY BETWEEN #{startDate} AND #{endDate}
+			 GROUP BY B.PAYDAY, C.APPDAY
+		) T
+	</select>
+	
+	<!-- 일별 수납 상세 -->
+	<select id="getRcpDetail" resultType="paymentStatisticsDTO">
+		SELECT A.PAYDAY AS PAYDAY,
+			   A.MASMONTH AS NOTICEMONTH,
+			   COALESCE(B.CUSNAME, '') AS CUSTOMERNAME,
+		       A.RCPUSRNAME AS RCPNAME,
+		       COALESCE(A.BNKCD, '') AS KFTCCODE,
+		       (SELECT COALESCE(SUM(PAYITEMAMT), 0) FROM XNOTIDET WHERE NOTIMASCD=B.NOTIMASCD AND NOTIDETST != 'PA00' AND NOTI_CAN_YN = 'N') AS PAYAMOUNT,
+		       A.RCPAMT AS RCPAMOUNT
+		FROM XRCPMAS A
+			LEFT OUTER JOIN XNOTIMAS B ON B.NOTIMASCD=A.NOTIMASCD AND B.NOTIMASST &lt;&gt; 'PA00' AND B.NOTI_CAN_YN = 'N'
+		WHERE A.RCPMASST = 'PA03'
+		  AND A.CHACD = #{chaCd}
+			<if test='sveCd == "OCD"'>
+  		  AND A.SVECD ='OCD'
+			</if>
+			<if test='sveCd == "DCD"'>
+		  AND A.SVECD ='DCD'
+			</if>
+			<if test='sveCd == "VAS"'>
+		  AND A.SVECD = #{sveCd}
+			</if>
+			<if test='sveCd == "DCS"'>
+		  AND A.SVECD IN('DCS', 'DVA')
+			</if>
+			<if test='sveCd != "CASH"'>
+		  AND A.PAYDAY = #{payDay}
+			</if>
+			<if test='sveCd == "CASH"'>
+		  AND A.RCPMASCD IN (SELECT RCPMASCD FROM XCASHMAS WHERE CHACD = #{chaCd} AND APPDAY = #{payDay} AND DISABLED = 'N') 
+			</if>
+		ORDER BY A.RCPMASCD
+	</select>
+	
+	
+	<!-- 청구, 수납 수수료 조회 -->
+	<select id="getRcpFee" resultType="MyPageSumDTO">
+		SELECT NOTMINLIMIT	/*청구정액범위*/
+				, NOTMINFEE	/*청구정액수수료*/
+				, NOTCNTFEE	/*청구건당수수료*/
+				, RCPCNTFEE	/*수납건당수수료*/
+				, RCPBNKFEE	/*수납건당은행수수료*/
+		FROM XCHALIST   
+		WHERE CHACD = #{chaCd}
+	</select>
+	
+	<!-- 월별수납현황 -->
+	<select id="getMonthRcpState" resultType="MyPageSumDTO">
+		SELECT TO_CHAR(TO_DATE(MASMONTH,'YYYYMM'),'YYYY.MM') AS MASMONTH
+               ,SUM(VASCNT) AS VASCNT
+               ,SUM(VASAMT) AS VASAMT
+               ,SUM(DCSCNT) AS DCSCNT
+               ,SUM(DCSAMT) AS DCSAMT
+               ,SUM(OCDCNT) AS OCDCNT
+               ,SUM(OCDAMT) AS OCDAMT
+               ,SUM(DCDCNT) AS DCDCNT
+               ,SUM(DCDAMT) AS DCDAMT
+               ,SUM(TOTCNT) AS TOTCNT
+               ,SUM(TOTAMT) AS TOTAMT
+               ,SUM(CASHCNT) AS CASHCNT
+               ,SUM(CASHAMT) AS CASHAMT
+		FROM (
+		    SELECT C.MASMONTH AS MASMONTH
+                   ,COUNT(CASE WHEN C.SVECD = 'VAS' THEN 1 END) AS VASCNT /*가상계좌*/
+                   ,COALESCE(SUM(CASE WHEN C.SVECD = 'VAS' THEN C.RCPAMT END),0) AS VASAMT
+                   ,COUNT(CASE WHEN C.SVECD IN('DCS', 'DVA') THEN 1 END) AS DCSCNT /*현금(현장)+무통장입금*/
+                   ,COALESCE(SUM(CASE WHEN C.SVECD IN('DCS', 'DVA') THEN C.RCPAMT END),0) AS DCSAMT
+                   ,COUNT(CASE WHEN C.SVECD ='OCD' THEN 1 END) AS OCDCNT /*온라인카드*/
+                   ,COALESCE(SUM(CASE WHEN C.SVECD ='OCD' THEN C.RCPAMT END),0) AS OCDAMT
+                   ,COUNT(CASE WHEN C.SVECD ='DCD' THEN 1 END) AS DCDCNT /*오프라인카드*/
+                   ,COALESCE(SUM(CASE WHEN C.SVECD ='DCD' THEN C.RCPAMT END),0) AS DCDAMT
+                   ,COUNT(*) AS TOTCNT /*총건수*/
+                   ,COALESCE(SUM(C.RCPAMT),0) AS TOTAMT /*합계*/
+                   ,0 AS CASHCNT
+                   ,0 AS CASHAMT
+            FROM XRCPMAS C
+            WHERE RCPMASST = 'PA03'
+              AND C.CHACD = #{chaCd}
+              AND SVECD IN('VAS','DCS','DVA','OCD','DCD')
+              AND C.MASMONTH BETWEEN #{startDate} AND #{endDate}
+            GROUP BY C.MASMONTH
+		UNION
+		SELECT
+		    A.MASMONTH
+		    ,0 AS VASCNT /*가상계좌*/
+		    ,0 AS VASAMT
+		    ,0 AS DCSCNT /*현금(현장)+무통장입금*/
+		    ,0 AS DCSAMT 
+		    ,0 AS OCDCNT /*온라인카드*/
+		    ,0 AS OCDAMT
+		    ,0 AS DCDCNT /*오프라인카드*/
+		    ,0 AS DCDAMT
+		    ,0 AS TOTCNT /*총건수*/
+		    ,0 AS TOTAMT /*합계*/
+		    ,COUNT(XCASHAMT) AS CASHCNT
+		    ,SUM(XCASHAMT) AS CASHAMT
+		FROM XNOTIMAS A LEFT OUTER JOIN (SELECT * FROM  XRCPMAS
+										 WHERE RCPMASST = 'PA03'
+										 AND SVECD IN('VAS','DCS','DVA','OCD','DCD')) B
+						ON A.NOTIMASCD = B.NOTIMASCD AND A.CHACD = B.CHACD AND A.MASMONTH = B.MASMONTH
+						LEFT OUTER JOIN (SELECT CASE WHEN JOB IS NULL THEN RCPAMT
+											    WHEN JOB = 'I' THEN RCPAMT
+											    WHEN JOB = 'U'THEN RCPAMT2 END AS XCASHAMT
+											  , RCPMASCD
+											  , APPDAY
+										 FROM XCASHMAS
+										 WHERE CASHMASST='ST03'
+										 AND DISABLED = 'N') C
+						ON B.RCPMASCD = C.RCPMASCD
+		WHERE A.NOTIMASST != 'PA00'
+		AND	A.NOTI_CAN_YN = 'N'
+		AND A.CHACD = #{chaCd}
+		AND A.MASMONTH BETWEEN #{startDate} AND #{endDate}
+		GROUP BY A.MASMONTH
+		) T
+		GROUP BY MASMONTH
+		ORDER BY MASMONTH DESC
+	</select>
+	
+	<!-- 월별 수납현황 카운트 (월별데이터의  합계를 보여주기 위해 사용함-->
+	<select id="getMonthRcpStateTotal" resultType="MyPageSumDTO">
+		SELECT SUM(VASCNT) AS VASCNT
+		    , SUM(VASAMT) AS VASAMT
+		    , SUM(DCSCNT) AS DCSCNT
+		    , SUM(DCSAMT) AS DCSAMT
+		    , SUM(OCDCNT) AS OCDCNT
+		    , SUM(OCDAMT) AS OCDAMT
+		    , SUM(DCDCNT) AS DCDCNT
+		    , SUM(DCDAMT) AS DCDAMT
+		    , SUM(TOTCNT) AS TOTCNT
+		    , SUM(TOTAMT) AS TOTAMT
+		    , SUM(CASHCNT) AS CASHCNT
+		    , SUM(CASHAMT) AS CASHAMT
+		FROM (SELECT COUNT(CASE WHEN C.SVECD = 'VAS' THEN 1 END) AS VASCNT /*가상계좌*/
+				,COALESCE(SUM(CASE WHEN C.SVECD = 'VAS' THEN C.RCPAMT END),0) AS VASAMT
+				,COUNT(CASE WHEN C.SVECD IN('DCS', 'DVA') THEN 1 END) AS DCSCNT /*현금(현장)+무통장입금*/
+				,COALESCE(SUM(CASE WHEN C.SVECD IN('DCS', 'DVA') THEN C.RCPAMT END),0) AS DCSAMT
+				,COUNT(CASE WHEN C.SVECD ='OCD' THEN 1 END) AS OCDCNT /*온라인카드*/
+				,COALESCE(SUM(CASE WHEN C.SVECD ='OCD' THEN C.RCPAMT END),0) AS OCDAMT
+				,COUNT(CASE WHEN C.SVECD ='DCD' THEN 1 END) AS DCDCNT /*오프라인카드*/
+				,COALESCE(SUM(CASE WHEN C.SVECD ='DCD' THEN C.RCPAMT END),0) AS DCDAMT
+				,COUNT(*) AS TOTCNT /*총건수*/
+				,COALESCE(SUM(C.RCPAMT),0) AS TOTAMT /*합계*/
+				,0 AS CASHCNT
+				,0 AS CASHAMT
+			FROM XRCPMAS C
+			WHERE C.RCPMASST = 'PA03'
+			  AND C.SVECD IN('VAS','DCS','DVA','OCD','DCD')
+			  AND C.CHACD = #{chaCd}
+			  AND C.MASMONTH BETWEEN #{startDate} AND #{endDate}
+			UNION
+			SELECT
+				0 AS VASCNT /*가상계좌*/
+				,0 AS VASAMT
+				,0 AS DCSCNT /*현금(현장)+무통장입금*/
+				,0 AS DCSAMT
+				,0 AS OCDCNT /*온라인카드*/
+				,0 AS OCDAMT
+				,0 AS DCDCNT /*오프라인카드*/
+				,0 AS DCDAMT
+				,0 AS TOTCNT /*총건수*/
+				,0 AS TOTAMT /*합계*/
+				,COUNT(XCASHAMT) AS CASHCNT
+				,SUM(XCASHAMT) AS CASHAMT
+			FROM XNOTIMAS A LEFT OUTER JOIN (SELECT * FROM  XRCPMAS
+											 WHERE RCPMASST = 'PA03'
+											 AND SVECD IN('VAS','DCS','DVA','OCD','DCD')) B
+							ON A.NOTIMASCD = B.NOTIMASCD AND A.CHACD = B.CHACD AND A.MASMONTH = B.MASMONTH
+							LEFT OUTER JOIN (SELECT CASE WHEN JOB IS NULL THEN RCPAMT
+														 WHEN JOB = 'I' THEN RCPAMT
+														 WHEN JOB = 'U'THEN RCPAMT2 END AS XCASHAMT
+													, RCPMASCD
+													, APPDAY
+											 FROM XCASHMAS
+											 WHERE CASHMASST='ST03'
+											 AND DISABLED = 'N') C
+							ON B.RCPMASCD = C.RCPMASCD
+			WHERE A.NOTIMASST != 'PA00'
+			AND	A.NOTI_CAN_YN = 'N'
+			AND A.CHACD = #{chaCd}
+			AND A.MASMONTH BETWEEN #{startDate} AND #{endDate}
+			) T
+	</select>
+	
+	<!-- 청구,미납 차트 -->
+	<select id="getXnotiChart" resultType="MyPageSumDTO">
+	 	SELECT A.MASMONTH /*수납일자*/
+        	, SUM(CASE WHEN C.SVECD IN('VAS','DCS','DVA','OCD','DCD') THEN C.RCPAMT END) AS RCP
+            , SUM(B.PAYITEMAMT)  AS PAYITEMAMT /*청구금액*/
+            , SUM(COALESCE(B.PAYITEMAMT, 0)) - SUM( COALESCE(C.RCPAMT, 0) )  AS NORCP     /*미납액*/
+		FROM XNOTIMAS A LEFT OUTER JOIN (SELECT NOTIMASCD, SUM(COALESCE(PAYITEMAMT, 0)) AS PAYITEMAMT
+										 FROM XNOTIDET
+										 WHERE NOTIDETST != 'PA00'
+										 AND NOTI_CAN_YN = 'N'
+										 GROUP BY NOTIMASCD) B
+						ON A.NOTIMASCD = B.NOTIMASCD
+						LEFT OUTER JOIN (SELECT *
+										 FROM  XRCPMAS
+										 WHERE RCPMASST = 'PA03'
+										 AND SVECD IN('VAS','DCS','DVA','OCD','DCD')) C
+					    ON A.NOTIMASCD = C.NOTIMASCD AND A.CHACD = C.CHACD
+		WHERE A.CHACD = #{chaCd}
+		AND A.NOTIMASST != 'PA00'
+		AND A.NOTI_CAN_YN = 'N'
+		AND A.MASMONTH BETWEEN #{startDate} AND #{endDate}
+		GROUP BY A.MASMONTH
+		ORDER BY A.MASMONTH
+	</select>
+	
+	<!-- 월별수납(미납,수납)차트 -->
+	<select id="getMonthChart" resultType="MyPageSumDTO">
+		SELECT A.MASMONTH, SUM(COALESCE(B.RCPAMT, 0)) AS RCP
+		FROM (SELECT DISTINCT MASMONTH, CHACD FROM XNOTIMAS) A
+			LEFT OUTER JOIN XRCPMAS B ON B.MASMONTH=A.MASMONTH AND B.CHACD=A.CHACD AND B.RCPMASST='PA03' AND B.SVECD IN('VAS','DCS','DVA','OCD','DCD')
+		WHERE A.CHACD=#{chaCd}
+	    AND A.MASMONTH BETWEEN #{startDate} AND #{endDate}
+		GROUP BY A.MASMONTH
+		ORDER BY A.MASMONTH ASC
+	</select>
+	
+	<!-- 월별수납 (결제수단)차트 -->
+	<select id="getPayMethodChart" resultType="MyPageSumDTO">
+		SELECT /*CHART DATA*/
+			 ROUND( CASE COUNT(CASE WHEN SVECD = 'VAS' THEN 1 END) WHEN 0 THEN 0 ELSE (COUNT(CASE WHEN SVECD = 'VAS' THEN 1 END) / COUNT(SVECD)) END ) AS PSTVAS
+            ,ROUND( CASE COUNT(CASE WHEN SVECD IN('DCS','DVA') THEN 1 END) WHEN 0 THEN 0 ELSE (COUNT(CASE WHEN SVECD IN('DCS','DVA') THEN 1 END) / COUNT(SVECD)) END  *100,2 ) AS PSTDCS
+            ,ROUND( CASE COUNT(CASE WHEN SVECD = 'OCD' THEN 1 END) WHEN 0 THEN 0 ELSE (COUNT(CASE WHEN SVECD = 'OCD' THEN 1 END) / COUNT(SVECD)) END  *100,2 ) AS PSTOCD
+		    ,ROUND( CASE COUNT(CASE WHEN SVECD = 'DCD' THEN 1 END) WHEN 0 THEN 0 ELSE (COUNT(CASE WHEN SVECD = 'DCD' THEN 1 END) / COUNT(SVECD)) END  *100,2 ) AS PSTDCD
+		FROM (SELECT * 
+			   FROM  XRCPMAS
+			   WHERE RCPMASST = 'PA03'
+			   AND SVECD IN('VAS','DCS','DVA','OCD','DCD')
+			  ) B
+		WHERE B.CHACD = #{chaCd}
+		AND B.MASMONTH BETWEEN #{startDate} AND #{endDate}
+	</select>
+</mapper>

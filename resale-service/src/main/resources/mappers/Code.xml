@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CodeDao">
+    <!-- 청구항목 코드 -->
+    <select id="claimItemSel" resultType="CodeDTO">
+		SELECT	PAYITEMCD	AS code
+			  ,	PAYITEMNAME AS codeName
+		  FROM XPAYITEM
+		WHERE CHACD=#{chaCd}
+		  AND PAYITEMST = 'ST01'
+		  AND COALESCE(DISABLEDYN, 'N') = 'N'
+		ORDER BY PTRITEMORDER ASC, PAYITEMCD ASC
+	</select>
+
+    <!-- 구분 코드 -->
+    <select id="cusGubnCdSel" resultType="CodeDTO">
+		SELECT A.CODE
+			  , A.CODENAME
+		  FROM ( SELECT CHACD
+		  				  , CASE    WHEN CUSGUBN1 IS NULL THEN  ''  ELSE CUSGUBN1 END AS CODENAME
+		  				  , CASE    WHEN CUSGUBN1 IS NULL THEN  ''  ELSE 'CUSGUBN1' END AS CODE
+		  			FROM XCHALIST
+		  			UNION
+		  			SELECT CHACD
+		  					, CASE    WHEN CUSGUBN2 IS NULL THEN  ''  ELSE CUSGUBN2 END AS CODENAME
+		  					, CASE    WHEN CUSGUBN2 IS NULL THEN  ''  ELSE 'CUSGUBN2' END AS CODE
+		  			  FROM XCHALIST
+		  			UNION
+		  			SELECT CHACD
+		  			  		, CASE    WHEN CUSGUBN3 IS NULL THEN  ''  ELSE CUSGUBN3 END AS CODENAME
+		  			  		, CASE    WHEN CUSGUBN3 IS NULL THEN  ''  ELSE 'CUSGUBN3' END AS CODE
+		  			  FROM XCHALIST
+		  			UNION
+		  			SELECT CHACD
+		  					, CASE    WHEN CUSGUBN4 IS NULL THEN  ''  ELSE CUSGUBN4 END AS CODENAME
+		  					, CASE    WHEN CUSGUBN4 IS NULL THEN  ''  ELSE 'CUSGUBN4' END AS CODE
+		  			  FROM XCHALIST
+		  		  ) A
+		  WHERE A.CHACD=#{chaCd}
+		    AND A.CODE IS NOT NULL
+			AND A.CODE &lt;&gt; ''
+			AND A.CODENAME &lt;&gt; ''
+		ORDER BY CODE
+	</select>
+
+    <!-- 구분코드 count -->
+    <select id="cusGubnCdCnt" resultType="int">
+select a.CUSGUBN1 + a.CUSGUBN2 + a.CUSGUBN3 + a.CUSGUBN4 AS CNT
+    from (select CASE WHEN CUSGUBN1 IS NULL THEN 0 when CUSGUBN1 = '' then 0 ELSE 1 END as cusgubn1,
+               CASE WHEN CUSGUBN2 IS NULL THEN 0 when CUSGUBN2 = '' then 0 ELSE 1 END as cusgubn2,
+               CASE WHEN CUSGUBN3 IS NULL THEN 0 when CUSGUBN3 = '' then 0 ELSE 1 END as cusgubn3,
+               CASE WHEN CUSGUBN4 IS NULL THEN 0 when CUSGUBN4 = '' then 0 ELSE 1 END as cusgubn4
+                from xchalist where chacd = #{chaCd}) a
+	</select>
+
+    <!-- 입금통장 정보 -->
+    <select id="moneyPassbookName" resultType="CodeDTO">
+		SELECT	GRPADJNAME  AS CODENAME
+				, ADJFIREGKEY AS CODE
+		  FROM XADJGROUP
+		WHERE CHACD=#{chaCd}
+	</select>
+
+	<select id="claimItemForExcelTrans" resultType="CodeDTO">
+		SELECT	COALESCE(PAYITEMCD,' ')	AS code
+		,	COALESCE(PAYITEMNAME, ' ') AS codeName
+		FROM XPAYITEM
+		WHERE CHACD=#{chaCd}
+		AND PAYITEMST = 'ST01'
+		AND COALESCE(DISABLEDYN, 'N') = 'N'
+		<choose>
+			<when test="Q123 != null and Q123 != ''">
+				AND substr(PAYITEMNAME,0,2)=#{prtItemName}
+			</when>
+			<otherwise>
+				AND CASE SUBSTR(PAYITEMNAME, 1,1)  WHEN '0' THEN  SUBSTR(PAYITEMNAME, 2)  ELSE PAYITEMNAME END like #{prtItemName} || '%'
+			</otherwise>
+		</choose>
+		ORDER BY PAYITEMNAME ASC, PAYITEMCD ASC
+	</select>
+
+</mapper>

@@ -1,0 +1,452 @@
+@charset "UTF-8";
+
+/*
+**
+** _table_n_list.scss
+** Author : 이영주
+** Create date : 2018.02.26
+** Description : Damoa 서비스에서 사용하는 테이블과 리스트 설정들 모음 damoa.scss 에서 최종으로 compile 됨
+**
+*/
+
+
+
+/* Table */
+
+.table-option {
+    color: #666;
+    font-size: .8125rem;
+
+    em {
+        font-style: normal;
+    }
+
+    .amount {
+    }
+
+    select {
+        max-width: 9.375rem;
+    }
+}
+
+@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+    .table-responsive  {
+        padding-bottom:.5rem;
+    }
+}
+
+
+
+table {
+    width:100%;
+    margin-bottom: 0 !important;
+    //table-layout: fixed;
+    //word-wrap: break-word;
+    th {
+        text-align: center;
+        vertical-align: middle !important;
+        white-space: nowrap;
+    }
+
+    td {
+        word-break: keep-all;
+        white-space: nowrap;
+    }
+
+    &.table-sm {
+        td {
+            padding: 0.5rem;
+        }
+    }
+
+    &.table-summary {
+        thead {
+            th {
+                border: 0;
+                background:rgb(224,232,240);
+                font-size:0.875rem;
+                padding:.8rem 1rem;
+            }
+        }
+
+        tbody {
+            tr:hover {
+                cursor:pointer;
+            }
+            td {
+                // width: 100%;
+                border: 0;
+                font-size:0.875rem;
+                padding-left:.7rem;
+                padding-right:.7rem;
+                padding-top:.3rem;
+                padding-bottom:.3rem;
+
+                &.has-red-dot {
+                    position: relative;
+                    &:before {
+                        content:"";
+                        position: absolute;
+
+                        left: 0;
+                        top: 1rem;
+
+                        width: .1875rem;
+                        height: .1875rem;
+
+                        background: #ff0000;
+                    }
+                }
+
+                img.icon-clip {
+                    width: .75rem;
+                    height: .75rem;
+                }
+            }
+        }
+    }
+
+    &.table-primary {
+        border-top:2px solid #3779d0;
+        border-bottom:1px solid #babac6;
+        background-color: #fff;
+        font-size: .875rem;
+
+        th {
+            padding:.675rem 1rem;
+            background-color: #f9f9f9;
+
+            border-left:1px solid #e6e6e6;
+            border-bottom:1px solid #e6e6e6;
+
+            font-weight: 400;
+
+            &:first-child {
+                border-left:0;
+            }
+        }
+
+        td {
+            padding-left:.5rem;
+            padding-right:.5rem;
+            background-color: #fff;
+
+            text-align: center;
+            vertical-align: middle;
+        }
+    }
+
+    &.table-form {
+        border-top:2px solid #3779d0;
+        border-bottom:1px solid #babac6;
+
+        font-size:0.875rem;
+
+        tr {
+            &:last-child {
+                th,td {
+                    border-bottom:0;
+                }
+            }
+        }
+
+        th,td {
+            display: flex;
+            padding: .3125rem 1rem !important;
+            min-height:2.5625rem;
+
+            align-items: center;
+
+            border-top:0;
+            border-bottom:1px solid #e6e6e6;
+
+        }
+        th {
+            background:#f9f9f9;
+
+            border-left:1px solid #e6e6e6;
+            border-right:1px solid #e6e6e6;
+
+            font-weight: 400;
+            justify-content: center;
+
+            &:first-child {
+                border-left:0;
+            }
+        }
+        td {
+            text-align: left;
+        }
+    }
+
+    &.table-black-line {
+        border-top:2px solid #1e2022;
+        border-bottom:1px solid #babed4;
+    }
+
+    &.useage-commission-list {
+        th {
+            &:last-child {
+                // font-weight: 700;
+            }
+        }
+        td {
+            &:last-child {
+                background:#f6feff;
+            }
+        }
+
+        tfoot {
+            td {
+                background:#f9faff;
+            }
+        }
+    }
+
+    &.table-qna-list {
+        tr {
+            &:hover {
+                cursor: pointer;
+            }
+        }
+        td {
+
+            &:first-child {
+                width: 3.875rem;
+            }
+
+            &:nth-child(2) {
+                padding-left:1.3rem;
+                padding-right:1.3rem;
+            }
+
+            &.has-red-dot {
+                position: relative;
+                &:before {
+                    content:"";
+                    position: absolute;
+
+                    left: .5rem;
+                    top: 1.2rem;
+
+                    width: .1875rem;
+                    height: .1875rem;
+
+                    background: #ff0000;
+                }
+            }
+
+            img.icon-clip {
+                width: .75rem;
+                height: .75rem;
+            }
+        }
+    }
+
+    .hidden {
+        display: none;
+        background: rgba(0,0,0,.05) !important;
+    }
+}
+
+#notice-list {
+    th {
+        &:first-child {
+            width:3.8125rem;
+        }
+        &:last-child {
+            width:6.6875rem;
+        }
+    }
+
+    td {
+        &:nth-child(2) {
+            text-align: left;
+        }
+
+        span {
+            &.label-featured {
+                padding:.1875rem .3125rem;
+                background: $blue-color;
+
+                font-size:.75rem;
+                color:#fff;
+            }
+        }
+    }
+}
+
+#notice-view, #qna-view {
+    &.table-form {
+        th {
+            justify-content: center;
+        }
+
+        td {
+            &.content-area {
+                min-height: 18rem;
+                padding:2rem !important;
+                border-bottom: 1px solid #bfc2d7;
+            }
+            textarea {
+                border: 0;
+            }
+        }
+    }
+}
+
+
+#faq-list {
+    thead {
+        th {
+            &:first-child {
+                width:3.8125rem;
+            }
+            &:nth-child(2) {
+                width:6.6875rem;
+            }
+        }
+    }
+
+
+    tbody {
+        tr {
+            cursor: pointer;
+
+            &.answer {
+                display: none;
+                td {
+                    background: #f9f9f9;
+                }
+            }
+
+            td {
+                &:last-child {
+                    text-align: left;
+                }
+            }
+        }
+    }
+}
+
+
+
+// sm break point
+@media screen and (max-width:767px) {
+    table {
+        &.table-form {
+            th {
+                border-left:0;
+                justify-content:flex-start;
+            }
+        }
+    }
+}
+
+
+.pagination {
+    .page-item {
+        margin:0rem;
+        a.page-link {
+            padding:.4rem .75rem;
+            border: 1px solid #fff;
+
+            color:#444;
+            font-size:.875rem;
+        }
+        &.active {
+            a.page-link {
+                background:#768393;
+                border: 1px solid #768393;
+                color:#fff;
+            }
+        }
+        &.controller {
+            a.page-link {
+                border:1px solid #d3d3d3;
+            }
+        }
+    }
+}
+
+
+.unordered-blue-dot-list {
+    padding: 0;
+    margin:0;
+    li {
+        position: relative;
+        padding: 0 0 0 .6875rem;
+        margin:0;
+        list-style: none;
+
+        color: #666;
+        font-size: .75rem;
+
+        &::before {
+            content: "";
+            width: 2px;
+            height: 2px;
+            background: #3779d0;
+            position: absolute;
+            left: 0;
+            top: .5rem;
+        }
+    }
+}
+
+.unordered-list {
+    padding: 0;
+    margin:0;
+    li {
+        position: relative;
+        padding: 0 0 0 .6875rem;
+        margin:0;
+        list-style: none;
+
+        font-size: .75rem;
+
+    }
+}
+
+.list-button-group-bottom {
+    margin-bottom:1.875rem;
+}
+
+.has-arrow {
+    position: relative;
+    padding-right:1.25rem;
+    &::after {
+        content: "\003e";
+        position: absolute;
+        right: .5rem;
+
+        color:rgba(118,118,118,1);
+    }
+}
+
+
+@media screen and (max-width:768px) {
+    .table-option {
+        select {
+            width:auto;
+        }
+    }
+
+    table {
+        table-layout: auto;
+        word-wrap: break-word;
+        &.table-form {
+            tr {
+                &:last-child {
+                    th,td {
+                        border-bottom:1px solid #e6e6e6;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.table-btn-td #resultBody > tr > td {
+    height: 48px;
+}

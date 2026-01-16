@@ -1,0 +1,2704 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ReceiptMgmt">
+<!--
+	<parameterMap type="java.util.HashMap" id="insertXrcpMasmap">
+		<parameter  property="CUSHP" javaType="encrypt" jdbcType="CLOB" />
+		<parameter  property="CUSOFFNO" javaType="encrypt" jdbcType="CLOB" />
+	</parameterMap>
+	
+		<parameterMap type="java.util.HashMap" id="paramCusOffNoMap">
+		<parameter  property="CUSOFFNO" javaType="encrypt" jdbcType="CLOB" />
+	</parameterMap>
+	
+	<parameterMap type="java.util.HashMap" id="paramCusOffNo2Map">
+		<parameter  property="cusOffNo" javaType="encrypt" jdbcType="CLOB" />
+		<parameter  property="cusOffNo2" javaType="encrypt" jdbcType="CLOB" />
+	</parameterMap>
+
+	<resultMap type="ReceiptMgmtDTO" id="CUSOFFNOmap">
+		<result column="CUSOFFNO" property="cusOffNo" javaType="encrypt" jdbcType="CLOB" />
+	</resultMap>
+	
+	<resultMap type="PdfReceiptMgmtDTO" id="pdfCUSOFFNOmap">
+		<result column="CUSOFFNO" property="cusOffNo" javaType="encrypt" jdbcType="CLOB" />
+	</resultMap>
+	
+	<resultMap type="NotiDTO" id="notiCUSOFFNOmap">
+		<result column="CUSOFFNO" property="cusOffNo" javaType="encrypt" jdbcType="CLOB" />
+	</resultMap>
+	
+	<resultMap type="ReceiptMgmtDTO" id="CUSOFFNOmap2">
+		<result column="CUSOFFNO2" property="cusOffNo2" javaType="encrypt" jdbcType="CLOB" />
+	</resultMap>
+	
+	<resultMap type="ReceiptMgmtDTO" id="CUSOFFNO2map">
+		<result column="CUSOFFNO" property="cusOffNo" javaType="encrypt" jdbcType="CLOB" />
+		<result column="CUSOFFNO2" property="cusOffNo2" javaType="encrypt" jdbcType="CLOB" />
+	</resultMap>-->
+
+	<!-- 입금내역 조회 -->
+	<select id="getReceiptList" parameterType="java.util.HashMap" resultType="ReceiptMgmtDTO">
+		<include refid="paging_header" />
+		SELECT	A.NOTIMASCD,
+				A.CHACD,
+				A.VANO,
+				TO_CHAR(TO_DATE(A.MASMONTH,'YYYYMM'),'YYYY.MM') AS MASMONTH,
+				A.NOTIMASST,
+				A.NOTI_CAN_YN AS NOTICANYN,
+				(SELECT SUM(COALESCE(PAYITEMAMT,0) ) FROM XNOTIDET  WHERE NOTIMASCD = A.NOTIMASCD AND NOTIDETST != 'PA00'  AND NOTI_CAN_YN = 'N') AS AMT,
+				(SELECT SUM(COALESCE(RCPAMT, 0)) FROM XRCPMAS WHERE NOTIMASCD=A.NOTIMASCD AND RCPMASST = 'PA03') as RCPAMT,
+				MAX(C.PAYDAY) AS PAYDAY,
+				MAX(SUBSTR(C.PAYTIME,1,4) ) AS PAYTIME,
+				(SELECT COALESCE(SUM(RCPAMT),0) FROM XRCPMAS WHERE NOTIMASCD=A.NOTIMASCD AND SVECD = 'VAS' AND RCPMASST = 'PA03') AS VASAMT,
+				(SELECT COALESCE(SUM(RCPAMT),0) FROM XRCPMAS WHERE NOTIMASCD=A.NOTIMASCD AND SVECD = 'OCD' AND RCPMASST = 'PA03') AS OCDAMT,
+				(SELECT COALESCE(SUM(RCPAMT),0) FROM XRCPMAS WHERE NOTIMASCD=A.NOTIMASCD AND SVECD IN( 'DCS','DVA' ) AND RCPMASST = 'PA03') AS DCSAMT,
+				(SELECT COALESCE(SUM(RCPAMT),0) FROM XRCPMAS WHERE NOTIMASCD=A.NOTIMASCD AND SVECD = 'DCD' AND RCPMASST = 'PA03') AS DCDAMT,
+				COALESCE((SELECT SUM(COALESCE(PAYITEMAMT,0) ) FROM XNOTIDET  WHERE NOTIMASCD = A.NOTIMASCD AND NOTIDETST != 'PA00'  AND NOTI_CAN_YN = 'N'),0) - (SELECT SUM(COALESCE(RCPAMT, 0)) FROM XRCPMAS WHERE NOTIMASCD=A.NOTIMASCD AND RCPMASST = 'PA03') AS UNAMT,
+				(SELECT COUNT(notidetcd) FROM XNOTIDET  WHERE NOTIMASCD = A.NOTIMASCD AND NOTIDETST != 'PA00'  AND NOTI_CAN_YN = 'N') AS ITEMCNT,
+				CASE WHEN A.NOTIMASST IS NULL THEN '' ELSE (CASE A.NOTIMASST WHEN 'PA00' THEN '임시' WHEN 'PA02' THEN '미납' WHEN 'PA03' THEN '완납' WHEN 'PA04' THEN '일부납' WHEN 'PA05' THEN '초과납' WHEN 'PA06' THEN '환불' WHEN 'PA09' THEN '취소' END) END AS NOTIMASSTNM,
+				TRIM(A.CUSNAME) AS CUSNAME,
+				A.CUSGUBN1,
+				A.CUSGUBN2,
+				A.CUSGUBN3,
+				A.CUSGUBN4,
+				SUM(COALESCE(D.REPAYAMT,0) ) REPAYAMT,
+				MAX(COALESCE(D.REGDT::varchar,'') ) AS REGDT
+		FROM XNOTIMAS A
+		LEFT OUTER JOIN XRCPMAS C ON A.NOTIMASCD = C.NOTIMASCD AND C.RCPMASST = 'PA03' AND C.CHACD = #{chaCd}
+		LEFT OUTER JOIN XREPAYMAS D ON C.RCPMASCD = D.RCPMASCD
+		WHERE 1 = 1
+			AND A.NOTIMASST != 'PA00'
+			AND A.NOTI_CAN_YN = 'N'
+			AND A.CHACD = #{chaCd}
+		<include refid="search" />
+		GROUP BY A.NOTIMASCD,
+				A.CHACD,
+				A.VANO,
+				A.MASMONTH,
+				A.NOTIMASST,
+				A.NOTI_CAN_YN,
+				A.CUSNAME,
+				A.CUSGUBN1,
+				A.CUSGUBN2,
+				A.CUSGUBN3,
+				A.CUSGUBN4
+	 <if test='sortGb == "RG"'>
+		ORDER BY PAYDAY DESC, PAYTIME DESC
+	 </if>
+	 <if test='sortGb == "NM"'>
+		ORDER BY CUSNAME
+	 </if>
+		<if test='pageGubn == "E"'>     
+	    	<include refid="excel_footer" />
+	    </if>
+	    <if test='pageGubn == "D"'>
+	    	<include refid="paging_footer" />
+	    </if>
+	    <!-- ORDER BY RN --> 
+	</select>
+	
+	<!-- 입금내역 조회 -->
+	<select id="getReceiptCount" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT COUNT(DISTINCT TTA.NOTIMASCD) 	AS CNT,
+			COALESCE(SUM(AMT), 0) 				AS AMT, /*총 수납금액*/
+			COALESCE(SUM(RCPAMT), 0) 			AS TOTAMT, /*총 수납금액*/
+			(COALESCE(SUM(RCPAMT), 0) - COALESCE(SUM(REPAYAMT), 0)) AS REALTOTAMT, /*실수납금액 = 수납금액-환불금액*/
+			(COALESCE(SUM(UNAMT), 0)) 			AS TOTUNAMT, /*미납금액*/
+			COALESCE(SUM(REPAYAMT), 0) 			AS REPAYAMT /*환불금액*/
+		FROM
+			(	SELECT
+					A.NOTIMASCD,
+					MAX(COALESCE(B.PAYITEMAMT,0) ) AS AMT,
+					(SELECT COALESCE(SUM(RCPAMT),0) FROM XRCPMAS WHERE NOTIMASCD=A.NOTIMASCD AND RCPMASST = 'PA03') as RCPAMT,
+					MAX(COALESCE(B.PAYITEMAMT,0) ) - (SELECT COALESCE(SUM(RCPAMT),0) FROM XRCPMAS WHERE NOTIMASCD=A.NOTIMASCD AND RCPMASST = 'PA03') AS UNAMT,
+					SUM(COALESCE(D.REPAYAMT,0) ) REPAYAMT
+				FROM XNOTIMAS A
+				INNER JOIN (
+					SELECT
+						ND.NOTIMASCD,
+						SUM(COALESCE(ND.PAYITEMAMT,0) ) AS PAYITEMAMT
+					FROM XNOTIDET ND
+					WHERE 1=1
+						AND NOTIDETST != 'PA00'
+						AND NOTI_CAN_YN = 'N'
+					GROUP BY NOTIMASCD
+				) B ON A.NOTIMASCD = B.NOTIMASCD
+				LEFT OUTER JOIN XRCPMAS C ON A.NOTIMASCD = C.NOTIMASCD AND C.RCPMASST = 'PA03'
+				LEFT OUTER JOIN XREPAYMAS D ON C.RCPMASCD = D.RCPMASCD
+				WHERE
+					1 = 1
+					AND A.NOTIMASST != 'PA00'
+					AND A.NOTI_CAN_YN = 'N'
+					AND A.CHACD = #{chaCd}
+				<include refid="search" />
+				GROUP BY A.NOTIMASCD
+			) TTA
+	</select>
+
+	<!-- 청구,가상계좌로  미납 마지막 날짜 구하기 -->
+	<select id="getLastMonth" resultType="String">
+		SELECT COALESCE(MAX(A.MASMONTH), TO_CHAR(NOW(),'YYYYMM')) AS MASMONTH
+		FROM XNOTIMAS A, XCUSMAS B 
+		WHERE A.CHACD = #{chaCd} 
+		AND A.VANO = B.VANO 
+		AND A.NOTIMASST = 'PA02' 
+		AND A.NOTI_CAN_YN = 'N'   
+		AND A.DISABLED  = 'N' 
+	</select>
+
+	<!-- 페이징을 위한 header -->
+	<sql id="paging_header">
+		SELECT *
+		FROM (
+				 SELECT (ROW_NUMBER() OVER()) AS RN, TTA.*
+				 FROM (
+	</sql>
+
+	<!-- 페이징을 위한 footer -->
+	<sql id="paging_footer">
+		    ) TTA
+		    <if test='rePayYn == "Y" and rePayYn != null'>
+			    WHERE TTA.REPAYAMT > 0 AND TTA.REPAYDAY IS NOT NULL
+		    </if>
+		) X WHERE RN BETWEEN #{start} AND #{end}
+	</sql>
+	
+	<!-- 엑셀다운로드시 footer -->
+	<sql id="excel_footer">
+		    ) TTA
+		    <if test='rePayYn == "Y" and rePayYn != null'>
+			    WHERE TTA.REPAYAMT > 0 AND TTA.REPAYDAY IS NOT NULL
+		    </if>
+		) X
+	</sql>
+	
+	<!-- 환불등록-->
+	<insert id="insertRepay" parameterType="java.util.HashMap">
+		INSERT INTO XREPAYMAS(REPAYMASCD, RCPMASCD, REPAYDAY, REPAYAMT, MAKER, REGDT)
+		VALUES(NEXTVAL('seqrepaymascd'), #{rcpMasCd}, TO_CHAR(NOW(),'YYYYMMDD'), #{rePayAmt}, #{chaCd}, NOW())
+	</insert>
+	
+	<select id="getXchaoption" resultType="String">
+		SELECT REFCD FROM XCHAOPTION 
+		WHERE CHACD = #{chaCd} AND REFSECT = 'A01'
+	</select>
+	
+	<select id="selectRcpBillCutDet" resultType="PdfReceiptMgmtDTO">
+		SELECT * FROM (           
+			SELECT *
+			FROM (  SELECT   MAS.RCPMASCD AS rcpMasCd,
+							 TRIM(MAS.CUSNAME) AS cusName,
+							 SUBSTR(MAS.MASMONTH,5,2) AS masMonth,
+							 MAS.CUSKEY AS cusKey,
+							 CHA.CUSGUBN1 AS cCusGubn,
+							 MAS.CUSGUBN1 AS rCusGubn,
+							 MAS.RCPAMT AS rcpAmt,
+							 MAS.PAYDAY AS payDay,
+							 MAS.PAYTIME AS payTime,
+							 TO_CHAR(NOW(),'YYYYMMDD') AS today,
+							 CHA.CHANAME AS chaName
+					FROM   XRCPMAS MAS, XCHALIST CHA
+					WHERE  MAS.RCPMASST = 'PA03'
+					AND    MAS.CHACD    = CHA.CHACD
+					<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(rcpMasList)'>
+						AND    MAS.RCPMASCD IN
+						<foreach item="item" collection="rcpMasList" index="index" open="(" close=")" separator=",">
+							#{item}
+						</foreach>
+					</if>
+				) TA,
+					(
+					SELECT  MAX (RCPMASCD) AS rcpMasCd2,
+							MAX (CASE LV WHEN 1 THEN PAYITEMNAME ELSE '' END) AS payItemName1,
+							MAX (CASE LV WHEN 1 THEN PAYITEMAMT ELSE NULL END) AS payItemAmt1,
+							MAX (CASE LV WHEN 1 THEN PTRITEMREMARK ELSE '' END) AS ptrItemRemark1,
+							MAX (CASE LV WHEN 1 THEN PTRITEMNAME ELSE '' END) AS ptrItemName1,
+							MAX (CASE LV WHEN 2 THEN PAYITEMNAME ELSE '' END) AS payItemName2,
+							MAX (CASE LV WHEN 2 THEN PAYITEMAMT ELSE NULL END) AS payItemAmt2,
+							MAX (CASE LV WHEN 2 THEN PTRITEMREMARK ELSE '' END) AS ptrItemRemark2,
+							MAX (CASE LV WHEN 2 THEN PTRITEMNAME ELSE '' END) AS ptrItemName2,
+							MAX (CASE LV WHEN 3 THEN PAYITEMNAME ELSE '' END) AS payItemName3,
+							MAX (CASE LV WHEN 3 THEN PAYITEMAMT ELSE NULL END) AS payItemAmt3,
+							MAX (CASE LV WHEN 3 THEN PTRITEMREMARK ELSE '' END) AS ptrItemRemark3,
+							MAX (CASE LV WHEN 3 THEN PTRITEMNAME ELSE '' END) AS ptrItemName3,
+							MAX (CASE LV WHEN 4 THEN PAYITEMNAME ELSE '' END) AS payItemName4,
+							MAX (CASE LV WHEN 4 THEN PAYITEMAMT ELSE NULL END) AS payItemAmt4,
+							MAX (CASE LV WHEN 4 THEN PTRITEMREMARK ELSE '' END) AS ptrItemRemark4,
+							MAX (CASE LV WHEN 4 THEN PTRITEMNAME ELSE '' END) AS ptrItemName4,
+							MAX (CASE LV WHEN 5 THEN PAYITEMNAME ELSE '' END) AS payItemName5,
+							MAX (CASE LV WHEN 5 THEN PAYITEMAMT ELSE NULL END) AS payItemAmt5,
+							MAX (CASE LV WHEN 5 THEN PTRITEMREMARK ELSE '' END) AS ptrItemRemark5,
+							MAX (CASE LV WHEN 5 THEN PTRITEMNAME ELSE '' END) AS ptrItemName5,
+							MAX (CASE LV WHEN 6 THEN PAYITEMNAME ELSE '' END) AS payItemName6,
+							MAX (CASE LV WHEN 6 THEN PAYITEMAMT ELSE NULL END) AS payItemAmt6,
+							MAX (CASE LV WHEN 6 THEN PTRITEMREMARK ELSE '' END) AS ptrItemRemark6,
+							MAX (CASE LV WHEN 6 THEN PTRITEMNAME ELSE '' END) AS ptrItemName6,
+							MAX (CASE LV WHEN 7 THEN PAYITEMNAME ELSE '' END) AS payItemName7,
+							MAX (CASE LV WHEN 7 THEN PAYITEMAMT ELSE NULL END) AS payItemAmt7,
+							MAX (CASE LV WHEN 7 THEN PTRITEMREMARK ELSE '' END) AS ptrItemRemark7,
+							MAX (CASE LV WHEN 7 THEN PTRITEMNAME ELSE '' END) AS ptrItemName7,
+							MAX (CASE LV WHEN 8 THEN PAYITEMNAME ELSE '' END) AS payItemName8,
+							MAX (CASE LV WHEN 8 THEN PAYITEMAMT ELSE NULL END) AS payItemAmt8,
+							MAX (CASE LV WHEN 8 THEN PTRITEMREMARK ELSE '' END) AS ptrItemRemark8,
+							MAX (CASE LV WHEN 8 THEN PTRITEMNAME ELSE '' END) AS ptrItemName8,
+							MAX (CASE LV WHEN 9 THEN PAYITEMNAME ELSE '' END) AS payItemName9,
+							MAX (CASE LV WHEN 9 THEN PAYITEMAMT ELSE NULL END) AS payItemAmt9,
+							MAX (CASE LV WHEN 9 THEN PTRITEMREMARK ELSE '' END) AS ptrItemRemark9,
+							MAX (CASE LV WHEN 9 THEN PTRITEMNAME ELSE '' END) AS ptrItemName9,
+							MAX (SUMAMT) AS sumAmt
+					FROM     (SELECT A.*,  
+									 ROW_NUMBER() OVER(PARTITION BY RCPMASCD ORDER BY RCPMASCD) rn,  
+									 SUM(PAYITEMAMT) OVER (PARTITION BY RCPMASCD) sumAmt   
+							  FROM   (SELECT   CASE WHEN DET.PTRITEMNAME IS NULL THEN DET.PAYITEMNAME ELSE DET.PTRITEMNAME END AS payItemName,
+											   SUM(DET.PAYITEMAMT) AS payItemAmt,  
+											   DET.PTRITEMREMARK AS ptrItemRemark,  
+											   DET.PTRITEMNAME AS ptrItemName,  
+											   DET.RCPMASCD AS rcpMasCd,  
+											   MAX(DET.PTRITEMORDER) AS ptrItemOrder  
+									  FROM    XRCPDET DET, XRCPMAS MAS  
+									  WHERE  1=1 
+									  <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(rcpMasList)'>
+										AND    MAS.RCPMASCD IN
+										<foreach item="item" collection="rcpMasList" index="index" open="(" close=")" separator=",">
+											#{item}
+										</foreach>
+									  </if>
+									  AND      DET.RCPMASCD = MAS.RCPMASCD  
+									  GROUP BY CASE WHEN DET.PTRITEMNAME IS NULL THEN DET.PAYITEMNAME ELSE DET.PTRITEMNAME END,
+												 DET.PTRITEMREMARK,  
+												 DET.PTRITEMNAME,  
+												 DET.PTRITEMREMARK,  
+												 DET.RCPMASCD  
+									  ORDER BY DET.RCPMASCD, MAX(DET.PTRITEMORDER)) A) AA RIGHT OUTER JOIN
+							 (SELECT LV  
+							  FROM   (SELECT     LEVEL LV  
+									  FROM       GENERATE_SERIES(1,9) LEVEL) CC) BB ON AA.RN = BB.LV
+							  GROUP BY RCPMASCD
+					)TB  
+			WHERE TA.RCPMASCD = TB.RCPMASCD2  
+		) T ORDER BY PAYDAY DESC, SUBSTR(PAYTIME,1,4) DESC, CUSNAME
+	</select>
+	
+	<!-- 가상계좌 카운트 -->
+	<select id="getPaymentCount" resultType="java.util.HashMap">
+		SELECT COUNT(A.RCPAMT) AS CNT,
+		       COALESCE(SUM(COALESCE(A.RCPAMT,0)), 0) AS TOTAMT
+		FROM XRCPMAS A
+		LEFT OUTER JOIN XNOTIMAS B ON B.NOTIMASCD=A.NOTIMASCD AND B.NOTIMASST&lt;&gt;'PA00' AND B.NOTI_CAN_YN='N'
+		INNER JOIN XCHALIST C ON C.CHACD=A.CHACD
+		LEFT OUTER JOIN XCUSMAS D ON D.VANO=A.VANO
+		WHERE A.SVECD='VAS'
+		  AND A.RCPMASST='PA03'
+		<include refid="paySearch" />
+	</select>
+	
+	<!-- 가상계좌 입금내역 -->
+	<select id="getPaymentList" resultType="PayMgmtDTO">
+	SELECT (ROW_NUMBER() OVER()) AS RN, X.* FROM (
+		SELECT B.NOTIMASCD,
+		       A.CHACD,
+		       A.VANO,
+		       A.MASMONTH,
+		       A.SVECD,
+		       COALESCE((SELECT SUM(PAYITEMAMT) FROM XNOTIDET WHERE NOTIMASCD=A.NOTIMASCD), 0) AS PAYITEMAMT,
+			   A.RCPAMT,
+			   A.PAYDAY,
+		       A.PAYTIME,
+		       TRIM(A.RCPUSRNAME) as rcpUserName,
+		       COALESCE(COALESCE(TRIM(B.CUSNAME), A.CUSNAME), C.CHANAME) as cusName,
+		       A.CUSGUBN1 as cusGubn1,
+		       A.CUSGUBN2 as cusGubn2,
+		       A.CUSGUBN3 as cusGubn3,
+		       A.CUSGUBN4 as cusGubn4,
+		       A.RCPMASCD as rcpMasCd,
+		       COALESCE((SELECT VALUE FROM KFTC_CODE WHERE CODE = A.BNKCD),' ')    AS bnkCd,
+		       COALESCE((SELECT VALUE FROM KFTC_CODE WHERE CODE = A.FICD),' ')    AS ficd,
+		       TO_DATE(A.PAYDAY||A.PAYTIME, 'YYYYMMDDHH24MISS') AS ORDDATE
+		FROM XRCPMAS A
+		    LEFT OUTER JOIN XNOTIMAS B ON B.NOTIMASCD=A.NOTIMASCD AND B.NOTIMASST &lt;&gt; 'PA00' AND B.NOTI_CAN_YN='N'
+			INNER JOIN XCHALIST C ON C.CHACD=A.CHACD
+			LEFT OUTER JOIN XCUSMAS D ON D.VANO=A.VANO
+		WHERE A.SVECD='VAS'
+		  AND A.RCPMASST='PA03'
+		<include refid="paySearch" />
+		<choose>
+			<when test='orderBy == "rcpName_asc"'>
+				ORDER BY A.RCPUSRNAME ASC, A.PAYDAY DESC, A.PAYTIME DESC
+			</when>
+			<when test='orderBy == "cusName_asc"'>
+				ORDER BY A.CUSNAME ASC, A.PAYDAY DESC, A.PAYTIME DESC
+			</when>
+			<otherwise>
+				ORDER BY A.PAYDAY DESC, A.PAYTIME DESC
+			</otherwise>
+		</choose>
+		) X
+	</select>
+	
+	<select id="selectRcpBillCut" resultType="PdfReceiptMgmtDTO">
+		SELECT 	RCP.NOTIMASCD AS NOTIMASCD,
+				REPLACE(MAX(RCP.CUSNAME),CHR(10),'') AS cusName, 
+				SUBSTR(MAX(RCP.MASMONTH),5,2) AS masMonth, 
+				MAX(RCP.CUSKEY) AS cusKey, 
+				MAX(CHA.CUSGUBN1) AS cCusGubn, 
+				MAX(RCP.CUSGUBN1) AS rCusGubn, 
+				SUM(RCP.RCPAMT) AS rcpAmt, 
+				MAX(RCP.PAYDAY) AS payDay, 
+				MAX(RCP.PAYTIME) AS payTime, 
+				TO_CHAR(NOW(),'YYYYMMDD') AS today,
+				MAX(CHA.CHANAME) AS chaName 
+		 FROM   XNOTIMAS NOTI LEFT OUTER JOIN XRCPMAS RCP ON NOTI.NOTIMASCD = RCP.NOTIMASCD AND NOTI.CHACD = RCP.CHACD
+				LEFT OUTER JOIN XCHALIST CHA ON RCP.CHACD = CHA.CHACD
+		 WHERE 1=1 
+		 AND   RCP.RCPMASST     = 'PA03'
+		 AND   NOTI.NOTIMASST  IN('PA03','PA04','PA05') 
+		 AND   NOTI.NOTI_CAN_YN = 'N'
+	  <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(notiMasList)'> 
+		 AND NOTI.NOTIMASCD IN 
+	     <foreach item="item" collection="notiMasList" index="index" open="(" close=")" separator=",">
+			 #{item}
+		 </foreach>
+	  </if>
+		 GROUP BY RCP.NOTIMASCD, SUBSTR(PAYTIME,1,4)
+		 ORDER BY PAYDAY DESC, SUBSTR(PAYTIME,1,4) DESC, CUSNAME
+	</select>
+	
+	<!-- 교육비납입증명서 -->
+	<select id="getEduList" resultType="PdfReceiptMgmtDTO">
+		SELECT DISTINCT C.CUSNAME
+		, C.VANO
+		, B.CHANAME
+		, B.CHAOFFNO
+		, B.CHAADDRESS1 || ' ' || B.CHAADDRESS2	ADDRESS
+		, B.OWNER
+		, B.OWNERTEL
+		, SUBSTR(A.PAYDAY, 1, 4) AS paymentYear
+		, SUM(A.RCPAMT) OVER (PARTITION BY C.VANO, SUBSTR(A.PAYDAY, 1, 4))
+		  FROM XRCPMAS A
+		INNER JOIN XCHALIST B ON B.CHACD=A.CHACD
+		INNER JOIN XCUSMAS C ON C.VANO=A.VANO
+		WHERE 1=1
+		  <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(notiMasList)'>
+			AND A.NOTIMASCD IN
+			<foreach item="item" collection="notiMasList" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		  </if>
+		ORDER BY C.CUSNAME ASC
+	</select>
+
+	<select id="selectEduDetailsList" resultType="com.finger.shinhandamoa.org.receiptmgmt.dto.PdfReceiptDetailsDTO">
+		SELECT A.MONTHS                 		AS PAYMENTMONTH
+			, COALESCE(B.RCPAMT, '0')			AS RCPAMOUNT
+		  FROM
+		(select to_char(generate_series(
+		date_trunc('month',to_date(#{paymentYear}, 'YYYY')),
+		date_trunc('MONTH', to_date(#{paymentYear}, 'YYYY')) + INTERVAL '1 year - 1 month', '1 month'::interval )::date, 'YYYYMM') as months) A
+		 LEFT OUTER JOIN ( SELECT DISTINCT SUBSTR(A.PAYDAY, 1, 6) PAYMONTH
+						, SUM(A.RCPAMT) OVER (PARTITION BY A.VANO, SUBSTR(A.PAYDAY, 1, 6))    RCPAMT
+				  FROM XRCPMAS A
+				  WHERE A.RCPMASST = 'PA03'
+					<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(checkList)'>
+						AND A.NOTIMASCD IN
+						<foreach item="item" collection="checkList" index="index" open="(" close=")" separator=",">
+							#{item}
+						</foreach>
+					</if>
+					<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(vano)'>
+						AND A.VANO=#{vano}
+					</if>
+					<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(paymentYear)'>
+						AND SUBSTR(A.PAYDAY, 1, 4)=#{paymentYear}
+					</if>
+				) B ON A.MONTHS = B.PAYMONTH
+		ORDER BY A.MONTHS
+	</select>
+	
+	<!-- 장기요양급여 납부확인서 -->
+	<select id="getRecpList" resultType="PdfReceiptMgmtDTO">
+		SELECT
+		COALESCE(B.RCPAMT, 0)				AS RCPAMT
+		, COALESCE(B.RCPAMT, '0')			AS rcpAmount
+		, B.PAYMONTH AS payMonth
+		<choose>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@empty(cert3)">
+				,A.MONTHS   AS PAYMENTMONTH
+			</when>
+			<otherwise>
+				, B.PAYDAY AS payDay
+			</otherwise>
+		</choose>
+		FROM
+			( SELECT DISTINCT SUBSTR(A.PAYDAY, 1, 6)    PAYMONTH
+			<choose>
+				<when test="@com.finger.shinhandamoa.common.CmmnUtils@empty(cert3)">
+					, SUM(A.RCPAMT) OVER (PARTITION BY A.VANO, SUBSTR(A.PAYDAY, 1, 6))    RCPAMT
+				</when>
+				<otherwise>
+					,SUM(A.RCPAMT) OVER (PARTITION BY A.VANO, SUBSTR(A.PAYDAY, 1, 8)) RCPAMT
+					, COALESCE(A.PAYDAY, '') AS PAYDAY
+				</otherwise>
+			</choose>
+			FROM XRCPMAS A
+			WHERE A.RCPMASST = 'PA03'
+			<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(notiMasList)'>
+				AND A.NOTIMASCD IN
+				<foreach item="item" collection="notiMasList" index="index" open="(" close=")" separator=",">
+					#{item}
+				</foreach>
+			</if>
+			<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(vano)'>
+				AND A.VANO=#{vano}
+			</if>
+			<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(paymentYear)'>
+				AND SUBSTR(A.PAYDAY, 1, 4)=#{paymentYear}
+			</if>
+			) B
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@empty(cert3)">
+			RIGHT OUTER JOIN (SELECT TO_CHAR(GENERATE_SERIES(
+			DATE_TRUNC('month',TO_DATE(#{paymentYear}, 'YYYY')),
+			DATE_TRUNC('MONTH', TO_DATE(#{paymentYear}, 'YYYY')) + INTERVAL '1 year - 1 month', '1 month'::interval )::date, 'YYYYMM') as months) A
+				ON A.MONTHS = B.PAYMONTH
+		</if>
+		<choose>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@empty(cert3)">
+				ORDER BY A.MONTHS
+			</when>
+			<otherwise>
+				ORDER BY B.PAYDAY ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- 기부금 리스트 -->
+	<select id="getDntnList" resultType="PdfReceiptMgmtDTO">
+		SELECT
+		 	  DISTINCT TRIM(C.CUSNAME) AS CUSNAME /*납부자*/
+			  ,A.VANO AS vano
+			  ,B.CHANAME AS CHANAME /*기관명 단체명*/
+			  ,B.OWNER AS OWNER /*대표명*/
+			  ,B.CHAADDRESS1 || B.CHAADDRESS2 AS ADDRESS/*주소*/
+			  ,B.CHAOFFNO AS CHAOFFNO /*사업자번호*/
+			  ,SUBSTR (A.PAYDAY, 1, 4) AS PAYDAY/*수납일*/
+		FROM   XRCPMAS A
+		      ,XCHALIST B
+		, XCUSMAS C
+		WHERE  A.CHACD    = B.CHACD
+		AND C.VANO = A.VANO
+		AND    A.CHACD    = #{chaCd}
+		AND    A.NOTIMASCD IN
+			<foreach item="item" collection="notiMasList" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		AND    A.RCPMASST = 'PA03'
+		ORDER BY TRIM(C.CUSNAME) ASC
+	</select>
+	
+	<!-- 계좌리스트 -->
+	<select id="getRecpAccNoList" resultType="PdfReceiptMgmtDTO">
+		SELECT DISTINCT TRIM(C.CUSNAME) AS CUSNAME
+			,A.VANO AS vano
+			,B.CHANAME AS CHANAME
+			,B.CHAOFFNO AS CHAOFFNO
+			,B.CHAADDRESS1 || B.CHAADDRESS2 AS ADDRESS
+			,B.OWNER AS OWNER
+			,SUBSTR (A.PAYDAY, 1, 4) AS payDay
+			,A.CHACD AS CHACD
+			,B.CHRTELNO AS CHRTELNO
+        FROM XRCPMAS  A
+			,XCHALIST B
+			, XCUSMAS C
+		WHERE A.CHACD = B.CHACD
+			AND C.VANO = A.VANO
+        	AND   A.NOTIMASCD IN
+		<foreach item="item" collection="notiMasList" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+			AND   A.RCPMASST = 'PA03'
+		ORDER BY TRIM(C.CUSNAME) ASC
+	</select>
+	
+	<!-- 현장수납 카운트 -->
+	<select id="getActCount" resultType="java.util.HashMap">
+		SELECT * 
+		FROM (
+		    SELECT (ROW_NUMBER() OVER()) AS RN,
+	                   COUNT(TTA.CHACD) OVER (PARTITION BY TTA.CHACD) AS CNT,  
+	                   SUM (TTA.RCPAMT) OVER (PARTITION BY TTA.CHACD) AS TOTAMT, 	/*입금금액*/
+                       SUM (TTA.SUMAMT) OVER (PARTITION BY TTA.CHACD) AS SUMAMT,   	/*청구금액*/
+                       SUM (TTA.UNAMT) OVER (PARTITION BY TTA.CHACD) AS UNAMT      	/*미납금액*/
+		    FROM(
+				SELECT
+					A.NOTIMASCD
+					,A.CHACD
+					,A.VANO
+					,A.MASMONTH                                                           /*청구월*/
+					,A.NOTIMASST                                                          /*청구상태*/
+					,A.NOTI_CAN_YN AS NOTICANYN                                           /*청구취소여부*/
+					,COALESCE(B.PAYITEMAMT,0)  AS AMT                                     /*청구액*/
+					,COALESCE(B.PAYITEMAMT,0) AS SUMAMT
+					,COALESCE(SUM(C.RCPAMT),0) AS RCPAMT                                  /*수납금액*/                                              /*수납금액*/
+					,MAX(C.PAYDAY) AS PAYDAY                                              /*최근 입금일시*/
+					,MAX(SUBSTR(C.PAYTIME,1,4)) AS PAYTIME
+					,MAX(CASE WHEN C.PAYDAY IS NULL THEN '' ELSE TO_CHAR(TO_DATE(C.PAYDAY, 'YYYY.MM.DD'),'YYYY.MM.DD') ||' ' || SUBSTR(C.PAYTIME, 1,2)||'.'||SUBSTR(C.PAYTIME, 3,2)||'.'||SUBSTR(C.PAYTIME, 5,2) END) AS PAYDATE
+					,SUM(CASE WHEN C.SVECD = 'VAS' THEN C.RCPAMT  ELSE 0 END )AS VASAMT      /*가상계좌금액*/
+					,SUM(CASE WHEN C.SVECD = 'OCD' THEN C.RCPAMT ELSE 0 END ) AS OCDAMT      /*온라인 카드결제*/
+					,SUM(CASE WHEN C.SVECD IN ('DCS', 'DVA') THEN C.RCPAMT ELSE 0 END ) AS DCSAMT      /*현금*/
+					,SUM(CASE WHEN C.SVECD = 'DCD' THEN C.RCPAMT ELSE 0 END ) AS DCDAMT /*오프라인 카드 결제액*/
+					,MAX(COALESCE(B.PAYITEMAMT, 0)) - SUM( COALESCE(C.RCPAMT, 0) )  AS UNAMT /*미납액*/
+					,MAX(C.RCPUSRNAME) AS RCPUSRNAME
+					,CASE WHEN A.NOTIMASST IS NULL THEN '' ELSE (CASE A.NOTIMASST WHEN 'PA00' THEN '임시' WHEN 'PA02' THEN '미납' WHEN 'PA03' THEN '완납' WHEN 'PA04' THEN '일부납' WHEN 'PA05' THEN '초과납' WHEN 'PA06' THEN '환불' WHEN 'PA09' THEN '취소' END) END AS NOTIMASSTNM
+					,A.CUSNAME
+					,A.CUSGUBN1
+					,A.CUSGUBN2
+					,A.CUSGUBN3
+					,A.CUSGUBN4
+					,ITEMCNT
+					,ITEMCNT AS DETCNT
+					,A.STARTDATE
+					,A.ENDDATE
+					,TO_CHAR(TO_DATE(A.STARTDATE,'YYYYMMDD'),'YYYY.MM.DD') || '~' || TO_CHAR(TO_DATE(A.ENDDATE,'YYYYMMDD'),'YYYY.MM.DD') AS RCPDATE
+					,TO_CHAR(TO_DATE(A.PRINTDATE,'YYYYMMDD'),'YYYY.MM.DD') AS PRINTDATE
+					,A.MASDAY
+				FROM XNOTIMAS  A
+				LEFT OUTER JOIN (
+					SELECT NOTIMASCD, count(NOTIMASCD) AS ITEMCNT , SUM(COALESCE(PAYITEMAMT, 0)) AS PAYITEMAMT
+					FROM   XNOTIDET
+					WHERE NOTIDETST != 'PA00'
+					AND NOTI_CAN_YN = 'N'
+					GROUP BY NOTIMASCD
+				)B ON A.NOTIMASCD = B.NOTIMASCD
+				LEFT OUTER JOIN (
+					SELECT *
+					FROM  XRCPMAS
+					WHERE RCPMASST  = 'PA03'
+				) C ON A.NOTIMASCD = C.NOTIMASCD AND A.CHACD = C.CHACD
+				WHERE A.NOTI_CAN_YN = 'N'
+				<include refid="actSearch" /> 	
+			)TTA
+		)TTB LIMIT 1
+	</select>
+	
+	<!-- 현장수납 리스트(미납) -->
+	<select id="getActList" resultType="ReceiptMgmtDTO">
+		<include refid="paging_header" />
+		    SELECT	A.NOTIMASCD
+		            ,A.CHACD
+		            ,A.VANO
+		            ,TO_CHAR(TO_DATE(A.MASMONTH,'YYYY.MM'),'YYYY.MM') AS MASMONTH  /*청구월*/
+		            ,A.NOTIMASST                                                          /*청구상태*/
+		            ,A.NOTI_CAN_YN AS NOTICANYN                                           /*청구취소여부*/
+		            ,B.PAYITEMAMT  AS AMT                                                 /*청구액*/
+		            ,B.PAYITEMAMT AS SUMAMT
+		            ,COALESCE(SUM(C.RCPAMT),0) AS RCPAMT                                              /*수납금액*/
+		            ,MAX(C.PAYDAY) AS PAYDAY                                              /*최근 입금일시*/
+		            ,MAX(SUBSTR(C.PAYTIME,1,4)) AS PAYTIME
+		            ,MAX(CASE WHEN C.PAYDAY IS NULL THEN '' ELSE TO_CHAR(TO_DATE(C.PAYDAY, 'YYYY.MM.DD'),'YYYY.MM.DD') ||' ' || SUBSTR(C.PAYTIME, 1,2)||'.'||SUBSTR(C.PAYTIME, 3,2)||'.'||SUBSTR(C.PAYTIME, 5,2) END) AS PAYDATE
+		            ,COALESCE(SUM(CASE WHEN C.SVECD = 'VAS' THEN C.RCPAMT  ELSE 0 END ),0) AS VASAMT      /*가상계좌금액*/
+		            ,COALESCE(SUM(CASE WHEN C.SVECD = 'OCD' THEN C.RCPAMT ELSE 0 END ),0) AS OCDAMT      /*온라인 카드결제*/
+		            ,COALESCE(SUM(CASE WHEN C.SVECD IN ('DCS', 'DVA') THEN C.RCPAMT ELSE 0 END ),0) AS DCSAMT      /*현금*/
+		            ,COALESCE(SUM(CASE WHEN C.SVECD = 'DCD' THEN C.RCPAMT ELSE 0 END ),0) AS DCDAMT /*오프라인 카드 결제액*/
+		            ,COALESCE(MAX(COALESCE(B.PAYITEMAMT, 0)) - SUM( COALESCE(C.RCPAMT, 0) ),0)  AS UNAMT /*미납액*/
+		            ,MAX(C.RCPUSRNAME) AS RCPUSRNAME
+		            ,CASE WHEN A.NOTIMASST IS NULL THEN '' ELSE (CASE A.NOTIMASST WHEN 'PA00' THEN '임시' WHEN 'PA02' THEN '미납' WHEN 'PA03' THEN '완납' WHEN 'PA04' THEN '일부납' WHEN 'PA05' THEN '초과납' WHEN 'PA06' THEN '환불' WHEN 'PA09' THEN '취소' END) END AS NOTIMASSTNM
+		            ,TRIM(A.CUSNAME) AS CUSNAME
+		            ,A.CUSGUBN1
+		            ,A.CUSGUBN2
+		            ,A.CUSGUBN3
+		            ,A.CUSGUBN4
+		            ,ITEMCNT
+		            ,ITEMCNT AS DETCNT
+		            ,A.STARTDATE
+				    ,A.ENDDATE
+		            ,TO_CHAR(TO_DATE(A.STARTDATE,'YYYYMMDD'),'YYYY.MM.DD') || '~' || TO_CHAR(TO_DATE(A.ENDDATE,'YYYYMMDD'),'YYYY.MM.DD') AS RCPDATE
+		            ,TO_CHAR(TO_DATE(A.PRINTDATE,'YYYYMMDD'),'YYYY.MM.DD') AS PRINTDATE
+		            ,A.MASDAY
+		    FROM XNOTIMAS  A
+		    LEFT OUTER JOIN (
+				SELECT NOTIMASCD, count(NOTIMASCD) AS ITEMCNT , SUM(COALESCE(PAYITEMAMT, 0)) AS PAYITEMAMT
+				FROM   XNOTIDET
+				WHERE NOTIDETST != 'PA00'
+				AND NOTI_CAN_YN = 'N'
+				GROUP BY NOTIMASCD
+			) B ON A.NOTIMASCD = B.NOTIMASCD
+			LEFT OUTER JOIN (
+				SELECT *
+				FROM  XRCPMAS
+				WHERE RCPMASST = 'PA03'
+			) C ON A.NOTIMASCD = C.NOTIMASCD AND A.CHACD = C.CHACD
+		<include refid="actSearch" />		
+		<if test='orderBy == "cusname"'>
+			ORDER BY A.CUSNAME
+		</if>
+		<if test='orderBy == "month"'>
+			ORDER BY A.MASMONTH, B.PAYITEMAMT
+		</if>
+		<if test='pageGubn == "E"'>     
+			<include refid="excel_footer" />
+		</if>
+		<if test='pageGubn == "D"'>
+			<include refid="paging_footer" />
+		</if>
+	</select>
+	
+	<!-- notimascd로 수납마스터 찾기 -->
+	<select id="getRcpCd" resultType="ReceiptMgmtDTO">
+		SELECT RCPMASCD, SVECD, RCPAMT FROM XRCPMAS WHERE NOTIMASCD = #{notiMasCd} AND SVECD = #{sveCd}
+	</select>
+	
+	<!-- 가상계좌 금액 체크 -->
+	<select id="getVasAmt" resultType="ReceiptMgmtDTO">
+		SELECT RCPAMT FROM XRCPMAS WHERE SVECD ='VAS' AND CHACD = #{chaCd} AND NOTIMASCD = #{notiMasCd}
+	</select>
+	
+	<!-- 시퀀스 -->
+	<select id="getSeq" resultType="ReceiptMgmtDTO">
+        SELECT  NEXTVAL('seqxrcpmascd') AS SEQCD
+    </select> 
+	
+	<select id="getRcpMasCd" resultType="java.lang.String">
+		SELECT RCPMASCD FROM XRCPMAS
+		WHERE NOTIMASCD = #{notiMasCd}
+			LIMIT 1
+	</select>
+	
+	<!-- 환불일경우 청구테이블 상태 수정 -->
+	<update id="updateXnotiMasSt" parameterType="java.util.HashMap">
+		UPDATE XNOTIMAS
+		SET NOTIMASST = 'PA06'
+		WHERE NOTIMASCD = #{notiMasCd}
+	</update>
+	
+	<!-- 환불일경우 청구테이블 상태 수정 -->
+	<update id="updateXnotiDetSt" parameterType="java.util.HashMap">
+		UPDATE XNOTIDET
+		SET NOTIDETST = 'PA06'
+		WHERE NOTIMASCD = #{notiMasCd}
+	</update>
+	
+	<!-- 직접수납관리 선택 data 수납테이블 insert -->
+	<insert id="insertXrcpMas" parameterType="java.util.HashMap">
+		INSERT INTO XRCPMAS(
+			RCPMASCD, NOTIMASCD, SVECD, CHACD, VANO, 
+			MASKEY, MASMONTH, MASDAY, CUSKEY, CUSOFFNO, 
+			CUSGUBN1, CUSGUBN2, CUSGUBN3, CUSGUBN4, CUSNAME, 
+			CUSHP, CUSMAIL, SMSYN, MAILYN, PAYDAY, 
+			PAYTIME, RCPAMT, SUCDAY, SUCTIME, RCPMASST, 
+			MAKEDT, MAKER, REGDT, CHATRTY
+		)SELECT #{rcpMasCd}, 
+			   NOTIMASCD, 
+			   #{sveCd} AS SVECD, 
+			   CHACD, 
+			   VANO, 
+			   MASKEY, 
+			   MASMONTH, 
+			   MASDAY, 
+			   CUSKEY, 
+			   CUSOFFNO, 
+			   CUSGUBN1, 
+			   CUSGUBN2, 
+			   CUSGUBN3, 
+			   CUSGUBN4, 
+			   CUSNAME, 
+			   CUSHP, 
+			   CUSMAIL, 
+			   SMSYN, 
+			   MAILYN, 
+			   TO_CHAR(NOW(),'YYYYMMDD')AS PAYDAY,
+			   TO_CHAR(NOW(), 'HH24MISS')AS PAYTIME,
+			   #{rcpAmt} AS RCPAMT, 
+			   TO_CHAR (NOW(), 'YYYYMMDD') AS SUCDAY,
+			   TO_CHAR (NOW(), 'HH24MISS') AS SUCTIME,
+			   #{afterCd} AS RCPMASST, 
+			   NOW() AS MAKEDT,
+			   #{chaCd} AS MAKER, 
+			   NOW() AS REGDT,
+			   CHATRTY 
+		FROM XNOTIMAS 
+		WHERE NOTIMASCD = #{notiMasCd}
+	</insert>
+	
+	<!-- 직접수납관리 선택 data 수납상세테이블 insert -->
+	<insert id="insertXrcpDet" parameterType="java.util.HashMap">
+		INSERT INTO XRCPDET(
+			RCPDETCD, RCPMASCD, NOTIDETCD, DETKEY, PAYITEMCD,
+			ADJFIREGKEY, PAYITEMNAME, PAYITEMAMT, RCPITEMYN, CHAOFFNO,
+			CUSOFFNO, PTRITEMNAME, PTRITEMREMARK, RCPDETST, MAKEDT,
+			MAKER, REGDT, CHATRTY
+		)SELECT NEXTVAL('seqxrcpdetcd') AS RCPDETCD,
+		   #{rcpMasCd} AS RCPMASCD, 
+		   NOTIDETCD, 
+		   DETKEY, 
+		   PAYITEMCD, 
+		   ADJFIREGKEY, 
+		   PAYITEMNAME, 
+		   #{payItemAmt}, 
+		   RCPITEMYN, 
+		   CHAOFFNO, 
+		   CUSOFFNO, 
+		   PTRITEMNAME, 
+		   PTRITEMREMARK, 
+		   #{afterCd} AS RCPDETST, 
+		   NOW() AS MAKEDT,
+		   #{chaCd} AS MAKER, 
+		   NOW() AS REGDT,
+		   CHATRTY 
+		FROM XNOTIDET 
+		WHERE NOTIMASCD = #{notiMasCd} 
+			AND PAYITEMCD = #{payItemCd}
+	</insert>
+	
+	<!-- 현장수납관리 수납 update -->
+	<update id="updateXrcpMas" parameterType="java.util.HashMap">
+		UPDATE XRCPMAS 
+		SET RCPMASST = #{afterCd},
+			RCPAMT = #{rcpAmt},
+			<!-- SVECD = #{sveCd}, -->
+			MAKEDT = NOW(),
+			MAKER = #{chaCd},
+			PAYDAY = TO_CHAR(NOW(),'YYYYMMDD')
+		WHERE NOTIMASCD = #{notiMasCd}
+			AND RCPMASCD = #{rcpMasCd}
+			AND RCPMASST = #{afterCd}
+			AND SVECD = #{sveCd}
+	</update>
+	
+	<!-- 현장수납관리 수납 update -->
+	<update id="updateXrcpDet" parameterType="java.util.HashMap">
+		UPDATE XRCPDET 
+		SET RCPDETST = #{afterCd},
+			PAYITEMAMT = #{payItemAmt},
+		  	MAKEDT = NOW(),
+		  	MAKER = #{chaCd}
+		WHERE RCPMASCD = #{rcpMasCd}
+			AND PAYITEMCD = #{payItemCd}
+	</update>
+	
+	<!-- 수납 마스터 삭제 -->
+	<delete id="deleteRcpmas" parameterType="map">
+		DELETE FROM XRCPMAS
+		WHERE NOTIMASCD = #{notiMasCd}
+		    AND RCPMASCD = #{rcpMasCd}
+		    AND SVECD = #{sveCd}
+	</delete>
+	
+	<!-- 수납상세 삭제 --> 
+	<delete id="deleteRcpdet" parameterType="map">
+		DELETE FROM XRCPDET
+		WHERE RCPMASCD = #{rcpMasCd}
+			AND PAYITEMCD = #{payItemCd}
+	</delete>
+	
+	<!-- 청구항목으로 수납상세 조회(확인용) -->
+	<select id="getXrcpDetList" resultType="ReceiptMgmtDTO">
+		SELECT COUNT(*) AS CNT FROM XRCPDET 
+		WHERE RCPMASCD = #{rcpMasCd}
+		AND MAKER = #{chaCd}
+		<!-- AND PAYITEMCD = #{payItemCd} -->
+	</select>
+	
+	<!-- 현장수납관리 청구update -->
+	<update id="updateXnotiMas" parameterType="java.util.HashMap">
+		UPDATE XNOTIMAS 
+		SET NOTIMASST = #{afterCd},
+		  	MAKEDT = NOW(),
+		  	MAKER = #{chaCd}
+		WHERE NOTIMASCD = #{notiMasCd}
+	</update>
+	
+	<!-- 현장수납관리 청구상세update -->
+	<update id="updateXnotiDet" parameterType="java.util.HashMap">
+		UPDATE XNOTIDET
+		SET NOTIDETST = #{notiDetSt},
+			MAKEDT = NOW(),
+			MAKER = #{chaCd}
+		WHERE NOTIMASCD = #{notiMasCd}
+			AND NOTIDETCD = #{notiDetCd}
+			AND PAYITEMCD = #{payItemCd}
+			<!-- AND PTRITEMORDER = #{ptrItemOrder} -->
+	</update>
+	
+	<!-- 청구 상세 list -->
+	<select id="getXnotiDetList" resultType="ReceiptMgmtDTO">
+		SELECT PAYITEMAMT, PTRITEMORDER, PAYITEMCD, NOTIDETST
+        FROM XNOTIDET 
+        WHERE NOTIMASCD = #{notiMasCd} 
+        AND NOTIDETST != 'PA00'
+		AND NOTI_CAN_YN = 'N'
+        ORDER BY PTRITEMORDER
+	</select>
+	
+	<select id="getRcpAmt" resultType="ReceiptMgmtDTO">
+		SELECT PAYITEMAMT FROM XRCPDET 
+		WHERE 1=1 AND RCPMASCD= #{rcpMasCd}
+		AND NOTIDETCD = #{notiDetCd}
+		AND PAYITEMCD = #{payItemCd}
+		ORDER BY PAYITEMCD
+	</select>
+	
+	<!-- 환불가능 내역 카운트 조회 AMTCHKTY :[IR방식:Y] -->
+	<select id="getReplyYCount" resultType="java.util.HashMap">
+		SELECT * FROM(SELECT
+			(ROW_NUMBER() OVER()) AS RN,
+			   COUNT(PAYDAY) OVER (PARTITION BY CHACD) AS CNT,  
+			   SUM(RCPAMT) OVER (PARTITION BY CHACD) AS TOTAMT  
+				FROM(SELECT * FROM(
+						SELECT A.NOTIMASCD,  
+								1 AS LV,  
+								1 AS SPANCNT,  
+								A.CHACD,  
+								A.MASMONTH,  
+								A.PAYDAY,  
+								SUBSTR (A.PAYTIME, 1, 4) AS PAYTIME,  
+								TRIM(A.CUSNAME) AS CUSNAME,  
+								A.CUSGUBN1,  
+								A.CUSGUBN2,  
+								A.CUSGUBN3,  
+								A.CUSGUBN4,  
+								SUM (B.PAYITEMAMT) NOTTAMT,  
+								SUM(A.RCPAMT) RCPAMT  
+						FROM XRCPMAS A, XNOTIDET B  
+						WHERE A.NOTIMASCD = B.NOTIMASCD 
+						AND A.RCPMASST = 'PA03'  
+						AND B.NOTIDETST IN('PA03', 'PA04')	
+						AND B.NOTI_CAN_YN = 'N'
+						AND A.CHACD = #{chaCd}
+						<include refid="rePaySearch" />		
+					) T1
+			   ) TTA) T2 LIMIT 1
+	</select>
+	
+	<!-- 환불가능 내역 리스트 조회 AMTCHKTY :[IR방식:Y] -->
+	<select id="getReplyYList" resultType="ReceiptMgmtDTO">
+		SELECT * FROM(SELECT 
+				TTA.*,
+				(ROW_NUMBER() OVER()) AS RN,
+			    COUNT(PAYDAY) OVER (PARTITION BY CHACD) AS CNT,  
+			    SUM(RCPAMT) OVER (PARTITION BY CHACD) AS TOTAMT  
+				FROM(SELECT * FROM(
+						SELECT A.NOTIMASCD,  
+								1 AS LV,  
+								1 AS SPANCNT,  
+								A.CHACD,  
+								A.MASMONTH,  
+								A.PAYDAY,  
+								SUBSTR (A.PAYTIME, 1, 4) AS PAYTIME,  
+								TRIM(A.CUSNAME) AS CUSNAME,  
+								A.CUSGUBN1,  
+								A.CUSGUBN2,  
+								A.CUSGUBN3,  
+								A.CUSGUBN4,  
+								SUM (B.PAYITEMAMT) NOTTAMT,  
+								SUM(A.RCPAMT) RCPAMT  
+						FROM XRCPMAS A, XNOTIDET B  
+						WHERE A.NOTIMASCD = B.NOTIMASCD 
+						AND A.RCPMASST = 'PA03'  
+						AND B.NOTIDETST IN('PA03', 'PA04')	
+						AND B.NOTI_CAN_YN = 'N'	
+						AND A.CHACD = #{chaCd}
+						<include refid="rePaySearch" />		
+					) T
+		<if test='pageGubn == "E"'>     
+    		<include refid="excel_footer" />
+	    </if>
+	    <if test='pageGubn == "D"'>
+	    	<include refid="paging_footer" />
+	    </if>
+	</select>
+	
+	<!-- 환불가능 내역 카운트 조회 AMTCHKTY :[SET방식:N] -->
+	<select id="getReplyNCount" resultType="java.util.HashMap">
+		SELECT * FROM( 
+			    SELECT	(ROW_NUMBER() OVER()) AS RN,
+						COUNT(TTA.CHACD) OVER (PARTITION BY TTA.CHACD) AS CNT,
+						SUM(TTA.RCPAMT) OVER (PARTITION BY TTA.CHACD) AS TOTAMT, /*입금금액*/
+						SUM(TTA.SUMAMT) OVER (PARTITION BY TTA.CHACD) AS SUMAMT,   /*청구금액*/
+						SUM(TTA.UNAMT) OVER (PARTITION BY TTA.CHACD) AS UNAMT      /*미납금액*/
+			    FROM(
+			    SELECT 
+			           A.NOTIMASCD
+			            ,A.CHACD
+			            ,A.VANO
+			            ,TO_CHAR(TO_DATE(A.MASMONTH,'YYYY.MM'),'YYYY.MM') AS MASMONTH			/*청구월*/
+			            ,A.NOTIMASST                                                          /*청구상태*/
+			            ,A.NOTI_CAN_YN AS NOTICANYN                                           /*청구취소여부*/
+			            ,B.PAYITEMAMT  AS AMT                                                 /*청구액*/
+			            ,B.PAYITEMAMT AS SUMAMT
+			            ,SUM(C.RCPAMT) AS RCPAMT                                              /*수납금액*/
+			            ,MAX(C.PAYDAY) AS PAYDAY                                              /*최근 입금일시*/
+			            ,MAX(SUBSTR(C.PAYTIME,1,4)) AS PAYTIME
+			            ,MAX(CASE WHEN C.PAYDAY IS NULL THEN '' ELSE TO_CHAR(TO_DATE(C.PAYDAY, 'YYYY.MM.DD'),'YYYY.MM.DD') ||' ' || SUBSTR(C.PAYTIME, 1,2)||'.'||SUBSTR(C.PAYTIME, 3,2)||'.'||SUBSTR(C.PAYTIME, 5,2) END) AS PAYDATE
+			            ,SUM(CASE WHEN C.SVECD = 'VAS' THEN C.RCPAMT  ELSE 0 END )AS VASAMT      /*가상계좌금액*/
+			            ,SUM(CASE WHEN C.SVECD = 'OCD' THEN C.RCPAMT ELSE 0 END ) AS OCDAMT      /*온라인 카드결제*/
+			            ,SUM(CASE WHEN C.SVECD IN ('DCS', 'DVA') THEN C.RCPAMT ELSE 0 END ) AS DCSAMT      /*현금*/
+			            ,SUM(CASE WHEN C.SVECD = 'DCD' THEN C.RCPAMT ELSE 0 END ) AS DCDAMT /*오프라인 카드 결제액*/
+			            ,MAX(COALESCE(B.PAYITEMAMT, 0)) - SUM( COALESCE(C.RCPAMT, 0) )  AS UNAMT /*미납액*/
+			            ,CASE WHEN A.NOTIMASST IS NULL THEN '' ELSE (CASE A.NOTIMASST WHEN 'PA00' THEN '임시' WHEN 'PA02' THEN '미납' WHEN 'PA03' THEN '완납' WHEN 'PA04' THEN '일부납' WHEN 'PA05' THEN '초과납' WHEN 'PA06' THEN '환불' WHEN 'PA09' THEN '취소' END) END AS NOTIMASSTNM
+			            ,A.CUSNAME
+			            ,A.CUSGUBN1
+			            ,A.CUSGUBN2
+			            ,A.CUSGUBN3
+			            ,A.CUSGUBN4
+			            ,ITEMCNT
+			            ,ITEMCNT AS DETCNT
+			            ,A.STARTDATE
+					    ,A.ENDDATE
+			            ,TO_CHAR(TO_DATE(A.STARTDATE,'YYYYMMDD'),'YYYY.MM.DD') || '~' || TO_CHAR(TO_DATE(A.ENDDATE,'YYYYMMDD'),'YYYY.MM.DD') AS RCPDATE
+			            ,TO_CHAR(TO_DATE(A.PRINTDATE,'YYYYMMDD'),'YYYY.MM.DD') AS PRINTDATE
+			            ,A.MASDAY
+			            ,C.CASHMASST
+			            ,C.JOB
+			    FROM     XNOTIMAS  A
+			            ,(
+			              SELECT NOTIMASCD, count(NOTIMASCD) AS ITEMCNT , SUM(COALESCE(PAYITEMAMT, 0)) AS PAYITEMAMT
+			              FROM   XNOTIDET
+			              WHERE  NOTIDETST   != 'PA00'
+					      AND    NOTI_CAN_YN  = 'N'
+			              GROUP BY NOTIMASCD
+			             )B
+			            ,(
+			              SELECT A.RCPAMT, A.PAYDAY, A.PAYTIME, A.SVECD, A.CHACD, A.NOTIMASCD, B.RCPMASCD, B.CASHMASST, B.JOB
+				          FROM  XRCPMAS A LEFT OUTER JOIN XCASHMAS B ON A.RCPMASCD = B.RCPMASCD
+				          WHERE A.RCPMASST = 'PA03'
+				          AND B.DISABLED = 'N'
+			             ) C
+			    WHERE    A.NOTIMASCD = B.NOTIMASCD
+			    AND      A.NOTIMASCD = C.NOTIMASCD
+			    AND      A.CHACD = C.CHACD
+			    AND      A.NOTI_CAN_YN = 'N'   
+		        AND      A.DISABLED  = 'N'    
+				AND      A.NOTIMASST  <![CDATA[!=]]>  'PA00'
+				AND      C.SVECD <![CDATA[!=]]> 'OCD'
+				<include refid="rePaySearch" />
+		) TTA) T LIMIT 1
+	</select>		
+	
+	<!-- 환불가능 내역 리스트 조회 AMTCHKTY :[SET방식:N] -->
+	<select id="getReplyNList" resultType="ReceiptMgmtDTO">
+		<include refid="paging_header" />
+			SELECT A.NOTIMASCD
+					,A.CHACD
+					,A.VANO
+					,TO_CHAR(TO_DATE(A.MASMONTH,'YYYY.MM'),'YYYY.MM') AS MASMONTH			/*청구월*/
+					,A.NOTIMASST                                                          /*청구상태*/
+					,A.NOTI_CAN_YN AS NOTICANYN                                           /*청구취소여부*/
+					,B.PAYITEMAMT  AS AMT                                                 /*청구액*/
+					,B.PAYITEMAMT AS SUMAMT
+					,SUM(C.RCPAMT) AS RCPAMT                                              /*수납금액*/
+					,MAX(C.PAYDAY) AS PAYDAY                                              /*최근 입금일시*/
+					,MAX(SUBSTR(C.PAYTIME,1,4)) AS PAYTIME
+					,MAX(CASE WHEN C.PAYDAY IS NULL THEN '' ELSE TO_CHAR(TO_DATE(C.PAYDAY, 'YYYY.MM.DD'),'YYYY.MM.DD') ||' ' || SUBSTR(C.PAYTIME, 1,2)||'.'||SUBSTR(C.PAYTIME, 3,2)||'.'||SUBSTR(C.PAYTIME, 5,2) END) AS PAYDATE
+					,SUM(CASE WHEN C.SVECD = 'VAS' THEN C.RCPAMT  ELSE 0 END )AS VASAMT      /*가상계좌금액*/
+					,SUM(CASE WHEN C.SVECD = 'OCD' THEN C.RCPAMT ELSE 0 END ) AS OCDAMT      /*온라인 카드결제*/
+					,SUM(CASE WHEN C.SVECD IN ('DCS', 'DVA') THEN C.RCPAMT ELSE 0 END ) AS DCSAMT      /*현금*/
+					,SUM(CASE WHEN C.SVECD = 'DCD' THEN C.RCPAMT ELSE 0 END ) AS DCDAMT /*오프라인 카드 결제액*/
+					,MAX(COALESCE(B.PAYITEMAMT, 0)) - SUM( COALESCE(C.RCPAMT, 0) )  AS UNAMT /*미납액*/
+					,CASE WHEN A.NOTIMASST IS NULL THEN '' ELSE (CASE A.NOTIMASST WHEN 'PA00' THEN '임시' WHEN 'PA02' THEN '미납' WHEN 'PA03' THEN '완납' WHEN 'PA04' THEN '일부납' WHEN 'PA05' THEN '초과납' WHEN 'PA06' THEN '환불' WHEN 'PA09' THEN '취소' END) END AS NOTIMASSTNM
+					,TRIM(A.CUSNAME) AS CUSNAME
+					,A.CUSGUBN1
+					,A.CUSGUBN2
+					,A.CUSGUBN3
+					,A.CUSGUBN4
+					,ITEMCNT
+					,ITEMCNT AS DETCNT
+					,A.STARTDATE
+					,A.ENDDATE
+					,TO_CHAR(TO_DATE(A.STARTDATE,'YYYYMMDD'),'YYYY.MM.DD') || '~' || TO_CHAR(TO_DATE(A.ENDDATE,'YYYYMMDD'),'YYYY.MM.DD') AS RCPDATE
+					,TO_CHAR(TO_DATE(A.PRINTDATE,'YYYYMMDD'),'YYYY.MM.DD') AS PRINTDATE
+					,A.MASDAY
+					,C.CASHMASST
+					,C.JOB
+			FROM XNOTIMAS  A
+			,(
+				 SELECT NOTIMASCD, count(NOTIMASCD) AS ITEMCNT , SUM(COALESCE(PAYITEMAMT, 0)) AS PAYITEMAMT
+				 FROM   XNOTIDET
+				 WHERE NOTIDETST != 'PA00'
+				 AND NOTI_CAN_YN = 'N'
+				 GROUP BY NOTIMASCD
+			)B
+			,(
+				SELECT A.RCPAMT, A.PAYDAY, A.PAYTIME, A.SVECD, A.CHACD, A.NOTIMASCD, B.RCPMASCD, B.CASHMASST, B.JOB
+				FROM  XRCPMAS A LEFT OUTER JOIN XCASHMAS B ON A.RCPMASCD = B.RCPMASCD
+				WHERE A.RCPMASST = 'PA03'
+			) C
+			WHERE A.NOTIMASCD = B.NOTIMASCD
+				AND A.NOTIMASCD = C.NOTIMASCD
+				AND A.CHACD = C.CHACD
+				AND A.NOTI_CAN_YN = 'N'
+				AND A.DISABLED  = 'N'
+				AND A.NOTIMASST  <![CDATA[!=]]>  'PA00'
+				AND C.SVECD <![CDATA[!=]]> 'OCD'
+			<include refid="rePaySearch" />
+			<if test='orderBy == "cusname"'>
+				ORDER BY A.CUSNAME
+			</if>
+			<if test='orderBy == "month"'>
+				ORDER BY A.MASMONTH
+			</if>
+		<if test='pageGubn == "E"'>     
+			<include refid="excel_footer" />
+		</if>
+		<if test='pageGubn == "D"'>
+			<include refid="paging_footer" />
+		</if>
+	</select>
+	
+	<!-- 환불완료 내역 카운트 조회 AMTCHKTY :[IR방식:Y] -->
+	<select id="getEndReplyYCount" resultType="java.util.HashMap">
+		SELECT * FROM(
+		    SELECT (ROW_NUMBER() OVER()) AS RN,
+	                COUNT(TTA.CHACD) OVER (PARTITION BY TTA.CHACD) AS CNT,  
+	                SUM (TTA.REPAYAMT) OVER (PARTITION BY TTA.CHACD) AS TOTAMT 
+		    FROM(
+		    SELECT 
+		           A.NOTIMASCD
+		            ,A.CHACD
+		            ,A.VANO
+		            ,A.MASMONTH                                                           /*청구월*/
+		            ,A.NOTIMASST                                                          /*청구상태*/
+		            ,A.NOTI_CAN_YN AS NOTICANYN                                           /*청구취소여부*/
+		            ,COALESCE(B.PAYITEMAMT,0)  AS AMT                                                 /*청구액*/
+		            ,COALESCE(B.PAYITEMAMT,0) AS SUMAMT
+		            ,COALESCE(SUM(C.RCPAMT),0) AS RCPAMT                                              /*수납금액*/
+		            ,MAX(C.PAYDAY) AS PAYDAY                                              /*최근 입금일시*/
+		            ,MAX(SUBSTR(C.PAYTIME,1,4)) AS PAYTIME
+		            ,MAX(CASE WHEN C.PAYDAY IS NULL THEN '' ELSE TO_CHAR(TO_DATE(C.PAYDAY, 'YYYY.MM.DD'),'YYYY.MM.DD') ||' ' || SUBSTR(C.PAYTIME, 1,2)||'.'||SUBSTR(C.PAYTIME, 3,2)||'.'||SUBSTR(C.PAYTIME, 5,2) END) AS PAYDATE
+		            ,SUM(CASE WHEN C.SVECD = 'VAS' THEN C.RCPAMT  ELSE 0 END )AS VASAMT      /*가상계좌금액*/
+		            ,SUM(CASE WHEN C.SVECD = 'OCD' THEN C.RCPAMT ELSE 0 END ) AS OCDAMT      /*온라인 카드결제*/
+		            ,SUM(CASE WHEN C.SVECD IN ('DCS', 'DVA') THEN C.RCPAMT ELSE 0 END ) AS DCSAMT      /*현금*/
+		            ,SUM(CASE WHEN C.SVECD = 'DCD' THEN C.RCPAMT ELSE 0 END ) AS DCDAMT /*오프라인 카드 결제액*/
+		            ,MAX(COALESCE(B.PAYITEMAMT, 0)) - SUM( COALESCE(C.RCPAMT, 0) )  AS UNAMT /*미납액*/
+		            ,CASE WHEN A.NOTIMASST IS NULL THEN '' ELSE (CASE A.NOTIMASST WHEN 'PA00' THEN '임시' WHEN 'PA02' THEN '미납' WHEN 'PA03' THEN '완납' WHEN 'PA04' THEN '일부납' WHEN 'PA05' THEN '초과납' WHEN 'PA06' THEN '환불' WHEN 'PA09' THEN '취소' END) END AS NOTIMASSTNM
+		            ,A.CUSNAME
+		            ,A.CUSGUBN1
+		            ,A.CUSGUBN2
+		            ,A.CUSGUBN3
+		            ,A.CUSGUBN4
+		            ,ITEMCNT
+		            ,ITEMCNT AS DETCNT
+		            ,A.STARTDATE
+				    ,A.ENDDATE
+		            ,TO_CHAR(TO_DATE(A.STARTDATE,'YYYYMMDD'),'YYYY.MM.DD') || '~' || TO_CHAR(TO_DATE(A.ENDDATE,'YYYYMMDD'),'YYYY.MM.DD') AS RCPDATE
+		            ,TO_CHAR(TO_DATE(A.PRINTDATE,'YYYYMMDD'),'YYYY.MM.DD') AS PRINTDATE
+		            ,A.MASDAY
+					,SUM(COALESCE(D.REPAYAMT, 0)) AS REPAYAMT
+					,TO_CHAR(TO_DATE(MAX(D.REPAYDAY),'YYYYMMDD'),'YYYY.MM.DD')  AS REPAYDAY
+		    FROM XNOTIMAS  A
+		    ,(
+		         SELECT NOTIMASCD, count(NOTIMASCD) AS ITEMCNT , SUM(COALESCE(PAYITEMAMT, 0)) AS PAYITEMAMT
+		         FROM   XNOTIDET
+		         WHERE NOTIDETST != 'PA00'
+					AND NOTI_CAN_YN = 'N'
+		         GROUP BY NOTIMASCD
+		    )B
+		    ,(
+		        SELECT *
+		        FROM  XRCPMAS
+		        WHERE RCPMASST = 'PA03'
+		    ) C
+			,XREPAYMAS D
+		    WHERE A.NOTIMASCD = B.NOTIMASCD
+		        AND A.NOTIMASCD = C.NOTIMASCD
+		        AND A.CHACD = C.CHACD
+				AND C.RCPMASCD = D.RCPMASCD
+		        AND A.NOTI_CAN_YN = 'N'   
+		        AND A.DISABLED  = 'N'    
+				AND A.NOTIMASST  <![CDATA[!=]]>  'PA00'
+				AND C.SVECD <![CDATA[!=]]> 'OCD'
+				<include refid="rePaySearch" /> 	
+		) TTA WHERE TTA.REPAYAMT > 0 AND TTA.REPAYDAY IS NOT NULL ) T LIMIT 1
+	</select>	
+	
+	<!-- 환불완료 내역 리스트 조회 AMTCHKTY :[IR방식:Y] -->
+	<select id="getEndReplyYList" resultType="ReceiptMgmtDTO">
+		<include refid="paging_header" />
+			SELECT
+				   A.NOTIMASCD
+					,A.CHACD
+					,A.VANO
+					,TO_CHAR(TO_DATE(A.MASMONTH,'YYYY.MM'),'YYYY.MM') AS MASMONTH			/*청구월*/
+					,A.NOTIMASST                                                          /*청구상태*/
+					,A.NOTI_CAN_YN AS NOTICANYN                                           /*청구취소여부*/
+					,B.PAYITEMAMT  AS AMT                                                 /*청구액*/
+					,B.PAYITEMAMT AS SUMAMT
+					,SUM(C.RCPAMT) AS RCPAMT                                              /*수납금액*/
+					,MAX(C.PAYDAY) AS PAYDAY                                              /*최근 입금일시*/
+					,MAX(SUBSTR(C.PAYTIME,1,4)) AS PAYTIME
+					,MAX(CASE WHEN C.PAYDAY IS NULL THEN '' ELSE TO_CHAR(TO_DATE(C.PAYDAY, 'YYYY.MM.DD'),'YYYY.MM.DD') ||' ' || SUBSTR(C.PAYTIME, 1,2)||'.'||SUBSTR(C.PAYTIME, 3,2)||'.'||SUBSTR(C.PAYTIME, 5,2) END) AS PAYDATE
+					,SUM(CASE WHEN C.SVECD = 'VAS' THEN C.RCPAMT  ELSE 0 END )AS VASAMT      /*가상계좌금액*/
+					,SUM(CASE WHEN C.SVECD = 'OCD' THEN C.RCPAMT ELSE 0 END ) AS OCDAMT      /*온라인 카드결제*/
+					,SUM(CASE WHEN C.SVECD IN ('DCS', 'DVA') THEN C.RCPAMT ELSE 0 END ) AS DCSAMT      /*현금*/
+					,SUM(CASE WHEN C.SVECD = 'DCD' THEN C.RCPAMT ELSE 0 END ) AS DCDAMT /*오프라인 카드 결제액*/
+					,MAX(COALESCE(B.PAYITEMAMT, 0)) - SUM( COALESCE(C.RCPAMT, 0) )  AS UNAMT /*미납액*/
+					,CASE WHEN A.NOTIMASST IS NULL THEN '' ELSE (CASE A.NOTIMASST WHEN 'PA00' THEN '임시' WHEN 'PA02' THEN '미납' WHEN 'PA03' THEN '완납' WHEN 'PA04' THEN '일부납' WHEN 'PA05' THEN '초과납' WHEN 'PA06' THEN '환불' WHEN 'PA09' THEN '취소' END) END AS NOTIMASSTNM
+					,TRIM(A.CUSNAME) AS CUSNAME
+					,A.CUSGUBN1
+					,A.CUSGUBN2
+					,A.CUSGUBN3
+					,A.CUSGUBN4
+					,ITEMCNT
+					,ITEMCNT AS DETCNT
+					,A.STARTDATE
+					,A.ENDDATE
+					,TO_CHAR(TO_DATE(A.STARTDATE,'YYYYMMDD'),'YYYY.MM.DD') || '~' || TO_CHAR(TO_DATE(A.ENDDATE,'YYYYMMDD'),'YYYY.MM.DD') AS RCPDATE
+					,TO_CHAR(TO_DATE(A.PRINTDATE,'YYYYMMDD'),'YYYY.MM.DD') AS PRINTDATE
+					,A.MASDAY
+					,SUM(COALESCE(D.REPAYAMT, 0)) AS REPAYAMT
+					,TO_CHAR(TO_DATE(MAX(D.REPAYDAY),'YYYYMMDD'),'YYYY.MM.DD')  AS REPAYDAY
+			FROM XNOTIMAS  A
+			,(
+				 SELECT NOTIMASCD, count(NOTIMASCD) AS ITEMCNT , SUM(COALESCE(PAYITEMAMT, 0)) AS PAYITEMAMT
+				 FROM   XNOTIDET
+				 WHERE NOTIDETST != 'PA00'
+					AND NOTI_CAN_YN = 'N'
+				 GROUP BY NOTIMASCD
+			)B
+			,(
+				SELECT *
+				FROM  XRCPMAS
+				WHERE RCPMASST = 'PA03'
+			) C
+			,XREPAYMAS D
+			WHERE A.NOTIMASCD = B.NOTIMASCD
+				AND A.NOTIMASCD = C.NOTIMASCD
+				AND A.CHACD = C.CHACD
+				AND C.RCPMASCD = D.RCPMASCD
+				AND A.NOTI_CAN_YN = 'N'
+				AND A.DISABLED  = 'N'
+				AND A.NOTIMASST  <![CDATA[!=]]>  'PA00'
+				AND C.SVECD <![CDATA[!=]]> 'OCD'
+			<include refid="rePaySearch" />
+		<if test='pageGubn == "E"'>     
+			<include refid="excel_footer" />
+		</if>
+		<if test='pageGubn == "D"'>
+			<include refid="paging_footer" />
+		</if>
+	</select>
+
+	<!-- 환불완료 내역 카운트 조회 AMTCHKTY :[SET방식:N] -->
+	<select id="getEndReplyNCount" resultType="java.util.HashMap">
+		SELECT 
+			NOTIMASCD,   
+			REPAYMASCD,
+			CASE LV WHEN 1 THEN CHACD  ELSE '' END AS CHACD,
+			CASE LV WHEN 1 THEN MASMONTH ELSE '' END AS MASMONTH,
+			CASE LV WHEN 1 THEN PAYDAY ELSE '' END AS PAYDAY,
+			CASE LV WHEN 1 THEN REPAYDAY ELSE '' END AS REPAYDAY,
+			CASE LV WHEN 1 THEN PAYTIME ELSE '' END AS PAYTIME,
+			CASE LV WHEN 1 THEN CUSNAME ELSE '' END AS CUSNAME,
+			CASE LV WHEN 1 THEN CUSGUBN1 ELSE '' END AS CUSGUBN1,
+			CASE LV WHEN 1 THEN CUSGUBN2 ELSE '' END AS CUSGUBN2,
+			CASE LV WHEN 1 THEN CUSGUBN3 ELSE '' END AS CUSGUBN3,
+			CASE LV WHEN 1 THEN CUSGUBN4 ELSE '' END AS CUSGUBN4,
+			CASE LV WHEN 1 THEN NOTAMT ELSE '' END AS NOTAMT,
+			CASE LV WHEN 1 THEN RCPAMT ELSE '' END AS RCPAMT,
+			REPAYAMT,  
+			LV,  
+			SPANCNT,  
+			RN,  
+			CNT,  
+			TOTAMT  
+		FROM(SELECT TTA.*, (ROW_NUMBER() OVER()) AS RN
+			FROM(SELECT TA.*,  
+					   COUNT(PAYDAY) OVER (PARTITION BY CHACD, LV) AS CNT,  
+					   SUM(RCPAMT) OVER (PARTITION BY CHACD, LV) AS TOTAMT  
+				FROM(SELECT A.NOTIMASCD,  
+							C.REPAYMASCD,  
+							ROW_NUMBER() OVER (PARTITION BY A.RCPMASCD ORDER BY A.RCPMASCD) AS LV,  
+							COUNT(A.RCPMASCD) OVER (PARTITION BY A.RCPMASCD) AS SPANCNT,  
+							A.CHACD,  
+							A.MASMONTH,  
+							A.PAYDAY,  
+							C.REPAYDAY,  
+							SUBSTR (A.PAYTIME, 1, 4) AS PAYTIME,    
+							TRIM(A.CUSNAME) AS CUSNAME,  
+							A.CUSGUBN1,  
+							A.CUSGUBN2,  
+							A.CUSGUBN3,  
+							A.CUSGUBN4,  
+							0 NOTAMT,  
+							SUM(A.RCPAMT) RCPAMT,  
+							C.REPAYAMT  
+					FROM XRCPMAS A, XREPAYMAS C  
+					WHERE A.RCPMASST = 'PA03'
+					AND A.RCPMASCD = C.RCPMASCD  
+					AND A.CHACD = #{chaCd}  
+					<include refid="rePaySearch" />
+			) TA ) TTA
+		) T WHERE RN  = 1
+	</select>
+
+	<!-- 환불완료 내역 리스트 조회 AMTCHKTY :[SET방식:N] -->
+	<select id="getEndReplyNlist" resultType="java.util.HashMap">
+		SELECT 
+			NOTIMASCD,   
+			REPAYMASCD,
+			CASE LV WHEN 1 THEN CHACD  ELSE '' END AS CHACD,
+			CASE LV WHEN 1 THEN MASMONTH ELSE '' END AS MASMONTH,
+			CASE LV WHEN 1 THEN PAYDAY ELSE '' END AS PAYDAY,
+			CASE LV WHEN 1 THEN REPAYDAY ELSE '' END AS REPAYDAY,
+			CASE LV WHEN 1 THEN PAYTIME ELSE '' END AS PAYTIME,
+			CASE LV WHEN 1 THEN CUSNAME ELSE '' END AS CUSNAME,
+			CASE LV WHEN 1 THEN CUSGUBN1 ELSE '' END AS CUSGUBN1,
+			CASE LV WHEN 1 THEN CUSGUBN2 ELSE '' END AS CUSGUBN2,
+			CASE LV WHEN 1 THEN CUSGUBN3 ELSE '' END AS CUSGUBN3,
+			CASE LV WHEN 1 THEN CUSGUBN4 ELSE '' END AS CUSGUBN4,
+			CASE LV WHEN 1 THEN NOTAMT ELSE '' END AS NOTAMT,
+			CASE LV WHEN 1 THEN RCPAMT ELSE '' END AS RCPAMT,
+			REPAYAMT,  
+			LV,  
+			SPANCNT,  
+			RN,  
+			CNT,  
+			TOTAMT  
+		FROM(
+		    SELECT TTA.*, (ROW_NUMBER() OVER()) AS RN
+			FROM(
+			    SELECT TA.*,
+					   COUNT(PAYDAY) OVER (PARTITION BY CHACD, LV) AS CNT,  
+					   SUM(RCPAMT) OVER (PARTITION BY CHACD, LV) AS TOTAMT  
+				FROM(SELECT A.NOTIMASCD,  
+							C.REPAYMASCD,  
+							ROW_NUMBER() OVER (PARTITION BY A.RCPMASCD ORDER BY A.RCPMASCD) AS LV,  
+							COUNT(A.RCPMASCD) OVER (PARTITION BY A.RCPMASCD) AS SPANCNT,  
+							A.CHACD,  
+							A.MASMONTH,  
+							A.PAYDAY,  
+							C.REPAYDAY,  
+							SUBSTR (A.PAYTIME, 1, 4) AS PAYTIME,    
+							TRIM(A.CUSNAME) AS CUSNAME,  
+							A.CUSGUBN1,  
+							A.CUSGUBN2,  
+							A.CUSGUBN3,  
+							A.CUSGUBN4,  
+							0 NOTAMT,  
+							SUM(A.RCPAMT) RCPAMT,  
+							C.REPAYAMT  
+					FROM XRCPMAS A, XREPAYMAS C  
+					WHERE A.RCPMASST = 'PA03'
+					AND A.RCPMASCD = C.RCPMASCD  
+					AND A.CHACD = #{chaCd}
+					<include refid="rePaySearch" />
+			) TA
+			<if test='pageGubn == "E"'>     
+		    	<include refid="excel_footer" />
+		    </if>
+		    <if test='pageGubn == "D"'>
+		    	<include refid="paging_footer" />
+		    </if> 
+	</select>
+	
+	<!--현금영수증 카운트-->
+	<select id="getCashMasCount" resultType="java.util.HashMap" parameterType="HashMap">
+		SELECT COUNT(1)                                       								AS CNT,
+				COALESCE(SUM(CASE A.CASHMASST  WHEN 'ST03' THEN  1  ELSE 0 END), 0) 		AS APPCNT,
+				COALESCE(SUM(B.RCPAMT), 0)                    								AS TOTPAYAMT,
+				COALESCE(SUM(CASE A.CASHMASST  WHEN 'ST03' THEN  A.RCPAMT  ELSE 0 END), 0) 	AS TOTAMT
+		FROM XCASHMAS A INNER JOIN XRCPMAS B ON B.RCPMASCD = A.RCPMASCD
+	<include refid="cashSearch" />
+	</select>
+
+	<!--현금영수증 리스트-->
+	<select id="getCashMasList" resultType="ReceiptMgmtDTO" parameterType="HashMap">
+		SELECT * FROM (
+			SELECT (ROW_NUMBER() OVER()) AS RN, X.* FROM (
+				SELECT
+					A.CASHMASCD,
+					B.PAYDAY,
+					B.MASMONTH,
+					B.PAYTIME,
+					A.APPDAY,
+					A.APPNO,
+					A.APPTIME,
+					B.CUSNAME,
+					B.CUSGUBN1,
+					B.CUSGUBN2,
+					B.CUSGUBN3,
+					B.CUSGUBN4,
+					COALESCE(A.CUSOFFNO,'') AS CUSOFFNO,
+					COALESCE(A.CUSOFFNO2,'') AS CUSOFFNO2,
+					COALESCE(B.RCPAMT, null) AS RCPAMT,
+					COALESCE(A.RCPAMT, null) AS CSHAMT,
+					COALESCE(A.RCPAMT2, null) AS CSHAMT2,
+					A.CASHMASST,
+					CASE A.CASHMASST WHEN 'ST02' THEN '미발행'  WHEN 'ST03' THEN '발행' WHEN 'ST04' THEN '처리중'  WHEN 'ST05' THEN  '요청접수' END AS CASHMASSTNM,
+					A.APPCD,
+					A.APPMSG,
+					A.DISABLED,
+					COALESCE(A.JOB,'') AS JOB,
+					B.SVECD,
+					CASE WHEN B.SVECD IS NULL THEN '기타' ELSE (CASE B.SVECD  WHEN 'VAS' THEN  '가상계좌'  WHEN 'DCS' THEN  '현금'  WHEN 'DVA' THEN  '현금'  WHEN 'DCD' THEN  '오프라인신용카드'  WHEN 'OCD' THEN  '온라인신용카드' END) END AS SVECDNM,
+					B.CHACD,
+					B.VANO,
+					A.CUSTYPE,
+					A.CUSTYPE2,
+					A.CONFIRM,
+					A.CONFIRM2,
+					(SELECT COUNT(*) FROM FW_CASH_RECEIPT_MASTER WHERE USER_DEFINE LIKE (A.CASHMASCD || '%')) AS histCnt
+				FROM XCASHMAS A
+					INNER JOIN XRCPMAS B ON B.RCPMASCD=A.RCPMASCD
+				<include refid="cashSearch"/>
+				<if test='orderBy == "pay"'>
+				ORDER BY B.PAYDAY DESC, B.PAYTIME DESC, B.CUSNAME, A.APPDAY DESC NULLS LAST, A.APPTIME DESC NULLS LAST
+				</if>
+				<if test='orderBy == "name"'>
+				ORDER BY B.CUSNAME, B.PAYDAY DESC, B.PAYTIME DESC, A.APPDAY DESC NULLS LAST, A.APPTIME DESC NULLS LAST
+				</if>
+				<if test='orderBy == "app"'>
+				ORDER BY A.APPDAY DESC NULLS LAST, A.APPTIME DESC NULLS LAST, B.PAYDAY DESC, B.PAYTIME DESC, B.CUSNAME
+				</if>
+			) X
+		) Y
+		<if test='pageGubn == "D"'>
+		WHERE RN BETWEEN #{start} AND #{end}
+		</if>
+	</select>
+	
+	<!-- 국세청양식 현금영수증 발급 이력 -->
+	<select id="getFWCashReceiptMasterList" resultType="ReceiptMgmtDTO" parameterType="java.util.Map">
+		SELECT A.ID,
+			   TO_CHAR(TO_DATE(A.TX_DATE,'YYYYMMDD'),'YYYY.MM.DD') AS txDate,
+			   A.CLIENT_IDENTITY_NO AS clientIdNo,
+			   A.TX_TYPE_CODE,
+			   CASE A.TX_TYPE_CODE  WHEN '0' THEN '승인거래'  WHEN '1' THEN '취소거래' END AS txTypeCodeNm,
+		       A.MEDIA_TYPE_CODE,
+			   CASE A.MEDIA_TYPE_CODE WHEN '1' THEN '주민번호'  WHEN '2' THEN '핸드폰번호' WHEN '3' THEN '카드번호'  WHEN '4' THEN  '사업자번호' END AS mediaTypeCodeNm,
+		       A.TX_NO,
+		       (COALESCE(A.TX_AMOUNT, 0) - COALESCE(A.TAX, 0)) AS splyAmt,
+		       COALESCE(A.TX_AMOUNT, 0) AS txAmt,
+		       COALESCE(A.TAX, 0) AS tax,
+		       C.CUSNAME,
+		       TO_CHAR(TO_DATE(C.PAYDAY,'YYYYMMDD'),'YYYY.MM.DD') AS payDate
+		  FROM FW_CASH_RECEIPT_MASTER A
+		 INNER JOIN XCASHMAS B 
+		    ON B.CASHMASCD = SUBSTR(A.USER_DEFINE, 1, 20)
+		  JOIN XRCPMAS C
+		    ON C.RCPMASCD = B.RCPMASCD
+		 WHERE A.RESPONSE_CODE='0000'
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaCd)'>
+			AND B.CHACD = #{chaCd}
+		</if>		   
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDate)'>			
+			AND A.TX_DATE BETWEEN #{startDate} AND #{endDate}
+		</if>
+		 ORDER BY A.TX_DATE ASC, A.TX_NO ASC
+	</select>				
+
+	<!-- 수납내역 -->
+	<select id="selectRcpMas" resultType="ReceiptMgmtDTO">
+		 SELECT RCP.BNKCD   
+			   ,CHA.PGSERVICEID
+               ,RCP.BNKMSGNO
+               ,RCP.PAYDAY
+               ,RCP.PAYTIME
+               ,RCP.PACKETNO
+               ,RCP.MASMONTH
+			   ,TRIM(RCP.CUSNAME) AS CUSNAME   
+			   ,RCP.RCPAMT   
+         FROM 	XRCPMAS RCP, XCHALIST CHA
+         WHERE 	RCP.RCPMASCD = #{rcpMasCd}  
+         AND	RCP.CHACD = CHA.CHACD
+	</select>
+	
+	<!-- 카드취소대상 원장코드 조회 -->
+	<select id="getCancelRcp" resultType="ReceiptMgmtDTO">
+		 SELECT RCP.NOTIMASCD   
+            ,	RCP.RCPMASCD
+            ,	RCP.CHACD   
+         FROM 	XRCPMAS RCP, XCHALIST CHA
+         WHERE 	RCP.CHACD = CHA.CHACD  
+         AND	CHA.PGSERVICEID = #{pgServiceId}
+         AND	RCP.PAYDAY = #{payDay}
+         AND	RCP.BNKMSGNO = #{bnkMsgNo}
+	</select>
+	
+	<!-- 수납정보 수정 -->
+	<update id="updateRcpMas" parameterType="hashMap">
+			UPDATE	XRCPMAS
+			SET 	RCPMASST = 'PA09',
+					MAKER = #{chaCd},
+			      	MAKEDT = NOW()
+			WHERE   RCPMASCD = #{rcpMasCd}
+			AND		RCPMASST = 'PA03'
+	</update>
+	
+	<!-- 수납상세항목 수정 -->
+	<update id="updateRcpDet" parameterType="hashMap">
+			UPDATE	XRCPDET
+			SET 	RCPDETST = 'PA09',
+					MAKER = #{chaCd},
+			      	MAKEDT = NOW()
+			WHERE   RCPMASCD = #{rcpMasCd}
+			AND		RCPDETST = 'PA03'
+	</update>
+	
+	<!-- 카드취소 후 청구테이블 상태변경 -->
+	<update id="updateNotiMas" parameterType="hashMap">
+			UPDATE	XNOTIMAS
+			SET 	NOTIMASST = 'PA02',
+			      	MAKEDT = NOW(),
+			      	MAKER = #{chaCd}
+			WHERE   NOTIMASCD = #{notiMasCd}
+	</update>
+	
+	<!-- 카드취소 후 청구상세테이블 상태변경 -->
+	<update id="updateNotiDet" parameterType="hashMap">
+			UPDATE	XNOTIDET
+			SET 	NOTIDETST = 'PA02',
+			      	MAKEDT = NOW(),
+			        MAKER = #{chaCd}
+			WHERE   NOTIMASCD = #{notiMasCd}
+	</update>
+
+	<!-- 현금영수증 발행 -->
+	<update id="insertCashMas" parameterType="java.util.HashMap">
+		UPDATE XCASHMAS
+			SET JOB       = 'I'
+			  , MAKER     = #{chaCd}
+			  , TAX       = COALESCE(#{tax}, 0)
+			  , CUSOFFNO  = COALESCE(#{cusOffNo}, '')
+			  , RCPAMT    = COALESCE(#{rcpAmt}, 0)
+			  , CONFIRM   = COALESCE(#{confirm}, '')
+			  , CUSTYPE   = COALESCE(#{cusType}, '')
+			  , CASHMASST = 'ST05'
+			  , MAKEDT    = NOW()
+			  , SENDDT    = #{senddt}
+		WHERE CASHMASCD = #{cashMasCd}
+	</update>
+
+	<!-- 현금영수증 재발행 -->
+	<update id="updateCashMas" parameterType="java.util.HashMap">
+		UPDATE XCASHMAS
+			SET JOB       = 'U'
+			  , MAKER     = #{chaCd}
+			  , TAX       = COALESCE(#{tax}, 0)
+			  , CUSOFFNO2 = COALESCE(#{cusOffNo2}, '')
+			  , RCPAMT2   = COALESCE(#{rcpAmt2}, 0)
+			  , CONFIRM2  = COALESCE(#{confirm2}, '')
+			  , CUSTYPE2  = COALESCE(#{cusType2}, '')
+			  , CASHMASST = 'ST05'
+			  , MAKEDT    = NOW()
+			  , SENDDT    = #{senddt}
+			  , CONFIRM = COALESCE(#{confirm},'')
+			  , CUSTYPE = COALESCE(#{cusType},'')
+		WHERE CASHMASCD = #{cashMasCd}
+	</update>
+
+	<!-- 발행요청 철회(취소), 발행요청 상태 -> 미발행 상태 -->
+	<update id="doInsertIssueDelete" parameterType="java.util.HashMap">
+		UPDATE XCASHMAS
+		SET JOB       = ''
+		, MAKER     = #{chaCd}
+		, CASHMASST = 'ST02'
+		, MAKEDT    = NOW()
+		, SENDDT    = #{senddt}
+		WHERE CASHMASCD = #{cashMasCd}
+	</update>
+
+	<!-- 취소 ( 현금영수증 발행완료 후 ), 발행 -> 발행 취소 요청 접수 -->
+	<update id="deleteCashMas" parameterType="java.util.HashMap">
+		UPDATE XCASHMAS
+		SET JOB       = 'D'
+			, MAKER     = #{chaCd}
+			, CASHMASST = 'ST05'
+			, MAKEDT    = NOW()
+			, SENDDT    = #{senddt}
+			, CONFIRM = COALESCE(#{confirm},'')
+			, CUSTYPE = COALESCE(#{cusType},'')
+		WHERE CASHMASCD = #{cashMasCd}
+	</update>
+
+	<!-- 재발행요청 철회, 발행 -> 재발행 -> 재발행 요청 철회 -> 발행 -->
+	<update id="reInsertIssueDelete" parameterType="java.util.HashMap">
+		UPDATE XCASHMAS
+		SET JOB       = ''
+			, MAKER     = #{chaCd}
+			, CASHMASST = 'ST03'
+			, MAKEDT    = NOW()
+			, SENDDT    = #{senddt}
+			, CUSOFFNO2 = ''
+			, RCPAMT2   = 0
+			, CONFIRM2  = ''
+			, CUSTYPE2  = ''
+		WHERE CASHMASCD = #{cashMasCd}
+	</update>
+
+	<!-- 취소요청 철회, 발행 -> 취소요청접수 -> 취소요청 철회 -> 발행 -->
+	<update id="noDeleteIssue" parameterType="java.util.HashMap">
+		UPDATE XCASHMAS
+		SET JOB       = ''
+		, MAKER     = #{chaCd}
+		, CASHMASST = 'ST03'
+		, MAKEDT    = NOW()
+		, SENDDT    = ''
+		WHERE CASHMASCD = #{cashMasCd}
+	</update>
+	
+	<!-- 미발행인 현금영수증 건이 있을경우 (UPDATE용 SELECT) -->
+	<select id="selectFlagCashMas" resultType="ReceiptMgmtDTO">
+		SELECT CASHMASCD, JOB FROM XCASHMAS WHERE CHACD = #{chaCd}
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(rcpMasCd)'>
+			AND RCPMASCD = #{rcpMasCd}
+		</if>
+	</select>
+
+	<!-- 재발행일경우 기존 2 컬럼에 값이잇으면 값을 옮겨주기 위해서 조회 -->
+	<select id="selectCashMas" resultType="ReceiptMgmtDTO">
+		SELECT
+		    CUSOFFNO2
+		    ,RCPAMT2
+		    ,CONFIRM2
+		    ,MAKEDT
+		    ,REGDT
+		    ,JOB
+		FROM XCASHMAS
+		WHERE CHACD = #{chaCd}
+			<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cashMasCd)'>
+				AND CASHMASCD = #{cashMasCd}
+	  		</if>
+	  		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(rcpMasCd)'>
+				AND RCPMASCD = #{rcpMasCd}
+	  		</if>
+			AND RCPAMT2 IS NOT NULL AND CUSOFFNO2 IS NOT NULL
+	</select>
+
+	<select id="getChaMasCd" resultType="ReceiptMgmtDTO">
+		SELECT A.CASHMASCD,
+				A.CUSTYPE,
+				A.CUSTYPE2,
+				A.CONFIRM,
+				A.CONFIRM2,
+				A.CUSOFFNO,
+				A.CUSOFFNO2,
+				B.RCPAMT,
+				A.RCPAMT    CASHRCPAMT,
+				A.RCPAMT2   CASHRCPAMT2,
+				A.JOB,
+				B.VANO
+		FROM XCASHMAS A INNER JOIN XRCPMAS B ON B.RCPMASCD=A.RCPMASCD
+		WHERE A.CHACD = #{chaCd}
+		AND A.CASHMASCD = #{cashMasCd}
+	</select>
+
+	<update id="updateCashMasU" parameterType="java.util.HashMap">
+		UPDATE XCASHMAS
+		SET JOB = COALESCE(#{job},'')
+		  ,MAKER = #{chaCd}
+		<choose>
+			<when test='job == "D"'>
+				,CASHMASST = 'ST05'
+			</when>
+			<when test='job == "I"'>
+				,TAX = COALESCE(#{tax},0)
+				,CUSOFFNO = COALESCE(#{cusOffNo},'')
+				,RCPAMT = COALESCE(#{rcpAmt}, 0)
+				,CONFIRM = COALESCE(#{confirm},'')
+				,CUSTYPE = COALESCE(#{cusType},'')
+				,CASHMASST = 'ST05'
+			</when>
+			<when test='job == "U"'>
+				,TAX = COALESCE(#{tax},0)
+				,CUSOFFNO2 = COALESCE(#{cusOffNo2},'')
+				,RCPAMT2 = COALESCE(#{rcpAmt2}, 0)
+				,CONFIRM2 = COALESCE(#{confirm2},'')
+				,CUSTYPE2 = COALESCE(#{cusType2},'')
+				,CASHMASST = 'ST05'
+			</when>
+			<otherwise>
+				,TAX = COALESCE(#{tax},0)
+				,CASHMASST = CASE WHEN APPNO IS NULL THEN  'ST02'  ELSE 'ST03' END
+			</otherwise>
+		</choose>
+		  ,MAKEDT = NOW()
+		, SENDDT=#{senddt}
+		WHERE CASHMASCD = #{cashMasCd}
+	</update>
+	
+	<update id="updateCashMasJobNull" parameterType="java.util.HashMap">
+		UPDATE XCASHMAS
+		SET MAKER = #{chaCd}
+			,RCPAMT = COALESCE(#{rcpAmt},0)
+			,TAX = COALESCE(#{tax},0)
+		  ,CASHMASST = 'ST02'
+		  ,MAKEDT = NOW()
+		WHERE RCPMASCD = #{rcpMasCd}  
+	</update>
+	
+	<!-- 청구항목 상세보기 -->
+	<select id="getReceiptDetail" resultType="ReceiptMgmtDTO">
+		SELECT  DET.NOTIDETCD,
+		        DET.PAYITEMNAME									  			AS "payItemName",
+		        COALESCE(SUM(DET.PAYITEMAMT) OVER (PARTITION BY DET.NOTIDETCD), 0)	AS "payItemAmt",
+		        COALESCE(SUM(RD.PAYITEMAMT) OVER (PARTITION BY DET.NOTIDETCD), 0)	AS "rcpAmt",
+		        DET.PTRITEMREMARK									   			AS "ptrItemRemark",
+		        MAS.VANO
+		FROM XNOTIDET DET
+		INNER JOIN XNOTIMAS MAS ON DET.NOTIMASCD = MAS.NOTIMASCD AND MAS.NOTIMASST != 'PA00'
+		LEFT OUTER JOIN  (  
+			SELECT RD.NOTIDETCD, COALESCE(SUM(RD.PAYITEMAMT), 0) AS PAYITEMAMT
+			FROM XRCPDET RD 
+			LEFT OUTER JOIN XRCPMAS RM ON RD.RCPMASCD = RM.RCPMASCD AND RM.RCPMASST = 'PA03'
+			WHERE RD.RCPDETST = 'PA03'
+			GROUP BY RD.NOTIDETCD
+		) RD ON DET.NOTIDETCD = RD.NOTIDETCD
+		WHERE 1=1
+		AND COALESCE(DET.NOTI_CAN_YN, 'N') = 'N'
+		AND DET.NOTIMASCD=#{notiMasCd}
+	</select>
+
+	<sql id="cardSearch">
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDate)'>
+			AND C.PAYDAY BETWEEN #{startDate} AND #{endDate}
+		</if>
+
+
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchValue)'>
+			AND
+			<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+				A.CUSNAME LIKE '%' || #{list} || '%'
+			</foreach>
+		</if>
+
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusGubnValue)'>
+			<if test='seachCusGubn == "ALL"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					( A.CUSGUBN1 LIKE '%' || #{list} || '%' OR A.CUSGUBN2 LIKE '%' || #{list} || '%' OR A.CUSGUBN3 LIKE '%' || #{list} || '%' OR A.CUSGUBN4 LIKE '%' || #{list} || '%' )
+				</foreach>
+			</if>
+			<if test='seachCusGubn == "CUSGUBN1"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					A.CUSGUBN1 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='seachCusGubn == "CUSGUBN2"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					A.CUSGUBN2 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='seachCusGubn == "CUSGUBN3"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					A.CUSGUBN3 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='seachCusGubn == "CUSGUBN4"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					A.CUSGUBN4 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+		</if>
+
+		<if test='masMonth != "" and masMonth != null and masMonth != "선택선택"'>
+			AND A.MASMONTH = #{masMonth}
+		</if>
+
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(statusCheck)">
+			<if test='statusCheck == "PA03"'>
+				AND		C.RCPMASST = 'PA03'
+			</if>
+			<if test='statusCheck == "PA09"'>
+				AND		C.RCPMASST = 'PA09'
+			</if>
+			<if test='statusCheck == "ALL"'>
+				AND		C.RCPMASST IN ('PA03', 'PA09')
+			</if>
+		</if>
+	</sql>
+
+	<!-- 온라인카드 입금내역 건수 -->
+	<select id="getCardPayCount" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+			SELECT COUNT(*) AS CNT,
+				   COALESCE(SUM(COALESCE(RCPAMT, 0)),0) AS TOTAMT
+			FROM
+			(	SELECT MASMONTH,
+                   	   CUSNAME,
+                   	   CUSGUBN1, 
+                   	   CUSGUBN2, 
+                   	   CUSGUBN3, 
+                   	   CUSGUBN4, 
+					   TO_CHAR(TO_DATE(PAYDAY||PAYTIME, 'YYYYMMDDHH24MISS'), 'YYYY.MM.DD HH24:MI:SS') PAYDAY2, 
+					   PAYDAY, 
+					   PAYTIME, 
+					   RCPAMT, 
+					   RCPMASST,
+					   RCPMASCD, 
+					   SUM (COALESCE(PAYITEMAMT,0)) AS PAYITEMAMT
+				FROM   (
+						SELECT A.MASMONTH,
+							   A.CUSNAME,
+							   A.CUSGUBN1,
+		                	   A.CUSGUBN2,
+		                	   A.CUSGUBN3,
+		                	   A.CUSGUBN4,   
+						       C.PAYDAY, 
+						       C.PAYTIME,
+						       B.PAYITEMAMT, 
+						       C.RCPAMT, 
+						       C.RCPMASST,
+						       C.RCPMASCD
+						FROM   XNOTIMAS A
+							  ,(SELECT NOTIMASCD, SUM(COALESCE(PAYITEMAMT, 0)) AS PAYITEMAMT
+			                	FROM   XNOTIDET
+				                WHERE NOTIDETST != 'PA00'
+								AND NOTI_CAN_YN  = 'N'
+			                    GROUP BY NOTIMASCD
+			            	   )B
+				              ,(SELECT *
+				                FROM  XRCPMAS
+				               )C
+						WHERE A.NOTIMASCD    = B.NOTIMASCD
+						AND   A.NOTIMASCD    = C.NOTIMASCD
+						AND   A.CHACD        = C.CHACD
+						AND   C.SVECD        = 'OCD'
+						AND	  A.NOTIMASST   != 'PA00'
+						AND   A.NOTI_CAN_YN  = 'N'
+						AND A.CHACD = #{chaCd}
+						<include refid="cardSearch"/>
+				) T1 GROUP BY MASMONTH, CUSNAME, CUSGUBN1, CUSGUBN2, CUSGUBN3, CUSGUBN4, PAYDAY, PAYTIME, PAYITEMAMT, RCPAMT, RCPMASST, RCPMASCD
+				<choose>
+					<when test="search_orderBy == 'masMonth'">
+						ORDER BY MASMONTH DESC
+					</when>
+					<otherwise>
+						ORDER BY PAYDAY DESC, PAYTIME DESC
+					</otherwise>
+				</choose>
+			) T2
+	</select>
+	
+	<!-- 온라인카드 입금내역 조회 -->
+	<select id="getCardPayList" resultType="PayMgmtDTO" parameterType="java.util.HashMap">
+		<include refid="paging_header" />
+			SELECT 	   MASMONTH,
+                   	   TRIM(CUSNAME) AS CUSNAME,
+                   	   CUSGUBN1, 
+                   	   CUSGUBN2, 
+                   	   CUSGUBN3, 
+                   	   CUSGUBN4, 
+					   TO_CHAR(TO_DATE(PAYDAY||PAYTIME, 'YYYYMMDDHH24MISS'), 'YYYY.MM.DD HH24:MI:SS') PAYDAY2, 
+					   PAYDAY, 
+					   PAYTIME, 
+					   RCPAMT, 
+					   RCPMASST,
+					   RCPMASCD, 
+					   SUM (COALESCE(PAYITEMAMT,0)) AS PAYITEMAMT,
+					   VANO
+			FROM
+			(
+				SELECT  A.MASMONTH,
+						A.CUSNAME,
+						A.CUSGUBN1,
+                		A.CUSGUBN2,
+                		A.CUSGUBN3,
+                		A.CUSGUBN4,   
+				       	C.PAYDAY, 
+				       	C.PAYTIME,
+				       	B.PAYITEMAMT, 
+				       	C.RCPAMT, 
+				       	C.RCPMASST,
+				       	C.RCPMASCD,
+				       	A.VANO
+				FROM XNOTIMAS A
+				,(SELECT NOTIMASCD, SUM(COALESCE(PAYITEMAMT, 0)) AS PAYITEMAMT
+	                FROM   XNOTIDET
+	                WHERE NOTIDETST != 'PA00'
+					AND NOTI_CAN_YN = 'N'
+                	GROUP BY NOTIMASCD
+            	)B
+            	,(SELECT *
+                FROM  XRCPMAS
+            	)C
+				WHERE A.NOTIMASCD = B.NOTIMASCD
+				AND A.NOTIMASCD   = C.NOTIMASCD
+				AND A.CHACD       = C.CHACD
+				AND C.SVECD       = 'OCD'
+				AND	A.NOTIMASST != 'PA00'
+				AND A.NOTI_CAN_YN = 'N'
+				AND A.CHACD = #{chaCd}
+				<include refid="cardSearch"/>
+			) T GROUP BY MASMONTH, CUSNAME, CUSGUBN1, CUSGUBN2, CUSGUBN3, CUSGUBN4, PAYDAY, PAYTIME, PAYITEMAMT, RCPAMT, RCPMASST, RCPMASCD, VANO
+			<choose>
+				<when test="search_orderBy == 'masMonth'">
+					ORDER BY MASMONTH DESC
+				</when>
+				<otherwise>
+					ORDER BY PAYDAY DESC, PAYTIME DESC
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="pageGubn == 'Excel'">
+					<include refid="excel_footer" />
+				</when>
+				<otherwise>
+					<include refid="paging_footer" />
+				</otherwise>
+			</choose>
+	</select>
+	
+	<!-- 현금영수증 사전 데이터 -->
+	<select id="getCashData" resultType="NotiDTO">
+		SELECT
+           B.CHACD,
+           C.CHAOFFNO,
+           B.CUSOFFNO,
+           B.CUSTYPE,
+           C.NOTAXYN,
+           B.RCPREQTY,
+           C.CHATRTY,
+           B.CONFIRM,
+           C.AMTCHKTY
+       FROM XCUSMAS B, XCHALIST C
+       WHERE B.CHACD = C.CHACD 
+       AND B.VANO = #{vano}
+	</select>
+	
+	<!-- 직접수납관리 현금영수증 insert -->
+	<insert id="insertCashMaster" parameterType="map">
+		INSERT INTO XCASHMAS(
+			CASHMASCD
+           ,RCPMASCD
+           ,CHACD
+           ,CHAOFFNO
+           ,CUSOFFNO
+           ,CUSTYPE
+           ,CONFIRM
+           ,AMTCHKTY
+           ,NOTAXYN
+           ,RCPREQTY
+           ,CHATRTY
+           ,RCPAMT
+           ,TIP
+           ,TAX
+           ,CASHMASST
+           ,MAKEDT
+           ,MAKER
+           ,REGDT
+       ) VALUES (NEXTVAL('seqcashmascd')
+           ,#{rcpMasCd}
+           ,#{chaCd}
+           ,COALESCE(#{chaOffNo},'')
+           ,COALESCE(#{cusOffNo},'')
+           ,COALESCE(#{cusType},'')
+           ,COALESCE(#{confirm},'')
+           ,COALESCE(#{amtChkTy},'')
+           ,COALESCE(#{noTaxYn},'')
+           ,COALESCE(#{rcpReqTy},'')
+           ,COALESCE(#{chaTrTy},'')
+           ,#{rcpAmt}
+           ,#{tip}
+           ,#{tax}
+           ,#{cashMasSt}
+           ,NOW()
+           ,#{chaCd}
+           ,NOW()
+       )
+	</insert>
+	
+	<!-- 현금영수증 삭제 -->
+	<delete id="deleteCashMaster" parameterType="java.util.HashMap">
+		<!-- DELETE FROM XCASHMAS
+		WHERE RCPMASCD = #{rcpMasCd}  -->
+		UPDATE XCASHMAS
+		SET DISABLED = 'Y',
+			JOB = null
+		WHERE RCPMASCD = #{rcpMasCd}
+	</delete>
+	
+	<!-- 직접수납관리 현금영수증 발행 취소 -->
+	<update id="updateCashMaster" parameterType="java.util.HashMap">
+		UPDATE XCASHMAS
+		SET 
+		  MAKER = #{chaCd}, 
+		  MAKEDT = NOW(),
+		  <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusType)'>
+		  	CUSTYPE = COALESCE(#{cusType},''),
+		  </if>
+		  <if test='checkUpdate == "U3"'>
+		 	<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(rcpAmt)'>
+		  		RCPAMT = #{rcpAmt},
+		  	</if>
+		  </if>
+		  <if test='checkUpdate == "U2"'>
+		  	<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(rcpAmt)'>
+		  		RCPAMT = #{rcpAmt},
+		  	</if>
+		  	<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusOffNo)'>
+			  	CUSOFFNO = COALESCE(#{cusOffNo},''),
+			</if>
+			<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(confirm)'>
+				CONFIRM = COALESCE(#{confirm},''),
+			</if>
+			<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(rcpAmt2)'>
+		  		RCPAMT2 = #{rcpAmt2},
+		  	</if>
+		  	<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusOffNo2)'>
+			  	CUSOFFNO2 = COALESCE(#{cusOffNo2},''),
+			</if>
+			<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(confirm2)'>
+				CONFIRM2 = COALESCE(#{confirm2},''),
+			</if>
+		  </if>
+		  <if test='checkUpdate == "U"'>
+			  <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(rcpAmt2)'>
+			  	RCPAMT2 = #{rcpAmt2},
+			  </if>
+			  <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusOffNo2)'>
+			  	CUSOFFNO2 = COALESCE(#{cusOffNo2},''),
+			  </if>
+			  <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(confirm2)'>
+			  	CONFIRM2 = COALESCE(#{confirm2},''),
+			  </if>
+		  </if>
+		  CASHMASST = COALESCE(#{cashMasSt},''),
+		  TAX = #{tax}
+		WHERE RCPMASCD = #{rcpMasCd}
+	</update>
+	
+	<!-- 직접수납 상태 확인 -->
+	<select id="getXnotiState" resultType="ReceiptMgmtDTO">
+		SELECT A.NOTIMASCD
+		  ,A.NOTIDETCD	
+	      ,A.PAYITEMCD
+	      ,A.PAYITEMNAME
+	      ,A.NOTIDETST
+	      ,COALESCE(A.PAYITEMAMT,0) AS PAYITEMAMT
+	      ,COALESCE(B.PAYITEMAMT,0) AS RCPITEMAMP
+	      ,COALESCE(A.PAYITEMAMT,0) - COALESCE(B.PAYITEMAMT,0) AS REMAMT
+	      ,COALESCE(VAS_AMT,0) AS VASAMT
+	      ,COALESCE(OCD_AMT,0) AS OCDAMT
+	      ,COALESCE(DCS_AMT,0) AS DCSAMT
+	      ,COALESCE(DCD_AMT,0) AS DCDAMT
+	      ,A.PTRITEMORDER
+	      ,A.RCPITEMYN
+		FROM XNOTIDET A
+		LEFT OUTER JOIN (
+			SELECT CHACD
+			,NOTIDETCD
+			,PAYITEMCD
+			,PAYITEMNAME
+			,SUM(PAYITEMAMT) PAYITEMAMT
+			,SUM(CASE WHEN A.SVECD = 'VAS' THEN A.RCPAMT ELSE 0 END)           AS VAS_AMT
+			,SUM(CASE WHEN A.SVECD = 'OCD' THEN A.RCPAMT ELSE 0 END)           AS OCD_AMT
+			,SUM(CASE WHEN A.SVECD IN ('DCS', 'DVA') THEN A.RCPAMT ELSE 0 END) AS DCS_AMT
+			,SUM(CASE WHEN A.SVECD = 'DCD' THEN A.RCPAMT ELSE 0 END)          AS DCD_AMT
+			FROM   XRCPMAS A
+			,XRCPDET B
+			WHERE  A.RCPMASST  = 'PA03'
+			AND  B.RCPDETST  = 'PA03'
+			AND  A.RCPMASCD = B.RCPMASCD
+			AND   A.CHACD = #{chaCd}
+			AND   A.NOTIMASCD = #{notiMasCd}
+		  	GROUP BY CHACD
+				  ,NOTIDETCD
+				  ,NOTIDETCD
+				  ,PAYITEMCD
+				  ,PAYITEMNAME
+	       ) B ON A.NOTIDETCD = B.NOTIDETCD
+		WHERE A.NOTIMASCD = #{notiMasCd}
+		AND	  A.NOTIDETST != 'PA00'
+		AND   A.NOTI_CAN_YN = 'N'
+		<if test='gubun == "A"'>
+			ORDER BY A.PAYITEMCD
+		</if>
+		<if test='gubun == "D"'>
+			ORDER BY A.PAYITEMCD DESC
+		</if>
+	</select>
+	
+	<!-- 변경 전 금액 -->
+	<select id="getXrcpAmt" resultType="ReceiptMgmtDTO">
+		SELECT RCPAMT FROM 
+		XRCPMAS WHERE RCPMASCD = #{rcpMasCd} AND SVECD = #{sveCd}
+	</select>
+	
+	<sql id="search">
+		<if test='dateGb == "M"'>
+			<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(masMonth)'>
+				AND A.MASMONTH = #{masMonth}
+			</if>
+		</if>
+		<if test='dateGb == "D"'>
+			<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDate)'>
+				AND C.PAYDAY BETWEEN #{startDate} AND #{endDate}
+			</if>
+		</if>
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(payList)'> 
+			AND A.NOTIMASST IN
+			<foreach item="item" collection="payList" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		<if test='payGb1 == "ALL"'>
+			AND A.NOTIMASST IN('PA02','PA03','PA04','PA05','PA06')
+		</if>
+
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusGubnValue)'>
+			<if test='cusGubn == "all"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					( A.CUSGUBN1 LIKE '%' || #{list} || '%' OR A.CUSGUBN2 LIKE '%' || #{list} || '%' OR A.CUSGUBN3 LIKE '%' || #{list} || '%' OR A.CUSGUBN4 LIKE '%' || #{list} || '%' )
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn1"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					A.CUSGUBN1 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn2"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					A.CUSGUBN2 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn3"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					A.CUSGUBN3 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn4"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					A.CUSGUBN4 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+		</if>
+
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchValue)'>
+			<if test='searchGb == "cusname"'>
+				AND
+				<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+					A.CUSNAME LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='searchGb == "vano"'>
+				AND
+				<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+					A.VANO LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+		</if>
+
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(svecdList)'>
+			AND C.SVECD IN
+			<foreach item="item" collection="svecdList" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+	</sql>
+	
+	<sql id="paySearch">
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaCd)'>
+			AND A.CHACD = #{chaCd}
+		</if>
+
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchValue)'>
+			<if test='searchGb == "cusname"'>
+				AND
+				<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+					COALESCE(COALESCE(TRIM(B.CUSNAME), A.CUSNAME), C.CHANAME) LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='searchGb == "rcpname"'>
+				AND
+				<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+					A.RCPUSRNAME LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='searchGb == "vano"'>
+				AND
+				<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+					A.VANO LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+		</if>
+
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusGubnValue)'>
+			<if test='cusGubn == "all"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					( D.CUSGUBN1 LIKE '%' || #{list} || '%' OR D.CUSGUBN2 LIKE '%' || #{list} || '%' OR D.CUSGUBN3 LIKE '%' || #{list} || '%' OR D.CUSGUBN4 LIKE '%' || #{list} || '%' )
+				</foreach>
+			</if>
+			<if test='cusGubn == "CUSGUBN1"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					D.CUSGUBN1 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='cusGubn == "CUSGUBN2"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					D.CUSGUBN2 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='cusGubn == "CUSGUBN3"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					D.CUSGUBN3 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='cusGubn == "CUSGUBN4"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					D.CUSGUBN4 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+		</if>
+
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDate)'>
+			AND A.PAYDAY BETWEEN #{startDate} AND #{endDate}
+		</if>
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(rcpMasList)'>
+			AND A.RCPMASCD IN
+			<foreach item="item" collection="rcpMasList" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+	</sql>
+	
+	<!-- 현장수납 미납 조건 -->
+	<sql id="actSearch">
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaCd)'>
+			AND A.CHACD = #{chaCd}
+		</if>
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(masMonth)'>
+			AND A.MASMONTH = #{masMonth}
+		</if>
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchValue)'>
+	    	<if test='searchGb == "cusname"'>
+				AND REGEXP_LIKE(A.CUSNAME, #{searchValue})
+			</if>
+			<if test='searchGb == "vano"'>
+				AND	(REGEXP_LIKE(SUBSTR(A.VANO, 11, 4), #{searchValue}) OR REGEXP_LIKE(A.VANO, #{searchValue}))
+			</if>
+		</if>
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusGubnValue)'>
+			<if test='cusGubn == "all"'>
+				AND(REGEXP_LIKE(A.CUSGUBN1, #{cusGubnValue})
+				OR REGEXP_LIKE(A.CUSGUBN2, #{cusGubnValue})
+				OR REGEXP_LIKE(A.CUSGUBN3, #{cusGubnValue})
+				OR REGEXP_LIKE(A.CUSGUBN4, #{cusGubnValue}))
+			</if>
+			<if test='cusGubn == "cusGubn1"'>
+				AND REGEXP_LIKE(A.CUSGUBN1, #{cusGubnValue})
+			</if>
+			<if test='cusGubn == "cusGubn2"'>
+				AND REGEXP_LIKE(A.CUSGUBN2, #{cusGubnValue})
+			</if>
+			<if test='cusGubn == "cusGubn3"'>
+				AND REGEXP_LIKE(A.CUSGUBN3, #{cusGubnValue})
+			</if>
+			<if test='cusGubn == "cusGubn4"'>
+				AND REGEXP_LIKE(A.CUSGUBN4, #{cusGubnValue})
+			</if>
+		</if>
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(notiStList)'>
+			AND A.NOTIMASST IN
+			<foreach item="item" collection="notiStList" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDate)'>
+			AND A.PAYDAY BETWEEN #{startDate} AND #{endDate}
+		</if>
+		GROUP BY A.NOTIMASCD
+	        ,A.CHACD
+	        ,A.VANO
+	        ,A.MASMONTH
+	        ,A.NOTIMASST
+	        ,A.NOTI_CAN_YN
+	        ,B.PAYITEMAMT
+	        ,A.CUSNAME
+	        ,A.CUSGUBN1
+	        ,A.CUSGUBN2
+	        ,A.CUSGUBN3
+	        ,A.CUSGUBN4
+	       ,ITEMCNT
+	       ,A.STARTDATE
+           ,A.ENDDATE
+           ,A.MASDAY
+           ,A.PRINTDATE
+	</sql>
+	
+	<!-- 환불내역 조회 -->
+	<sql id="rePaySearch">
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaCd)'>
+			AND A.CHACD = #{chaCd}
+		</if>
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(masMonth)'>
+			AND A.MASMONTH = #{masMonth}
+		</if>
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchValue)'>
+	    	<if test='searchGb == "cusname"'>
+				AND A.CUSNAME ~ #{searchValue}
+			</if>
+			<if test='searchGb == "vano"'>
+				AND	(SUBSTR(A.VANO, 11, 4) ~ #{searchValue} OR A.VANO ~ #{searchValue})
+			</if>
+		</if>
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusGubnValue)'>
+			<if test='cusGubn == "all"'>
+				AND(A.CUSGUBN1 ~ #{cusGubnValue}
+				OR A.CUSGUBN2 ~ #{cusGubnValue}
+				OR A.CUSGUBN3 ~ #{cusGubnValue}
+				OR A.CUSGUBN4 ~ #{cusGubnValue})
+			</if>
+			<if test='cusGubn == "cusGubn1"'>
+				AND A.CUSGUBN1 ~ #{cusGubnValue}
+			</if>
+			<if test='cusGubn == "cusGubn2"'>
+				AND A.CUSGUBN2 ~ #{cusGubnValue}
+			</if>
+			<if test='cusGubn == "cusGubn3"'>
+				AND A.CUSGUBN3 ~ #{cusGubnValue}
+			</if>
+			<if test='cusGubn == "cusGubn4"'>
+				AND A.CUSGUBN4 ~ #{cusGubnValue}
+			</if>
+		</if>
+		
+		<if test='rePayYn == "N" and rePayYn != null'>
+			AND A.NOTIMASST IN('PA03', 'PA04', 'PA05')
+			<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDate)'>
+				AND C.PAYDAY BETWEEN #{startDate} AND #{endDate}
+			</if>
+		</if>
+		<if test='rePayYn == "Y" and rePayYn != null'>
+			AND A.NOTIMASST = 'PA06'
+			<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDate)'>
+				AND D.REPAYDAY BETWEEN #{startDate} AND #{endDate}
+			</if>
+		</if>
+		<if test='rePayYn == "N" and rePayYn != null'>
+			GROUP BY A.NOTIMASCD
+			        ,A.CHACD
+			        ,A.VANO
+			        ,A.MASMONTH
+			        ,A.NOTIMASST
+			        ,A.NOTI_CAN_YN
+			        ,B.PAYITEMAMT
+			        ,A.CUSNAME
+			        ,A.CUSGUBN1
+			        ,A.CUSGUBN2
+			        ,A.CUSGUBN3
+			        ,A.CUSGUBN4
+			       ,ITEMCNT
+			       ,A.STARTDATE
+		           ,A.ENDDATE
+		           ,A.MASDAY
+		           ,A.PRINTDATE
+		           ,C.CASHMASST
+		           ,C.JOB
+		</if>
+		<if test='rePayYn == "Y" and rePayYn != null'>
+			GROUP BY A.NOTIMASCD
+			        ,A.CHACD
+			        ,A.VANO
+			        ,A.MASMONTH
+			        ,A.NOTIMASST
+			        ,A.NOTI_CAN_YN
+			        ,B.PAYITEMAMT
+			        ,A.CUSNAME
+			        ,A.CUSGUBN1
+			        ,A.CUSGUBN2
+			        ,A.CUSGUBN3
+			        ,A.CUSGUBN4
+			       ,ITEMCNT
+			       ,A.STARTDATE
+		           ,A.ENDDATE
+		           ,A.MASDAY
+		           ,A.PRINTDATE 
+		</if>
+	</sql>
+	
+	<!-- 현금영수증 발행내역 -->
+	<sql id="cashSearch">
+		<where>
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaCd)'>
+			AND A.CHACD = #{chaCd}
+		</if>
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(masMonth)'>
+			AND B.MASMONTH = #{masMonth}
+		</if>
+
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchValue)'>
+			<if test='searchGb == "cusname"'>
+				AND
+				<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+					B.CUSNAME LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='searchGb == "vano"'>
+				AND
+				<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+					B.VANO LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='searchGb == "cusOffNo"'>
+				AND (
+				<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+					A.CUSOFFNO LIKE '%' || #{list} || '%'
+				</foreach>
+				OR				<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+					A.CUSOFFNO2 LIKE '%' || #{list} || '%'
+				</foreach>
+				)
+			</if>
+		</if>
+
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusGubnValue)'>
+			<if test='cusGubn == "all"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					( B.CUSGUBN1 LIKE '%' || #{list} || '%' OR B.CUSGUBN2 LIKE '%' || #{list} || '%' OR B.CUSGUBN3 LIKE '%' || #{list} || '%' OR B.CUSGUBN4 LIKE '%' || #{list} || '%' )
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn1"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					B.CUSGUBN1 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn2"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					B.CUSGUBN2 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn3"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					B.CUSGUBN3 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn4"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					B.CUSGUBN4 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+		</if>
+
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDate)'>
+			<if test='selectedDate == "payDay"'>
+				AND B.PAYDAY BETWEEN #{startDate} AND #{endDate}
+			</if>
+			<if test='selectedDate == "appDay"'>
+				AND A.APPDAY BETWEEN #{startDate} AND #{endDate}
+			</if>
+		</if>
+
+		<if test='cashMasSt == "ALL"'>
+			AND A.CASHMASST IN('ST02', 'ST03', 'ST04', 'ST05')
+		</if>
+		<if test='cashMasSt == "ST02"'><!--미발행-->
+			AND A.CASHMASST = 'ST02'
+		</if>
+		<if test='cashMasSt == "ST03"'><!--발행-->
+			AND A.CASHMASST = 'ST03'
+		</if>
+		<if test='cashMasSt == "ST04"'><!--발행중-->
+			AND A.CASHMASST = 'ST04'
+		</if>
+		<if test='cashMasSt == "ST05"'><!--발행중-->
+			AND A.CASHMASST = 'ST05'
+		</if>
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(svecdList)'>
+			AND B.SVECD IN
+			<foreach item="item" collection="svecdList" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		
+		<if test='svecdList == null'>
+			AND B.SVECD IN('VAS', 'DCS','DVA')
+		</if>
+
+		<choose>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(rcpMasSt) and rcpMasSt == 'PA03'">
+				AND B.RCPMASST = 'PA03'
+			</when>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(rcpMasSt) and rcpMasSt == 'PA09'">
+				AND B.RCPMASST = 'PA09'
+			</when>
+		</choose>
+		</where>
+
+	</sql>
+
+    <!-- 고객 조회 -->
+    <select id="selectCusMasByRcpMasCd" resultType="ReceiptMgmtDTO" parameterType="string">
+		SELECT 	A.CUSNAME		AS cusName
+			,	TO_CHAR(A.REGDT, 'YYYY.MM.DD') 		AS regDt
+			,	A.CUSKEY 		AS cusKey
+			,	A.RCPGUBN  	AS rcpGubn	--납부대상여부
+			, 	A.CUSGUBN1 	AS cusGubn1
+			, 	A.CUSGUBN2 	AS cusGubn2
+			, 	A.CUSGUBN3 	AS cusGubn3
+			, 	A.CUSGUBN4 	AS cusGubn4
+			,	A.VANO 		AS vano
+			,	A.CUSHP 		AS cusHp
+			,	A.RCPREQTY  	AS rcpReqTy	--현금영수증발급 A 자동
+			,	A.CUSTYPE 	AS cusType 	--발급용도
+			,	A.CONFIRM 	AS confirm  --발급방법
+			, 	A.CUSOFFNO  	AS cusOffNo -- 발급번호    
+			,	A.DISABLED 	AS disabled
+        FROM XCUSMAS A
+            INNER JOIN XRCPMAS B ON B.VANO=A.VANO
+        WHERE B.RCPMASCD=#{rcpMasCd}
+    </select>
+    
+    <!-- 청구원장 조회 -->
+    <select id="selectNoticeMasterByRcpMasCd" resultType="map" parameterType="string">
+        SELECT A.MASMONTH,
+        	   A.MASDAY,
+        	   A.STARTDATE,
+        	   A.ENDDATE,
+        	   A.PRINTDATE
+        FROM XNOTIMAS A
+            INNER JOIN XRCPMAS B ON B.NOTIMASCD=A.NOTIMASCD
+        WHERE B.RCPMASCD=#{rcpMasCd}
+    </select>
+    
+    <!-- 청구원장 내역조회 -->
+    <select id="selectNoticeDetailsByRcpMasCd" resultType="map" parameterType="string">
+	SELECT DISTINCT
+		   A.PAYITEMNAME,
+		   A.PAYITEMAMT AS "PAYAMT",
+		   SUM(C.PAYITEMAMT) OVER (PARTITION BY A.NOTIDETCD ORDER BY A.PTRITEMORDER) AS "RCPAMT"
+	FROM XNOTIDET A
+		INNER JOIN XRCPMAS B ON B.NOTIMASCD=A.NOTIMASCD AND B.RCPMASST='PA03'
+		LEFT OUTER JOIN XRCPDET C ON C.NOTIDETCD=A.NOTIDETCD AND C.RCPMASCD=B.RCPMASCD
+	WHERE B.RCPMASCD=#{rcpMasCd}
+    </select>
+
+
+	<sql id="payItem_paging_header">
+		SELECT *
+		FROM (
+			SELECT (ROW_NUMBER() OVER()) AS RN, F.*
+			 FROM (
+	</sql>
+
+	<sql id="payItem_paging_footer">
+			) F
+		) X WHERE rn BETWEEN #{start} and #{end}
+	</sql>
+
+	<sql id="payItem_search">
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(masMonth)'>
+			AND A.MASMONTH = #{masMonth}
+		</if>
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDate)'>
+			AND A.PAYDAY BETWEEN #{startDate} AND #{endDate}
+		</if>
+
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchValue)'>
+			<if test='searchGb == "cusname"'>
+				AND
+				<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+					A.CUSNAME LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='searchGb == "vano"'>
+				AND
+				<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+					A.VANO LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+		</if>
+
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusGubnValue)'>
+			<if test='cusGubn == "all"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					( A.CUSGUBN1 LIKE '%' || #{list} || '%' OR A.CUSGUBN2 LIKE '%' || #{list} || '%' OR A.CUSGUBN3 LIKE '%' || #{list} || '%' OR A.CUSGUBN4 LIKE '%' || #{list} || '%' )
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn1"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					A.CUSGUBN1 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn2"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					A.CUSGUBN2 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn3"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					A.CUSGUBN3 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn4"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					A.CUSGUBN4 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+		</if>
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(svecdList)'>
+			AND A.SVECD IN
+			<foreach item="item" collection="svecdList" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(payItem)'>
+			AND B.PAYITEMCD = #{payItem}
+		</if>
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(adjFiregKey)'>
+			AND C.ADJFIREGKEY = #{adjFiregKey}
+		</if>
+	</sql>
+
+	<sql id="payItem_orderBy">
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(sortGb)'>
+			<if test='sortGb == "payDay"'>
+				ORDER BY A.PAYDAY DESC, A.PAYTIME DESC, A.CUSNAME ASC, A.CUSGUBN1 ASC, A.CUSGUBN2 ASC, A.CUSGUBN3 ASC, A.CUSGUBN4 ASC, C.GRPADJNAME ASC
+			</if>
+			<if test='sortGb == "cusName"'>
+				ORDER BY A.CUSNAME ASC, A.PAYDAY DESC, A.PAYTIME DESC, A.CUSGUBN1 ASC, A.CUSGUBN2 ASC, A.CUSGUBN3 ASC, A.CUSGUBN4 ASC, C.GRPADJNAME ASC
+			</if>
+			<if test='sortGb == "cusGubn"'>
+				ORDER BY A.CUSGUBN1 ASC, A.CUSGUBN2 ASC, A.CUSGUBN3 ASC, A.CUSGUBN4 ASC, A.CUSNAME ASC, A.PAYDAY DESC, A.PAYTIME DESC, C.GRPADJNAME ASC
+			</if>
+			<if test='sortGb == "grpadjName"'>
+				ORDER BY C.GRPADJNAME ASC, A.PAYDAY DESC, A.PAYTIME DESC, A.CUSNAME ASC, A.CUSGUBN1 ASC, A.CUSGUBN2 ASC, A.CUSGUBN3 ASC, A.CUSGUBN4 ASC
+			</if>
+		</if>
+	</sql>
+
+	<select id="selectPayItemListCnt" resultType="map">
+		SELECT COUNT(*)							AS CNT
+        	  , COALESCE(SUM(B.PAYITEMAMT), '0')			AS TOTAMT
+		FROM XRCPMAS A
+		INNER JOIN XRCPDET B ON A.RCPMASCD = B.RCPMASCD
+		LEFT OUTER JOIN XADJGROUP C ON B.ADJFIREGKEY = C.ADJFIREGKEY AND A.CHACD = C.CHACD
+		INNER JOIN XNOTIDET D ON B.NOTIDETCD = D.NOTIDETCD
+		WHERE A.RCPMASST = 'PA03'
+		  AND A.CHACD = #{chaCd}
+		<include refid="payItem_search" />
+	</select>
+
+	<select id="selectPayItemList" resultType="PayMgmtDTO">
+		<include refid="payItem_paging_header" />
+		SELECT A.RCPMASCD
+				, B.RCPDETCD
+				, A.MASMONTH                  AS "masMonth"
+				, A.PAYDAY                    AS "payDay"
+				, A.PAYTIME                   AS "payTime"
+				, A.CUSNAME                   AS "cusName"
+				, A.CUSKEY                    AS "cusKey"
+				, A.VANO                      AS "vano"
+				, A.CUSGUBN1                  AS "cusGubn1"
+				, A.CUSGUBN2                  AS "cusGubn2"
+				, A.CUSGUBN3                  AS "cusGubn3"
+				, A.CUSGUBN4                  AS "cusGubn4"
+				, B.PAYITEMNAME               AS "payItemName"
+				, B.PAYITEMAMT                AS "payAmt"         -- 입금금액
+				, D.PAYITEMAMT                AS "notiAmt"        -- 청구금액
+				, B.PTRITEMREMARK             AS "ptrItemRemark"
+				, B.RCPDETST                  AS "rcpDetSt"
+				, A.SVECD                     AS "sveCd"
+				, C.ADJFIREGKEY               AS "adjFiregKey"
+				, C.GRPADJNAME                AS "grpadjName"
+		FROM XRCPMAS A
+		INNER JOIN XRCPDET B ON A.RCPMASCD = B.RCPMASCD
+		LEFT OUTER JOIN XADJGROUP C ON B.ADJFIREGKEY = C.ADJFIREGKEY AND A.CHACD = C.CHACD
+		INNER JOIN XNOTIDET D ON B.NOTIDETCD = D.NOTIDETCD
+		WHERE A.RCPMASST = 'PA03'
+		  AND A.CHACD = #{chaCd}
+		<include refid="payItem_search" />
+		<include refid="payItem_orderBy"/>
+		<include refid="payItem_paging_footer" />
+	</select>
+
+	<select id="selectPayItemExcelList" resultType="PayMgmtDTO">
+		SELECT A.RCPMASCD
+				, B.RCPDETCD
+				, A.MASMONTH                  AS "masMonth"
+				, A.PAYDAY                    AS "payDay"
+				, A.PAYTIME                   AS "payTime"
+				, A.CUSNAME                   AS "cusName"
+				, A.CUSKEY                    AS "cusKey"
+				, A.VANO                      AS "vaNo"
+				, A.CUSGUBN1                  AS "cusGubn1"
+				, A.CUSGUBN2                  AS "cusGubn2"
+				, A.CUSGUBN3                  AS "cusGubn3"
+				, A.CUSGUBN4                  AS "cusGubn4"
+				, B.PAYITEMNAME               AS "payItemName"
+				, B.PAYITEMAMT                AS "payAmt"         -- 입금금액
+				, D.PAYITEMAMT                AS "notiAmt"        -- 청구금액
+				, A.RCPAMT					  AS "rcpAmt"
+				, B.PTRITEMREMARK             AS "ptrItemRemark"
+				, B.RCPDETST                  AS "rcpDetSt"
+				, CASE A.SVECD  WHEN 'VAS' THEN  '가상계좌'  WHEN 'DCS' THEN  '현금'  WHEN 'DCD' THEN  '신용카드 오프라인'  WHEN 'DVA' THEN  '무통장입금' WHEN 'OCD' THEN '신용카드 온라인' END AS "sveCd"
+				, C.ADJFIREGKEY               AS "adjFiregKey"
+				, C.GRPADJNAME                AS "grpadjName"
+		FROM XRCPMAS A
+		INNER JOIN XRCPDET B ON A.RCPMASCD = B.RCPMASCD
+		LEFT OUTER JOIN XADJGROUP C ON B.ADJFIREGKEY = C.ADJFIREGKEY AND A.CHACD = C.CHACD
+		INNER JOIN XNOTIDET D ON B.NOTIDETCD = D.NOTIDETCD
+		WHERE A.RCPMASST = 'PA03'
+		  AND A.CHACD = #{chaCd}
+		<include refid="payItem_search" />
+		<include refid="payItem_orderBy"/>
+	</select>
+
+	<select id="selectCashHistList" parameterType="java.util.HashMap" resultType="FwCashReceiptMasterDTO">
+		<include refid="paging_header" />
+		SELECT
+			A.ID AS id
+			, A.CLIENT_TYPE_CODE AS clientTypeCode
+			, A.TX_TYPE_CODE AS txTypeCode
+			, A.DATA_NO AS dataNo
+			, A.MEDIA_TYPE_CODE AS mediaTypeCode
+			, A.HOST_IDENTITY_NO AS hostIdentityNo
+			, A.CLIENT_IDENTITY_NO AS clientIdentityNo
+			, A.CLIENT_NO AS clientNo
+			, A.TX_DATE AS txDate
+			, A.POS_ENTRY AS posEntry
+			, A.TX_NO AS txNo
+			, A.CANCEL_TX_NO AS cancelTxNo
+			, A.TX_AMOUNT AS txAmount
+			, A.TIP AS tip
+			, A.TAX AS tax
+			, A.CANCEL_TX_DATE AS cancelTxDate
+			, A.CURRENCY_CODE AS currencyCode
+			, A.RESPONSE_CODE AS responseCode
+			, A.USER_DEFINE AS userDefine
+			, A.STATUS_CD AS statusCd
+			, A.REQUEST_DATE AS requestDate
+			, TO_CHAR(A.RESPONSE_DATE, 'YYYY.MM.DD') AS responseDate
+			, A.CREATE_DATE AS createDate
+			, A.CREATE_USER AS createUser
+			, SUBSTR(A.USER_DEFINE, 1, 20) AS cashMasCd
+			, SUBSTR(A.USER_DEFINE, 22, 1) AS job
+		FROM
+		FW_CASH_RECEIPT_MASTER A
+		LEFT OUTER JOIN XCASHMAS B ON B.CASHMASCD = SUBSTR(A.USER_DEFINE, 1, 20)
+		WHERE
+		SUBSTR(A.USER_DEFINE, 1, 20) = #{cashMasCd}
+		ORDER BY A.ID DESC
+		<include refid="paging_footer" />
+	</select>
+
+	<select id="countCashHistList" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT COUNT(*) AS CNT
+		FROM FW_CASH_RECEIPT_MASTER A
+		LEFT OUTER JOIN XCASHMAS B ON B.CASHMASCD = SUBSTR(A.USER_DEFINE, 1, 20)
+		WHERE SUBSTR(A.USER_DEFINE, 1, 20) = #{cashMasCd}
+	</select>
+</mapper>

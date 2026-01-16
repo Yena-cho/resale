@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SysVanoExcelDao">	
+
+	<!-- 가상계좌관리 - 가상계좌보유현황 -->	
+	<select id="getVano01ListExcel" resultType="com.finger.shinhandamoa.sys.setting.dto.VanoMgmtDTO">
+		SELECT  *
+		FROM 	(SELECT A.CHACD
+					, 	A.CHANAME
+					, 	A.CHRNAME
+					,	A.CHATRTY
+					,  	A.CHRTELNO
+					, 	A.CHAST
+					, 	COALESCE (SUM(B.CNT), 0)  AS totcnt
+					, 	COALESCE (SUM(B.YCNT), 0) - COALESCE (MAX(C.CNT), 0) AS usedcnt
+					, 	COALESCE (SUM(B.NCNT), 0) AS notusedcnt
+					,	COALESCE (MAX(C.CNT), 0)  AS delcnt
+				FROM 	XCHALIST A
+					left outer join	(SELECT CHACD
+						 	, 	REGDT
+							,	COUNT(*) AS  CNT 
+							, 	CASE WHEN  USEYN = 'Y' THEN  COUNT(*) END AS YCNT 
+							,	CASE WHEN  USEYN = 'N' THEN  COUNT(*) END AS NCNT 
+						 FROM 	VALIST 
+						 WHERE 	1 = 1 
+						 <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaCd)">
+						 AND	CHACD	= #{chaCd}
+						 </if>
+						 GROUP 	BY CHACD, REGDT, USEYN) B on A.CHACD 	= B.CHACD
+					left outer join	(SELECT COUNT(*) AS CNT
+							, 	CHACD
+						 FROM 	XCUSMAS
+						 WHERE 	1 = 1 
+						 <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaCd)">
+						 AND	CHACD	= #{chaCd}
+						 </if>
+						 AND  	DISABLED = 'Y'
+						 GROUP  BY CHACD) C on A.CHACD 	= C.CHACD
+				WHERE 	1=1
+				GROUP 	BY A.CHACD
+					, 	A.CHANAME
+					, 	A.CHRNAME
+					,	A.CHATRTY
+					,  	A.CHRTELNO
+					, 	A.CHAST) TA
+		WHERE 	1 = 1
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaCd)">
+		AND		TA.CHACD	= #{chaCd}
+		</if>
+		<include refid="vanoOwnsSearch" />
+		<include refid="vanoList01ListOrderBy"/>
+	</select>
+
+	<!-- 가상계좌관리 > 가상계좌 발급요청관리 -->
+	<select id="getVanoIssuedListExcel" resultType="com.finger.shinhandamoa.sys.setting.dto.VanoMgmtDTO">
+		SELECT TA.FGCD AS fgcd
+			, TA.CHACD AS chacd
+			, TA.CHANAME AS chaname
+			, TA.CHASTATUS AS chastatus
+			, TA.CHATYPE AS chatype
+			, TA.CHAST AS chast
+			, TA.CHATRTY AS chatrty
+			, TB.YCNT AS ycnt
+			, TB.WCNT AS wcnt
+			, TB.ACNT AS acnt
+			, TB.NCNT AS ncnt
+			, TB.RCNT AS rcnt
+		FROM XCHALIST TA LEFT OUTER JOIN
+			( SELECT CHACD
+			, COUNT(CASE WHEN USEYN = 'Y'
+			AND CHACD IS NOT NULL THEN 1 END) AS YCNT
+			, COUNT(CASE WHEN USEYN = 'N'
+			AND CUSCD IS NOT NULL
+			AND CHACD IS NOT NULL THEN 1 END) AS WCNT
+			, COUNT(CASE WHEN CHACD IS NOT NULL THEN 1 END) AS ACNT
+			, COUNT(CASE WHEN CHACD IS NULL THEN 1 END) AS NCNT
+			, COUNT(CASE WHEN USEYN = 'N'
+			AND CUSCD IS NULL
+			AND CHACD IS NOT NULL THEN 1 END) AS RCNT
+			FROM VALIST
+			GROUP BY CHACD
+		) TB ON TA.CHACD = TB.CHACD
+		WHERE 1=1
+		<include refid="vanoList01ListSearch" />
+		<include refid="vanoIssuedOrderBy"/>
+	</select>
+	 
+	<sql id="vanoOwnsSearch">
+		<if test="searchGb != null and searchGb == 'chrname' and searchValue != ''">
+			AND		TA.CHRNAME 	LIKE '%' || #{searchValue} || '%'
+		</if>
+		<if test="searchGb != null and searchGb == 'chrtelno' and searchValue != ''">
+			AND		TA.CHRTELNO LIKE '%' || #{searchValue} || '%'
+		</if>
+		<if test="stList.size > 0">
+			AND		TA.CHAST  IN  
+			<foreach collection="stList" item="list" index="index" open="(" close=")" separator=",">
+				#{list}
+			</foreach>
+		</if>
+		<if test="chatrtyList.size > 0">
+			AND		TA.CHATRTY  IN  
+			<foreach collection="chatrtyList" item="list" index="index" open="(" close=")" separator=",">
+				#{list}
+			</foreach>
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(fromNotUseCnt)">
+			AND		TA.notusedcnt <![CDATA[>=]]> #{fromNotUseCnt}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(toNotUseCnt)">
+			AND  	TA.notusedcnt <![CDATA[<=]]> #{toNotUseCnt}
+		</if>
+	</sql> 
+	
+	<sql id="vanoList01ListOrderBy">
+        <choose>                      
+			<when test='searchOrderBy == "chacd" '>
+			    ORDER BY TA.CHACD		
+			</when>
+			<when test='searchOrderBy == "chast" '>
+			    ORDER BY TA.CHAST			
+			</when>			
+        </choose>
+	</sql>
+	
+	<sql id="searchCnt">
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(fromNotUseCnt)">
+		AND		TA.notusedcnt <![CDATA[>=]]> #{fromNotUseCnt}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(toNotUseCnt)">
+		AND  	TA.notusedcnt <![CDATA[<=]]> #{toNotUseCnt}
+		</if>
+	</sql>
+
+	<sql id="vanoList01ListSearch">
+		<if test="searchGb != null and searchGb == 'chaname' and searchValue != ''">
+			AND		TA.CHANAME LIKE '%' || #{searchValue} || '%'
+		</if>
+		<if test="searchGb != null and searchGb == 'chrname' and searchValue != ''">
+			AND		TA.CHRNAME LIKE '%' || #{searchValue} || '%'
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chacd)">
+			AND		TA.CHACD = #{chacd}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaname)">
+			AND		TA.CHANAME = #{chaname}
+		</if>
+		<if test="stList.size > 0">
+			AND		TA.CHAST  IN
+			<foreach collection="stList" item="list" index="index" open="(" close=")" separator=",">
+				#{list}
+			</foreach>
+		</if>
+	</sql>
+
+	<sql id="vanoIssuedOrderBy">
+		<choose>
+			<when test='searchOrderBy == "chaname" '>
+				ORDER BY TA.CHANAME, TA.CHAST
+			</when>
+			<when test='searchOrderBy == "chast" '>
+				ORDER BY TA.CHAST, TA.CHACD
+			</when>
+		</choose>
+	</sql>
+
+	<!-- 가상계좌관리 - 기관별 가상계좌 보유현황 -->	
+	<select id="getChaVanoListExcel" resultType="com.finger.shinhandamoa.sys.setting.dto.VanoMgmt2DTO">
+		SELECT	TB.*
+		FROM	(
+			SELECT /*+ use_hash(b c a) */ TO_CHAR(A.REGDT, 'YYYY.MM.DD') AS REGDT
+				,  A.REGDT 		AS REGDATE
+				,  A.CHACD		AS chacd
+				,  B.CHANAME	AS chaname
+				,  C.CUSNAME	AS cusname
+				,  A.VANO		AS vano
+				,  A.fgcd       AS fgcd
+				,  A.assigndt   AS assigndt
+				,  A.cuscd      AS cuscd
+				,  A.useyn      AS useyn
+				,  TO_CHAR(TO_DATE(PAYDAY, 'YYYYMMDD'), 'YYYY.MM.DD') AS lastrcpdate
+				,  CASE WHEN A.CHACD IS NOT NULL AND A.USEYN = 'Y' THEN 'Y'
+						WHEN A.CHACD IS NOT NULL AND A.CUSCD IS NOT NULL AND A.USEYN = 'N' THEN 'W'
+						WHEN A.CHACD IS NOT NULL THEN 'A'
+						WHEN A.CHACD IS NULL THEN 'N' ELSE '' END AS vastate
+		FROM  VALIST A
+		LEFT OUTER JOIN XCHALIST  B ON A.CHACD = B.CHACD
+		LEFT OUTER JOIN	XCUSMAS C on A.CHACD = C.CHACD AND 	A.VANO 	= C.VANO
+		LEFT OUTER JOIN	(SELECT MAX(PAYDAY) AS PAYDAY
+							, 	VANO
+							, 	CHACD
+						FROM 	XRCPMAS
+						WHERE 	RCPMASST = 'PA03'
+						<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chacd)">
+							AND 	CHACD 	 = '${chacd}'
+						</if>
+						GROUP 	BY VANO, CHACD) D on A.CHACD = D.CHACD AND 	A.VANO 	= D.VANO
+						<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chacd)">
+							AND 	A.CHACD 	 = '${chacd}'
+						</if>
+						) TB
+		WHERE	1 = 1
+		<include refid="chaVanoListListSearch"/>
+		<include refid="chaVanoListListOrderBy"/>
+	</select>	
+
+	 <sql id="chaVanoListListSearch">
+	 	<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startday) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endday)">
+			AND TO_CHAR(TB.REGDATE, 'YYYYMMDD') BETWEEN #{startday} AND #{endday}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaname)">
+			AND	 TB.CHANAME LIKE '%' || #{chaname} || '%'
+		</if>
+		<if test="searchGb == 'vano' and searchValue != ''">
+			AND  TB.VANO 	LIKE '%' || #{searchValue} || '%'
+		</if>
+		<if test="searchGb == 'cusname' and searchValue != ''">
+			AND  COALESCE (TB.CUSNAME, '') LIKE '%' || #{searchValue} || '%'
+		</if>	
+		<if test="stList.size > 0">
+			AND		TB.USEYN  IN  
+			<foreach collection="stList" item="list" index="index" open="(" close=")" separator=",">
+				#{list}
+			</foreach>
+		</if>
+	</sql>
+	
+	<sql id="chaVanoListListOrderBy">
+        <choose>                      
+			<when test='searchOrderBy == "regdt" '>
+			    ORDER BY TB.REGDT,  TB.CUSNAME			
+			</when>
+			<when test='searchOrderBy == "custname" '>
+			    ORDER BY TB.CUSNAME, TB.REGDT			
+			</when>			
+			<when test='searchOrderBy == "vano" '>
+			    ORDER BY TB.VANO, TB.REGDT			
+			</when>			
+        </choose>
+	</sql>
+	
+	<select id="getVanoTranHisListExcel" resultType="com.finger.shinhandamoa.sys.setting.dto.VanoMgmtDTO">
+		SELECT  A.PAYDAY       AS  payday     
+			, 	A.PAYTIME      AS  paytime 
+			, 	COALESCE ((SELECT VALUE FROM KFTC_CODE WHERE CODE = A.FICD),' ')     AS  ficd
+		    ,   COALESCE ((SELECT VALUE FROM KFTC_CODE WHERE CODE = A.BNKCD),' ')    AS  bnkcd
+			,	A.RCPUSRNAME   AS  rcpusrname
+			, 	A.CUSNAME      AS  cusname 
+			, 	A.VANO         AS  vano   
+			, 	A.CHACD        AS  chacd      
+			,	B.CHANAME 	   AS  chaname 
+			, 	A.RCPAMT       AS  rcpamt                    
+		FROM 	XRCPMAS 	   A                                   
+		   , 	XCHALIST 	   B                                
+		WHERE 	A.CHACD 	   = B.CHACD                       
+		AND 	RCPMASST 	   = 'PA03' 
+		AND A.SVECD = 'VAS'
+		<include refid="vanoTranHisListListSearch" />
+		<include refid="vanoTranHisListOrderBy" />				   
+	</select>
+	
+	<sql id="vanoTranHisListListSearch">
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(paydayFrom)">
+			AND A.PAYDAY <![CDATA[>=]]> #{paydayFrom}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(paydayTo)">
+			AND A.PAYDAY <![CDATA[<=]]> #{paydayTo}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(paytimeFrom)">
+			AND A.PAYDAY || A.PAYTIME <![CDATA[>=]]> #{paydayFrom} || #{paytimeFrom}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(paytimeTo)">
+			AND A.PAYDAY || A.PAYTIME <![CDATA[<=]]> #{paydayTo} || #{paytimeTo}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaCd)">
+			AND		A.CHACD 	= #{chacd}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaname)">
+			AND		B.CHANAME 	LIKE '%' || #{chaname} || '%'
+		</if>
+		<if test="searchGb == 'vano' and searchValue != ''">
+			AND		A.VANO 		= #{searchValue}
+		</if>
+		<if test="searchGb == 'cusname' and searchValue != ''">
+			AND		A.CUSNAME 	= #{searchValue}
+		</if>
+	</sql>
+	
+	<sql id="vanoTranHisListOrderBy">
+        <choose>                      
+			<when test='searchOrderBy == "payday" '>
+			    ORDER BY A.PAYDAY || A.PAYTIME DESC,  A.VANO			
+			</when>
+			<when test='searchOrderBy == "vano" '>
+			    ORDER BY A.VANO, A.PAYDAY || A.PAYTIME DESC			
+			</when>			
+        </choose>
+	</sql>
+	
+</mapper>

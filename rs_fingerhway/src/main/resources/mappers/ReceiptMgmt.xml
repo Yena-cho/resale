@@ -1,0 +1,633 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="receiptMgmtDao">
+	<select id="selectReceiptStateListCnt" resultType="ReceiptTotVO" >
+		SELECT
+		COUNT(1)	AS TOT_CNT
+		,	FORMAT(COUNT(1), 0) AS DISP_TOT_CNT
+		FROM
+		TB_PAYER_INFO A
+		INNER JOIN TB_PAYER_INFO_MASTER B ON A.PAYER_INFO_ID = B.PAYER_INFO_ID
+		LEFT OUTER JOIN (
+		SELECT
+		PAYDAY
+		,	BNKCD
+		,	TRNO
+		FROM
+		AEGISTRANSMSG
+		WHERE
+		TRANST = '03'
+		) C ON A.TRNO = C.TRNO
+		WHERE
+		1=1
+		<if test='successYn == "Y"'>
+			AND C.PAYDAY IS NOT NULL
+		</if>
+		<if test='successYn == "N"'>
+			AND C.PAYDAY IS NULL
+		</if>
+		<if test='startMonth != "" and startMonth != null'>
+			AND	B.REG_MONTH	=	#{startMonth}
+		</if>
+		<if test='searchStr != "" and searchStr != null'>
+			<if test='searchInd == "CAR"'>
+				AND	A.CAR_NUM	LIKE	CONCAT('%',#{searchStr},'%')
+			</if>
+			<if test='searchInd == "NAME"'>
+				AND	A.CAR_OWNER_NM	LIKE	CONCAT('%',#{searchStr},'%')
+			</if>
+			<if test='searchInd == "CUST"'>
+				AND	A.CUST_INQ_NUM	LIKE	CONCAT('%',#{searchStr},'%')
+			</if>
+			<if test='searchInd == "ACNT"'>
+				AND	A.VIRTUAL_ACNT_NUM	LIKE	CONCAT('%',#{searchStr},'%')
+			</if>
+		</if>
+		<if test='successYn == "Y"'>
+			ORDER BY C.PAYDAY DESC
+		</if>
+	</select>
+
+	<select id="selectReceiptStateReceiptTot" resultType="ReceiptTotVO" >
+		SELECT
+		FORMAT(COUNT(1),0) AS TOT_RECEIPT_CNT
+		,	FORMAT(NVL(SUM(A.TOT_AMT),0),0) AS TOT_RECEIPT_AMT
+		FROM
+		TB_PAYER_INFO A
+		INNER JOIN TB_PAYER_INFO_MASTER B ON A.PAYER_INFO_ID = B.PAYER_INFO_ID
+		LEFT OUTER JOIN	(
+		SELECT
+		PAYDAY
+		,	BNKCD
+		,	TRNO
+		FROM
+		AEGISTRANSMSG
+		WHERE
+		TRANST = '03'
+		) C ON A.TRNO = C.TRNO
+		WHERE
+		1=1
+		<![CDATA[
+			AND	A.TRNO = C.TRNO
+			AND	C.PAYDAY	>=	CONCAT(#{startDate},'000000')
+			AND	C.PAYDAY	<=	CONCAT(#{endDate},'235959')
+			]]>
+		<if test='successYn == "Y"'>
+			AND C.PAYDAY IS NOT NULL
+		</if>
+		<if test='successYn == "N"'>
+			AND C.PAYDAY IS NULL
+		</if>
+		<if test='startMonth != "" and startMonth != null'>
+			AND	B.REG_MONTH	=	#{startMonth}
+		</if>
+		<if test='searchStr != "" and searchStr != null'>
+			<if test='searchInd == "CAR"'>
+				AND	A.CAR_NUM	LIKE	CONCAT('%',#{searchStr},'%')
+			</if>
+			<if test='searchInd == "NAME"'>
+				AND	A.CAR_OWNER_NM	LIKE	CONCAT('%',#{searchStr},'%')
+			</if>
+			<if test='searchInd == "CUST"'>
+				AND	A.CUST_INQ_NUM	LIKE	CONCAT('%',#{searchStr},'%')
+			</if>
+			<if test='searchInd == "ACNT"'>
+				AND	A.VIRTUAL_ACNT_NUM	LIKE	CONCAT('%',#{searchStr},'%')
+			</if>
+		</if>
+	</select>
+
+	<select id="selectReceiptStateDefaultTot" resultType="ReceiptTotVO" >
+		SELECT
+		FORMAT(COUNT(1),0) AS TOT_DEFAULT_CNT
+		,	FORMAT(NVL(SUM(A.TOT_AMT),0),0) AS TOT_DEFAULT_AMT
+		FROM
+		TB_PAYER_INFO A
+		INNER JOIN TB_PAYER_INFO_MASTER B ON A.PAYER_INFO_ID = B.PAYER_INFO_ID
+		LEFT OUTER JOIN	(
+		SELECT
+		PAYDAY
+		,	BNKCD
+		,	TRNO
+		FROM
+		AEGISTRANSMSG
+		WHERE
+		TRANST = '03'
+		) C ON A.TRNO = C.TRNO
+		WHERE
+		1=1
+		AND C.PAYDAY IS NULL
+		<if test='successYn == "Y"'>
+			AND C.PAYDAY IS NOT NULL
+		</if>
+		<if test='successYn == "N"'>
+			AND C.PAYDAY IS NULL
+		</if>
+		<if test='startMonth != "" and startMonth != null'>
+			AND	B.REG_MONTH	=	#{startMonth}
+		</if>
+		<if test='searchStr != "" and searchStr != null'>
+			<if test='searchInd == "CAR"'>
+				AND	A.CAR_NUM	LIKE	CONCAT('%',#{searchStr},'%')
+			</if>
+			<if test='searchInd == "NAME"'>
+				AND	A.CAR_OWNER_NM	LIKE	CONCAT('%',#{searchStr},'%')
+			</if>
+			<if test='searchInd == "CUST"'>
+				AND	A.CUST_INQ_NUM	LIKE	CONCAT('%',#{searchStr},'%')
+			</if>
+			<if test='searchInd == "ACNT"'>
+				AND	A.VIRTUAL_ACNT_NUM	LIKE	CONCAT('%',#{searchStr},'%')
+			</if>
+		</if>
+	</select>
+
+	<select id="selectReceiptStateList" resultType="PayerInfoVO" >
+		SELECT B.*
+		FROM (
+		SELECT
+		A.CAR_NUM
+		,	A.CAR_OWNER_NM
+		,	CONCAT(SUBSTR(A.PAY_DUE_DT,1,4),'.',SUBSTR(A.PAY_DUE_DT,5,2),'.',SUBSTR(A.PAY_DUE_DT,7,2)) AS PAY_DUE_DT
+		,	A.CUST_INQ_NUM
+		,	CASE WHEN A.OCCUR_DTTM1 IS NULL THEN 10
+		WHEN A.OCCUR_DTTM2 IS NULL THEN 1
+		WHEN A.OCCUR_DTTM3 IS NULL THEN 2
+		WHEN A.OCCUR_DTTM4 IS NULL THEN 3
+		WHEN A.OCCUR_DTTM5 IS NULL THEN 4
+		WHEN A.OCCUR_DTTM6 IS NULL THEN 5
+		WHEN A.OCCUR_DTTM7 IS NULL THEN 6
+		WHEN A.OCCUR_DTTM8 IS NULL THEN 7
+		WHEN A.OCCUR_DTTM9 IS NULL THEN 8
+		WHEN A.OCCUR_DTTM10 IS NULL THEN 9
+		ELSE 1
+		END AS TOT_CNT
+		,	FORMAT(A.TOT_AMT,0) AS TOT_AMT
+		,	CASE WHEN C.PAYDAY IS NULL THEN NULL
+		ELSE CONCAT(SUBSTR(C.PAYDAY,1,4),'.',SUBSTR(C.PAYDAY,5,2),'.',SUBSTR(C.PAYDAY,7,2),' ',SUBSTR(C.PAYDAY,9,2),':',SUBSTR(C.PAYDAY,11,2),':',SUBSTR(C.PAYDAY,13,2))
+		END AS PAYDAY
+		,	(SELECT BANK_NM FROM TB_BANK_CD WHERE BANK_CD = C.BNKCD) AS BANK_CD_NM
+		,	C.BNKCD
+		,	CASE WHEN C.PAYDAY IS NULL THEN '미납'
+		ELSE '완납'
+		END AS PAY_YN_NM
+		,	CASE WHEN C.PAYDAY IS NULL THEN 'N'
+		ELSE 'Y'
+		END AS PAY_YN
+		,	A.OCCUR_REASON1
+		,	A.VIRTUAL_ACNT_NUM
+		,	A.TRNO
+		FROM
+		TB_PAYER_INFO A
+		INNER JOIN TB_PAYER_INFO_MASTER B ON A.PAYER_INFO_ID = B.PAYER_INFO_ID
+		LEFT OUTER JOIN (
+		SELECT
+		PAYDAY
+		,	BNKCD
+		,	TRNO
+		FROM
+		AEGISTRANSMSG
+		WHERE
+		TRANST = '03'
+		) C ON A.TRNO = C.TRNO
+		WHERE
+		1=1
+		<if test='successYn == "Y"'>
+			AND C.PAYDAY IS NOT NULL
+		</if>
+		<if test='successYn == "N"'>
+			AND C.PAYDAY IS NULL
+		</if>
+		<if test='startMonth != "" and startMonth != null'>
+			AND	B.REG_MONTH	=	#{startMonth}
+		</if>
+		<if test='searchStr != "" and searchStr != null'>
+			<if test='searchInd == "CAR"'>
+				AND	A.CAR_NUM	LIKE	CONCAT('%',#{searchStr},'%')
+			</if>
+			<if test='searchInd == "NAME"'>
+				AND	A.CAR_OWNER_NM	LIKE	CONCAT('%',#{searchStr},'%')
+			</if>
+			<if test='searchInd == "CUST"'>
+				AND	A.CUST_INQ_NUM	LIKE	CONCAT('%',#{searchStr},'%')
+			</if>
+			<if test='searchInd == "ACNT"'>
+				AND	A.VIRTUAL_ACNT_NUM	LIKE	CONCAT('%',#{searchStr},'%')
+			</if>
+		</if>
+		) B
+		<if test='order == "CAR_OWNER_NM"'>
+			ORDER BY B.CAR_OWNER_NM ASC, B.CUST_INQ_NUM ASC
+		</if>
+		<if test='order == "CUST_INQ_NUM"'>
+			ORDER BY B.CUST_INQ_NUM ASC
+		</if>
+		<if test='order == "PAY_DUE_DT"'>
+			ORDER BY B.PAY_DUE_DT DESC, B.CUST_INQ_NUM ASC
+		</if>
+		<if test='order == "PAYDAY"'>
+			ORDER BY B.PAYDAY DESC, B.CUST_INQ_NUM ASC
+		</if>
+		LIMIT #{startIdx} , #{pageSize}
+	</select>
+
+	<select id="selectReceiptStateExcel" resultType="PayerInfoVO" >
+		SELECT
+		A.CAR_NUM
+		,	A.CAR_OWNER_NM
+		,	CONCAT(SUBSTR(A.PAY_DUE_DT,1,4),'.',SUBSTR(A.PAY_DUE_DT,5,2),'.',SUBSTR(A.PAY_DUE_DT,7,2)) AS PAY_DUE_DT
+		,	A.CUST_INQ_NUM
+		,	CASE WHEN A.OCCUR_DTTM1 IS NULL THEN 10
+		ELSE
+		CASE WHEN A.OCCUR_DTTM2 IS NULL THEN 1
+		ELSE
+		CASE WHEN A.OCCUR_DTTM3 IS NULL THEN 2
+		ELSE
+		CASE WHEN A.OCCUR_DTTM4 IS NULL THEN 3
+		ELSE
+		CASE WHEN A.OCCUR_DTTM5 IS NULL THEN 4
+		ELSE
+		CASE WHEN A.OCCUR_DTTM6 IS NULL THEN 5
+		ELSE
+		CASE WHEN A.OCCUR_DTTM7 IS NULL THEN 6
+		ELSE
+		CASE WHEN A.OCCUR_DTTM8 IS NULL THEN 7
+		ELSE
+		CASE WHEN A.OCCUR_DTTM9 IS NULL THEN 8
+		ELSE
+		CASE WHEN A.OCCUR_DTTM10 IS NULL THEN 9
+		ELSE 1
+		END AS TOT_CNT
+		,	FORMAT(A.TOT_AMT,0) AS TOT_AMT
+		,	CASE WHEN C.PAYDAY IS NULL THEN NULL
+		ELSE CONCAT(SUBSTR(C.PAYDAY,1,4),'.',SUBSTR(C.PAYDAY,5,2),'.',SUBSTR(C.PAYDAY,7,2),' ',SUBSTR(C.PAYDAY,9,2),':',SUBSTR(C.PAYDAY,11,2),':',SUBSTR(C.PAYDAY,13,2))
+		END AS PAYDAY
+		,	(SELECT BANK_NM FROM TB_BANK_CD WHERE BANK_CD = C.BNKCD) AS BANK_CD_NM
+		,	C.BNKCD
+		,	CASE WHEN C.PAYDAY IS NULL THEN '미납'
+		ELSE '완납'
+		END AS PAY_YN_NM
+		,	CASE WHEN C.PAYDAY IS NULL THEN 'N'
+		ELSE 'Y'
+		END AS PAY_YN
+		,	A.OCCUR_REASON1
+		,	A.VIRTUAL_ACNT_NUM
+		,	A.TRNO
+		,	A.OCCUR_DTTM1
+		,	A.OCCUR_REASON1
+		,	A.PASS_PLACE1
+		,	FORMAT(A.PASS_AMT1,0) AS PASS_AMT1
+		,	A.OCCUR_DTTM2
+		,	A.OCCUR_REASON2
+		,	A.PASS_PLACE2
+		,	CASE WHEN A.PASS_AMT2 = 0 THEN '' ELSE FORMAT(A.PASS_AMT2,0) END AS PASS_AMT2
+		,	A.OCCUR_DTTM3
+		,	A.OCCUR_REASON3
+		,	A.PASS_PLACE3
+		,	CASE WHEN A.PASS_AMT3 = 0 THEN '' ELSE FORMAT(A.PASS_AMT3,0) END AS PASS_AMT3
+		,	A.OCCUR_DTTM4
+		,	A.OCCUR_REASON4
+		,	A.PASS_PLACE4
+		,	CASE WHEN A.PASS_AMT4 = 0 THEN '' ELSE FORMAT(A.PASS_AMT4,0) END AS PASS_AMT4
+		,	A.OCCUR_DTTM5
+		,	A.OCCUR_REASON5
+		,	A.PASS_PLACE5
+		,	CASE WHEN A.PASS_AMT5 = 0 THEN '' ELSE FORMAT(A.PASS_AMT5,0) END AS PASS_AMT5
+		,	A.OCCUR_DTTM6
+		,	A.OCCUR_REASON6
+		,	A.PASS_PLACE6
+		,	CASE WHEN A.PASS_AMT6 = 0 THEN '' ELSE FORMAT(A.PASS_AMT6,0) END AS PASS_AMT6
+		,	A.OCCUR_DTTM7
+		,	A.OCCUR_REASON7
+		,	A.PASS_PLACE7
+		,	CASE WHEN A.PASS_AMT7 = 0 THEN '' ELSE FORMAT(A.PASS_AMT7,0) END AS PASS_AMT7
+		,	A.OCCUR_DTTM8
+		,	A.OCCUR_REASON8
+		,	A.PASS_PLACE8
+		,	CASE WHEN A.PASS_AMT8 = 0 THEN '' ELSE FORMAT(A.PASS_AMT8,0) END AS PASS_AMT8
+		,	A.OCCUR_DTTM9
+		,	A.OCCUR_REASON9
+		,	A.PASS_PLACE9
+		,	CASE WHEN A.PASS_AMT9 = 0 THEN '' ELSE FORMAT(A.PASS_AMT2,0) END AS PASS_AMT9
+		,	A.OCCUR_DTTM10
+		,	A.OCCUR_REASON10
+		,	A.PASS_PLACE10
+		,	CASE WHEN A.PASS_AMT10 = 0 THEN '' ELSE FORMAT(A.PASS_AMT10,0) END AS PASS_AMT10
+		FROM
+		TB_PAYER_INFO A
+		INNER JOIN TB_PAYER_INFO_MASTER B ON A.PAYER_INFO_ID = B.PAYER_INFO_ID
+		LEFT OUTER JOIN (
+		SELECT
+		PAYDAY
+		,	BNKCD
+		,	TRNO
+		FROM
+		AEGISTRANSMSG
+		WHERE
+		TRANST = '03'
+		) C ON A.TRNO = C.TRNO
+		WHERE
+		1=1
+		<if test='successYn == "Y"'>
+			AND C.PAYDAY IS NOT NULL
+		</if>
+		<if test='successYn == "N"'>
+			AND C.PAYDAY IS NULL
+		</if>
+		<if test='startMonth != "" and startMonth != null'>
+			AND	B.REG_MONTH	=	#{startMonth}
+		</if>
+		<if test='searchStr != "" and searchStr != null'>
+			<if test='searchInd == "CAR"'>
+				AND	A.CAR_NUM	LIKE	CONCAT('%',#{searchStr},'%')
+			</if>
+			<if test='searchInd == "NAME"'>
+				AND	A.CAR_OWNER_NM	LIKE	CONCAT('%',#{searchStr},'%')
+			</if>
+			<if test='searchInd == "CUST"'>
+				AND	A.CUST_INQ_NUM	LIKE	CONCAT('%',#{searchStr},'%')
+			</if>
+			<if test='searchInd == "ACNT"'>
+				AND	A.VIRTUAL_ACNT_NUM	LIKE	CONCAT('%',#{searchStr},'%')
+			</if>
+		</if>
+		<if test='order == "CAR_OWNER_NM"'>
+			ORDER BY ISNULL(A.CAR_OWNER_NM), A.CAR_OWNER_NM ASC, A.CUST_INQ_NUM ASC
+		</if>
+		<if test='order == "CUST_INQ_NUM"'>
+			ORDER BY ISNULL(A.CUST_INQ_NUM), A.CUST_INQ_NUM ASC
+		</if>
+		<if test='order == "PAY_DUE_DT"'>
+			ORDER BY A.PAY_DUE_DT DESC, A.CUST_INQ_NUM ASC
+		</if>
+		<if test='order == "PAYDAY"'>
+			ORDER BY C.PAYDAY DESC, A.CUST_INQ_NUM ASC
+		</if>
+
+	</select>
+
+	<select id="selectClaimItem" resultType="PayerInfoVO" >
+	    SELECT
+	    		FORMAT(A.TOT_AMT,0) AS TOT_AMT
+			,	A.OCCUR_DTTM1
+			,	A.OCCUR_REASON1
+			,	A.PASS_PLACE1
+			,	FORMAT(A.PASS_AMT1,0) AS PASS_AMT1
+			,	A.OCCUR_DTTM2
+			,	A.OCCUR_REASON2
+			,	A.PASS_PLACE2
+			,	CASE WHEN A.PASS_AMT2 = 0 THEN '' ELSE FORMAT(A.PASS_AMT2,0) END AS PASS_AMT2
+			,	A.OCCUR_DTTM3
+			,	A.OCCUR_REASON3
+			,	A.PASS_PLACE3
+			,	CASE WHEN A.PASS_AMT3 = 0 THEN '' ELSE FORMAT(A.PASS_AMT3,0) END AS PASS_AMT3
+			,	A.OCCUR_DTTM4
+			,	A.OCCUR_REASON4
+			,	A.PASS_PLACE4
+			,	CASE WHEN A.PASS_AMT4 = 0 THEN '' ELSE FORMAT(A.PASS_AMT4,0) END AS PASS_AMT4
+			,	A.OCCUR_DTTM5
+			,	A.OCCUR_REASON5
+			,	A.PASS_PLACE5
+			,	CASE WHEN A.PASS_AMT5 = 0 THEN '' ELSE FORMAT(A.PASS_AMT5,0) END AS PASS_AMT5
+			,	A.OCCUR_DTTM6
+			,	A.OCCUR_REASON6
+			,	A.PASS_PLACE6
+			,	CASE WHEN A.PASS_AMT6 = 0 THEN '' ELSE FORMAT(A.PASS_AMT6,0) END AS PASS_AMT6
+			,	A.OCCUR_DTTM7
+			,	A.OCCUR_REASON7
+			,	A.PASS_PLACE7
+			,	CASE WHEN A.PASS_AMT7 = 0 THEN '' ELSE FORMAT(A.PASS_AMT7,0) END AS PASS_AMT7
+			,	A.OCCUR_DTTM8
+			,	A.OCCUR_REASON8
+			,	A.PASS_PLACE8
+			,	CASE WHEN A.PASS_AMT8 = 0 THEN '' ELSE FORMAT(A.PASS_AMT8,0) END AS PASS_AMT8
+			,	A.OCCUR_DTTM9
+			,	A.OCCUR_REASON9
+			,	A.PASS_PLACE9
+			,	CASE WHEN A.PASS_AMT9 = 0 THEN '' ELSE FORMAT(A.PASS_AMT2,0) END AS PASS_AMT9
+			,	A.OCCUR_DTTM10
+			,	A.OCCUR_REASON10
+			,	A.PASS_PLACE10
+			,	CASE WHEN A.PASS_AMT10 = 0 THEN '' ELSE FORMAT(A.PASS_AMT10,0) END AS PASS_AMT10
+	    FROM
+	    		TB_PAYER_INFO	A
+	    WHERE A.TRNO = #{trno}
+	</select>
+
+	<select id="selectReceiptTot" resultType="ReceiptTotVO" >
+		SELECT
+				COUNT(1) AS TOT_CNT
+			,	FORMAT(COUNT(1),0) AS DISP_TOT_CNT
+			,	CONCAT(FORMAT(SUM(IFNULL(A.TOT_AMT,0)),0),'원') AS TOT_RECEIPT_AMT
+			,	CONCAT(FORMAT(COUNT(1)*100,0),'원') AS TOT_FEE_AMT
+		FROM
+				TB_PAYER_INFO	A
+			INNER JOIN AEGISTRANSMSG	C ON A.TRNO = C.TRNO
+		WHERE
+			<![CDATA[
+			C.PAYDAY	>=	CONCAT(#{startDate},'000000')
+			AND	C.PAYDAY	<=	CONCAT(#{endDate},'235959')
+			]]>
+	</select>
+
+	<select id="selectReceiptList" resultType="PayerInfoVO" >
+			  SELECT B.*
+			  FROM (
+			  		SELECT
+				  		A.CUST_INQ_NUM
+					,	FORMAT(A.TOT_AMT,0) AS TOT_AMT
+					,	(SELECT BANK_NM FROM TB_BANK_CD WHERE BANK_CD = C.BNKCD) AS BANK_CD_NM
+					,	CONCAT(SUBSTR(C.PAYDAY,1,4),'.',SUBSTR(C.PAYDAY,5,2),'.',SUBSTR(C.PAYDAY,7,2)) AS PAYDAY
+					,	'100' AS FEE
+					,	'신한은행가상계좌' AS PROCESS_IND
+				FROM
+						TB_PAYER_INFO A
+					INNER JOIN AEGISTRANSMSG C ON A.TRNO = C.TRNO
+				WHERE
+					1=1
+					<![CDATA[
+					AND	C.PAYDAY	>=	CONCAT(#{startDate},'000000')
+					AND	C.PAYDAY	<=	CONCAT(#{endDate},'235959')
+					]]>
+				ORDER BY C.PAYDAY DESC
+			  LIMIT #{startIdx} , #{pageSize}
+			  ) B
+	</select>
+
+	<select id="selectReceiptExcel" resultType="PayerInfoVO" >
+		SELECT
+				REPLACE(A.CUST_INQ_NUM,'+','') AS CUST_INQ_NUM
+			,	TO_CHAR(A.TOT_AMT) AS TOT_AMT
+			,	(SELECT BANK_NM FROM TB_BANK_CD WHERE BANK_CD = C.BNKCD) AS BANK_CD_NM
+			,	'가상계좌'	AS	BCH_CD_NM
+			,	SUBSTR(C.PAYDAY,1,8) AS PAYDAY
+			,	'100' AS FEE
+		FROM
+				TB_PAYER_INFO	A
+			INNER JOIN AEGISTRANSMSG C ON A.TRNO = C.TRNO
+		WHERE
+			1=1
+-- 				A.TRNO = C.TRNO
+			<![CDATA[
+					AND	C.PAYDAY	>=	CONCAT(#{startDate},'000000')
+					AND	C.PAYDAY	<=	CONCAT(#{endDate},'235959')
+			]]>
+
+	</select>
+
+	<select id="selectDefaultTot" resultType="ReceiptTotVO" >
+		SELECT
+		COUNT(1)	AS TOT_CNT
+		,	FORMAT(COUNT(1),0) AS DISP_TOT_CNT
+		,	FORMAT(SUM(IFNULL(A.TOT_AMT,0)),0)||'원' AS TOT_DEFAULT_AMT
+		FROM
+		TB_PAYER_INFO A
+		INNER JOIN TB_PAYER_INFO_MASTER B ON A.PAYER_INFO_ID = B.PAYER_INFO_ID
+		LEFT OUTER JOIN (
+		SELECT
+		PAYDAY
+		,	BNKCD
+		,	TRNO
+		FROM
+		AEGISTRANSMSG
+		WHERE
+		TRANST = '03'
+		) C ON A.TRNO = C.TRNO
+		WHERE
+		1=1
+		AND C.PAYDAY IS NULL
+		<if test='startMonth != "" and startMonth != null'>
+			AND	B.REG_MONTH	= #{startMonth}
+		</if>
+	</select>
+
+	<select id="selectDefaultList" resultType="PayerInfoVO" >
+		SELECT B.*
+		FROM (
+		SELECT
+		A.CAR_NUM
+		,	A.CAR_OWNER_NM
+		,	CONCAT(SUBSTR(A.PAY_DUE_DT,1,4),'.',SUBSTR(A.PAY_DUE_DT,5,2),'.',SUBSTR(A.PAY_DUE_DT,7,2)) AS PAY_DUE_DT
+		,	A.CAR_OWNER_ADDR
+		,	A.GIRO_NUM
+		,	A.CUST_INQ_NUM
+		,	FORMAT(A.TOT_AMT,0) AS TOT_AMT
+		,	A.NOTI_AMT_CD
+		,	A.GIRO_CD
+		FROM
+		TB_PAYER_INFO A
+		INNER JOIN TB_PAYER_INFO_MASTER B ON A.PAYER_INFO_ID = B.PAYER_INFO_ID
+		LEFT OUTER JOIN	(
+		SELECT
+		PAYDAY
+		,	BNKCD
+		,	TRNO
+		FROM
+		AEGISTRANSMSG
+		WHERE
+		TRANST = '03'
+		) C ON A.TRNO = C.TRNO
+		WHERE
+		1=1
+		AND C.PAYDAY IS NULL
+		<if test='startMonth != "" and startMonth != null'>
+			AND	B.REG_MONTH	=	#{startMonth}
+		</if>
+		ORDER BY A.PAY_DUE_DT ASC, A.CUST_INQ_NUM ASC
+		LIMIT #{startIdx} , #{pageSize}
+		) B
+	</select>
+
+	<select id="selectDefaultExcel" resultType="PayerInfoVO">
+		SELECT
+		A.CAR_NUM
+		, A.CAR_OWNER_NM
+		, CONCAT(SUBSTR(A.PAY_DUE_DT,1,4),'.',SUBSTR(A.PAY_DUE_DT,5,2),'.',SUBSTR(A.PAY_DUE_DT,7,2)) AS PAY_DUE_DT
+		, A.CAR_OWNER_ADDR
+		, A.GIRO_NUM
+		, A.CUST_INQ_NUM
+		, FORMAT(A.TOT_AMT,0) AS TOT_AMT
+		, A.NOTI_AMT_CD
+		, A.GIRO_CD
+		,	A.OCCUR_DTTM1
+		,	A.OCCUR_REASON1
+		,	A.PASS_PLACE1
+		,	FORMAT(A.PASS_AMT1,0) AS PASS_AMT1
+		,	A.OCCUR_DTTM2
+		,	A.OCCUR_REASON2
+		,	A.PASS_PLACE2
+		,	CASE WHEN A.PASS_AMT2 = 0 THEN '' ELSE FORMAT(A.PASS_AMT2,0) END AS PASS_AMT2
+		,	A.OCCUR_DTTM3
+		,	A.OCCUR_REASON3
+		,	A.PASS_PLACE3
+		,	CASE WHEN A.PASS_AMT3 = 0 THEN '' ELSE FORMAT(A.PASS_AMT3,0) END AS PASS_AMT3
+		,	A.OCCUR_DTTM4
+		,	A.OCCUR_REASON4
+		,	A.PASS_PLACE4
+		,	CASE WHEN A.PASS_AMT4 = 0 THEN '' ELSE FORMAT(A.PASS_AMT4,0) END AS PASS_AMT4
+		,	A.OCCUR_DTTM5
+		,	A.OCCUR_REASON5
+		,	A.PASS_PLACE5
+		,	CASE WHEN A.PASS_AMT5 = 0 THEN '' ELSE FORMAT(A.PASS_AMT5,0) END AS PASS_AMT5
+		,	A.OCCUR_DTTM6
+		,	A.OCCUR_REASON6
+		,	A.PASS_PLACE6
+		,	CASE WHEN A.PASS_AMT6 = 0 THEN '' ELSE FORMAT(A.PASS_AMT6,0) END AS PASS_AMT6
+		,	A.OCCUR_DTTM7
+		,	A.OCCUR_REASON7
+		,	A.PASS_PLACE7
+		,	CASE WHEN A.PASS_AMT7 = 0 THEN '' ELSE FORMAT(A.PASS_AMT7,0) END AS PASS_AMT7
+		,	A.OCCUR_DTTM8
+		,	A.OCCUR_REASON8
+		,	A.PASS_PLACE8
+		,	CASE WHEN A.PASS_AMT8 = 0 THEN '' ELSE FORMAT(A.PASS_AMT8,0) END AS PASS_AMT8
+		,	A.OCCUR_DTTM9
+		,	A.OCCUR_REASON9
+		,	A.PASS_PLACE9
+		,	CASE WHEN A.PASS_AMT9 = 0 THEN '' ELSE FORMAT(A.PASS_AMT2,0) END AS PASS_AMT9
+		,	A.OCCUR_DTTM10
+		,	A.OCCUR_REASON10
+		,	A.PASS_PLACE10
+		,	CASE WHEN A.PASS_AMT10 = 0 THEN '' ELSE FORMAT(A.PASS_AMT10,0) END AS PASS_AMT10
+		,	A.RUN_DT
+		,	A.VIRTUAL_ACNT_NUM
+		FROM
+		TB_PAYER_INFO A
+		INNER JOIN TB_PAYER_INFO_MASTER B ON A.PAYER_INFO_ID = B.PAYER_INFO_ID
+		LEFT OUTER JOIN	(
+		SELECT
+		PAYDAY
+		,	BNKCD
+		,	TRNO
+		FROM
+		AEGISTRANSMSG
+		WHERE
+		TRANST = '03'
+		) C ON A.TRNO = C.TRNO
+		WHERE
+		1=1
+		AND C.PAYDAY IS NULL
+		<if test='startMonth != "" and startMonth != null'>
+			AND	B.REG_MONTH	=	#{startMonth}
+		</if>
+		ORDER BY A.PAY_DUE_DT ASC, A.CUST_INQ_NUM ASC
+	</select>
+
+	<select id="selectReceiptLastDownDt" resultType="TbReceiptLastDownDtVO">
+		SELECT
+				CONCAT(SUBSTR(A.PROC_DTTM,1,4),'.',SUBSTR(A.PROC_DTTM,5,2),'.',SUBSTR(A.PROC_DTTM,7,2),' ',SUBSTR(A.PROC_DTTM,9,2),':',SUBSTR(A.PROC_DTTM,11,2),':',SUBSTR(A.PROC_DTTM,13,2)) AS PROC_DTTM
+			,	CONCAT(SUBSTR(A.INQ_START_DT,1,4),'.',SUBSTR(A.INQ_START_DT,5,2),'.',SUBSTR(A.INQ_START_DT,7,2)) AS INQ_START_DT
+			,	CONCAT(SUBSTR(A.INQ_END_DT,1,4),'.',SUBSTR(A.INQ_END_DT,5,2),'.',SUBSTR(A.INQ_END_DT,7,2)) AS INQ_END_DT
+		FROM
+				TB_RECEIPT_LAST_DOWN_DT A
+	</select>
+
+	<update id="updateReceiptLastDownDt">
+		UPDATE	TB_RECEIPT_LAST_DOWN_DT
+		SET
+				PROC_DTTM = DATE_FORMAT(NOW(), 'YYYYMMDDHH24MISS')
+			,	INQ_START_DT = #{inqStartDt}
+			,	INQ_END_DT = #{inqEndDt}
+	</update>
+</mapper>

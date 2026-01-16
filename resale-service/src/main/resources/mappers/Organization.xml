@@ -1,0 +1,1081 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Organization">
+		<!-- ORDER BY -->
+	<sql id="orderByNotiMgmt">
+		<choose>
+			<when test="search_orderBy == 'date'">
+				ORDER BY TA.STARTDATE DESC, TA.ENDDATE DESC, TA.CUSNAME ASC
+			</when>
+			<when test="search_orderBy == 'masDate'">
+				ORDER	BY TA.REGDT	DESC,	TA.NOTIMASCD DESC
+			</when>
+			<when test="search_orderBy == 'vaNo'">
+				ORDER BY TA.VANO DESC, TA.REGDT	DESC
+			</when>
+			<when test="search_orderBy == 'cusGubn'">
+				ORDER BY TA.CUSGUBN1 ASC, TA.CUSGUBN2 ASC, TA.CUSGUBN3 ASC, TA.CUSGUBN4 ASC
+			</when>
+			<otherwise>
+			ORDER BY TA.CUSNAME ASC, TA.REGDT	DESC
+			</otherwise>
+		</choose>
+	</sql>
+
+	<!-- 기관관리자	고지서조회/출력	-->
+	<select	id="getNotiMgmtList" resultType="NotiMgmtResDTO">
+		<include refid="paging_header"	/>
+		SELECT TA.*,
+		COUNT(TB.CHACD) OVER	(PARTITION BY	TB.CHACD)	AS masCnt,
+		SUM(TA.AMT) 	OVER	(PARTITION BY	TB.CHACD)	AS totAmt
+		FROM  (
+			SELECT	MAS.NOTI_CAN_YN,
+			MAS.NOTIMASCD						AS notiMasCd,
+			MAS.CUSKEY 							AS	cusKey,
+			TO_CHAR(TO_DATE(MASMONTH,'YYYYMM'),'YYYY.MM')	AS masMonth,
+			MAS.CUSNAME							AS cusName,
+			MAS.CUSGUBN1						AS	cusGubn1,
+			MAS.CUSGUBN2 						AS	cusGubn2,
+			MAS.CUSGUBN3 						AS	cusGubn3,
+			MAS.CUSGUBN4 						AS	cusGubn4,
+			'NEW'								AS tbGubn,
+			CHA.BILLIMGTY						AS billiMgty,
+			MAS.VANO 							AS	vaNo,
+			TO_CHAR(TO_DATE(STARTDATE,'YYYYMMDD'),'YYYY.MM.DD')	|| '~' ||	TO_CHAR(TO_DATE(ENDDATE,'YYYYMMDD'),'YYYY.MM.DD')	AS rcpDate,
+			MAS.STARTDATE						AS startDate,
+			MAS.ENDDATE							AS endDate,
+			TO_CHAR(TO_DATE(PRINTDATE,'YYYYMMDD'),'YYYY.MM.DD')	AS printDate,
+			COUNT	(DET.NOTIMASCD)				AS detCnt,
+			COALESCE(SUM (DET.PAYITEMAMT),0)	AS amt,
+			COALESCE(TO_CHAR(TO_DATE(MAS.MASDAY,'YYYYMMDD'),'YYYY.MM.DD'),' ')	AS masDay,
+			MAS.REGDT							AS regDt,
+			MAS.NOTIMASST						AS notiMasSt,
+			CASE WHEN MAS.NOTIMASST IS NULL THEN '' ELSE (CASE MAS.NOTIMASST WHEN 'PA02' THEN '미납' WHEN 'PA03' THEN '완납' WHEN 'PA04' THEN '일부납' WHEN 'PA05' THEN '초과납' WHEN 'PA06' THEN '환불' END) END AS notiMasStNm,
+			CASE MAS.SMSYN WHEN 'Y' THEN (CASE SMS.STATUS  WHEN '2' THEN  SMS.REQDATE END) END AS	reqDate,
+			' ' as reqDt
+			, CASE CHA.ATYN WHEN 'Y' THEN (CASE AT.SENDRESULTCD  WHEN '7000' THEN  AT.SENDDATE END) END AS sendDate
+			FROM	XNOTIMAS MAS
+			LEFT OUTER JOIN XNOTIDET DET ON MAS.NOTIMASCD = DET.NOTIMASCD AND DET.NOTIDETST != 'PA00' AND DET.NOTI_CAN_YN= 'N'
+			LEFT OUTER JOIN XCHALIST CHA ON MAS.CHACD = CHA.CHACD
+			LEFT OUTER JOIN (SELECT MAX(REQDATE)	AS REQDATE
+			,STATUS
+			,NOTIMASCD
+			FROM	SMSREQ
+			WHERE	STATUS	=	'2'
+			GROUP	BY STATUS
+			,NOTIMASCD
+			) SMS ON MAS.NOTIMASCD = SMS.NOTIMASCD
+		LEFT OUTER JOIN (SELECT MAX(COALESCE(TO_CHAR(SENDDATE, 'YYYY.MM.DD'), ' ')) AS SENDDATE, SENDRESULTCD, NOTIMASCD
+		FROM ATREQ
+		WHERE SENDRESULTCD = '7000'
+		GROUP BY SENDRESULTCD, NOTIMASCD) AT ON MAS.NOTIMASCD = AT.NOTIMASCD
+		WHERE 		MAS.CHACD			 = #{chaCd}
+		AND		MAS.MASMONTH		 = #{masMonth}
+		AND		MAS.NOTI_CAN_YN		 = 'N'
+		AND		MAS.NOTIMASST		!= 'PA00'
+		<include refid="search" />
+		GROUP BY MAS.NOTIMASCD,
+		MAS.CUSKEY,
+		MAS.MASMONTH,
+		MAS.CUSNAME,
+		MAS.CUSGUBN1,
+		MAS.CUSGUBN2,
+		MAS.CUSGUBN3,
+		MAS.CUSGUBN4,
+		CHA.BILLIMGTY,
+		cha.atyn,
+		MAS.VANO,
+		TO_CHAR(TO_DATE(MAS.STARTDATE,'YYYYMMDD'),'YYYY.MM.DD') || '~' || TO_CHAR(TO_DATE(MAS.ENDDATE,'YYYYMMDD'),'YYYY.MM.DD'),
+		MAS.STARTDATE,
+		MAS.ENDDATE,
+		MAS.PRINTDATE,
+		MAS.MASDAY,
+		MAS.CHACD,
+		MAS.REGDT,
+		MAS.NOTIMASST,
+		SMS.REQDATE,
+		MAS.SMSYN,
+		SMS.STATUS,
+		MAS.NOTI_CAN_YN
+		, AT.SENDRESULTCD, CHA.ATYN, AT.SENDDATE
+		) TA, XCUSMAS TB
+		WHERE TA.VANO = TB.VANO
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchValue)'>
+			<if test='searchGb == "cusname"'>
+				AND
+				<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+					TA.CUSNAME LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='searchGb == "vano"'>
+				AND
+				<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+					TA.VANO LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+		</if>
+
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusGubnValue)'>
+			<if test='cusGubn == "all"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					( TA.CUSGUBN1 LIKE '%' || #{list} || '%' OR TA.CUSGUBN2 LIKE '%' || #{list} || '%' OR TA.CUSGUBN3 LIKE '%' || #{list} || '%' OR TA.CUSGUBN4 LIKE '%' || #{list} || '%' )
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn1"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					TA.CUSGUBN1 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn2"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					TA.CUSGUBN2 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn3"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					TA.CUSGUBN3 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn4"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					TA.CUSGUBN4 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+		</if>
+		<include refid="orderByNotiMgmt" />
+		<include refid="paging_footer"	/>
+	</select>
+
+	<!-- 기관관리자 고지서조회/출력 카운트-->
+	<select id="getNotiMgmtTotalCount" parameterType="java.util.HashMap" resultType="hashMap">
+		SELECT COALESCE (MAX(A.MASCNT),0) AS masCnt, COALESCE (MAX(A.TOTAMT),0) AS totAmt
+		FROM  (
+		SELECT TA.*,
+			COUNT (TB.CHACD) OVER (PARTITION BY TB.CHACD) AS masCnt,
+			SUM (TA.AMT) OVER (PARTITION BY TB.CHACD) AS totAmt
+		FROM   (
+			SELECT MAS.NOTI_CAN_YN,
+			MAS.NOTIMASCD AS notiMasCd,
+			MAS.CUSKEY AS cusKey,
+			MAS.CUSNAME AS cusName,
+			MAS.CUSGUBN1 AS cusGubn1,
+			MAS.CUSGUBN2 AS cusGubn2,
+			MAS.CUSGUBN3 AS cusGubn3,
+			MAS.CUSGUBN4 AS cusGubn4,
+			'NEW' AS tbGubn,
+			CHA.BILLIMGTY AS billiMgty,
+			MAS.VANO AS vaNo,
+			TO_CHAR(TO_DATE(MAS.STARTDATE,'YYYYMMDD'),'YYYY.MM.DD') || '~' || TO_CHAR(TO_DATE(MAS.ENDDATE,'YYYYMMDD'),'YYYY.MM.DD') AS rcpDate,
+			MAS.STARTDATE AS startDate,
+			MAS.ENDDATE AS endDate,
+			TO_CHAR(TO_DATE(MAS.PRINTDATE,'YYYYMMDD'),'YYYY.MM.DD') AS printDate,
+			COUNT (DET.NOTIMASCD) AS detCnt,
+			COALESCE (SUM (DET.PAYITEMAMT),0) AS amt,
+			COALESCE (TO_CHAR(TO_DATE(MAS.MASDAY,'YYYYMMDD'),'YYYY.MM.DD'),' ') AS masDay,
+			MAS.REGDT AS regDt,
+			MAS.NOTIMASST AS notiMasSt,
+		    CASE WHEN MAS.NOTIMASST IS NULL THEN '' ELSE (CASE MAS.NOTIMASST WHEN 'PA02' THEN '미납' WHEN 'PA03' THEN '완납' WHEN 'PA04' THEN '일부납' WHEN 'PA05' THEN '초과납' WHEN 'PA06' THEN '환불' END) END AS notiMasStNm,
+			CASE MAS.SMSYN WHEN 'Y' THEN (CASE SMS.STATUS  WHEN '2' THEN  SMS.REQDATE END) END AS	reqDate,
+			' ' as reqDt
+			, CASE CHA.ATYN WHEN 'Y' THEN (CASE AT.SENDRESULTCD  WHEN '7000' THEN  AT.SENDDATE END) END AS sendDate
+		FROM   XNOTIMAS MAS
+		 left outer join XNOTIDET DET on  MAS.NOTIMASCD = DET.NOTIMASCD and DET.NOTIDETST  != 'PA00' and DET.NOTI_CAN_YN = 'N'
+		 left outer join XCHALIST CHA on MAS.CHACD = CHA.CHACD
+		 left outer join (SELECT MAX(REQDATE) AS REQDATE, STATUS, NOTIMASCD FROM SMSREQ WHERE STATUS = '2' GROUP BY STATUS, NOTIMASCD) SMS on MAS.NOTIMASCD = SMS.NOTIMASCD
+		 LEFT OUTER JOIN (SELECT MAX(COALESCE(TO_CHAR(SENDDATE, 'YYYY.MM.DD'), ' ')) AS SENDDATE, SENDRESULTCD, NOTIMASCD
+		 FROM ATREQ
+		 WHERE SENDRESULTCD = '7000'
+		 GROUP BY SENDRESULTCD, NOTIMASCD) AT ON MAS.NOTIMASCD = AT.NOTIMASCD
+		WHERE  MAS.CHACD 	      = #{chaCd}
+		AND	   MAS.MASMONTH       = #{masMonth}
+		AND    MAS.NOTIMASST     != 'PA00'
+		AND    MAS.NOTI_CAN_YN    = 'N'
+		<include refid="search" />
+		GROUP BY MAS.NOTIMASCD,
+			MAS.CUSKEY,
+			MAS.CUSNAME,
+			MAS.CUSGUBN1,
+			MAS.CUSGUBN2,
+			MAS.CUSGUBN3,
+			MAS.CUSGUBN4,
+			CHA.BILLIMGTY,
+			cha.atyn,
+			MAS.VANO,
+			TO_CHAR(TO_DATE(MAS.STARTDATE,'YYYYMMDD'),'YYYY.MM.DD') || '~' || TO_CHAR(TO_DATE(MAS.ENDDATE,'YYYYMMDD'),'YYYY.MM.DD'),
+			MAS.STARTDATE,
+			MAS.ENDDATE,
+			MAS.PRINTDATE,
+			MAS.MASDAY,
+			MAS.CHACD,
+			MAS.REGDT,
+			MAS.NOTIMASST,
+			SMS.REQDATE,
+			MAS.SMSYN,
+			SMS.STATUS,
+			MAS.NOTI_CAN_YN,
+			at.sendresultcd,
+			AT.SENDDATE
+		) TA, XCUSMAS TB
+		WHERE TA.VANO = TB.VANO
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchValue)'>
+			<if test='searchGb == "cusname"'>
+				AND
+				<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+					TA.CUSNAME LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='searchGb == "vano"'>
+				AND
+				<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+					TA.VANO LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+		</if>
+
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusGubnValue)'>
+			<if test='cusGubn == "all"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					( TA.CUSGUBN1 LIKE '%' || #{list} || '%' OR TA.CUSGUBN2 LIKE '%' || #{list} || '%' OR TA.CUSGUBN3 LIKE '%' || #{list} || '%' OR TA.CUSGUBN4 LIKE '%' || #{list} || '%' )
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn1"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					TA.CUSGUBN1 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn2"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					TA.CUSGUBN2 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn3"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					TA.CUSGUBN3 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn4"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					TA.CUSGUBN4 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+		</if>
+		) A limit 1
+	</select>
+
+	<!-- 기관관리자 세션 -->
+	<select id="selectNotiBaseInfo" resultType="NotiMgmtBaseDTO">
+		SELECT CHACD		/*가맹점코드*/
+                , AGTCD		/*계약지점코드*/
+                , USRPWD		/*비밀번호*/
+                , CHANAME		/*가맹점명*/
+                , OWNER		/*대표자*/
+                , OWNERTEL	/*대표전화번호*/
+                , CHAOFFNO	/*학원사업자번호*/
+                , CHASTATUS	/*업종*/
+                , CHATYPE		/*업태*/
+                , CHAADDRESS1	/*학원주소1*/
+                , CHAADDRESS2	/*학원주소2*/
+                , CHAZIPCODE	/*우편번호*/
+                , CHRNAME		/*담당자명*/
+                , CHRTELNO	/*담당자전화번호*/
+                , CHRHP		/*담당자핸드폰번호*/
+                , CHRMAIL		/*담당자메일주소*/
+                , FEEACCNO	/*수수료계좌번호 */
+                , FEEOFFNO	/*계좌주주민/사업자번호*/
+                , FEEACCNAME	/*계좌주명*/
+                , ACCNOCNT	/*가상계좌 1회발급수*/
+                , CONNAME		/*승인직원이름*/
+                , CONTELNO	/*승인직원연락처*/
+                , ADJACCYN	/*다계좌사용여부*/
+                , RCPREQYN	/*현금영수증신청여부*/
+                , RCPREQTY	/*현금영수증자동발급여부*/
+                , RCPDTDUPYN	/*납부기간중복[허용:Y, 불가:N, 부분납:P]*/
+                , USESMSYN	/*SMS전송사용여부*/
+                , NOTSMSYN	/*청구시SMS전송여부*/
+                , RCPSMSYN	/*납부시SMS전송여부*/
+                , RCPSMSTY	/*납부시SMS자동전송여부*/
+                , USEMAILYN	/*전자메일사용여부*/
+                , AMTCHKTY	/*금액체크여부[IR방식:Y, SET방식:N]*/
+                , CUSNAMETY	/*납부자명:U/가맹점명:C*/
+                , NOTAXYN		/*과세/비과세여부*/
+                , CHATRTY		/*가맹점접속형태 웹(01),전문(03)*/
+                , CHAIP		/*가맹점아이피 (전문연동)*/
+                , CHAPORT		/*가맹점포트 (전문연동)*/
+                , CUSGUBN1	/*고객구분값1*/
+                , CUSGUBN2	/*고객구분값2*/
+                , CUSGUBN3	/*고객구분값3*/
+                , CUSGUBN4	/*고객구분값4*/
+                , CUSGUBNYN1	/*고지서출력여부1*/
+                , CUSGUBNYN2	/*고지서출력여부2*/
+                , CUSGUBNYN3	/*고지서출력여부3*/
+                , CUSGUBNYN4	/*고지서출력여부4*/
+                , NOTSMS		/*청구시SMS메세지*/
+                , RCPSMS		/*납부시SMS메세지*/
+                , CHASVCYN	/*약관동의여부*/
+                , CHASVCDT	/*약관동의일시*/
+                , BILLNAME	/*고지서이름 (고지서인쇄)*/
+                , CUSALS		/*납부자호칭 (고지서인쇄)*/
+                , NOTICHANAME	/*학원명 (고지서인쇄)*/
+                , TELNO		/*전화번호 (고지서인쇄)*/
+                , REMARK		/*비고*/
+                , CHAST		/*상태*/
+                , MAKEDT		/*조작일시*/
+                , MAKER		/*조작자*/
+                , REGDT		/*등록일시*/
+                , BILLIMGTY	/*고지서로고위치*/
+                , USEPGYN		/*PG서비스사용여부*/
+                , CHKCASH		/*현금영수증신청서수령여부*/
+                , CHKOFF		/*사업자등록증수령여부*/
+                , CHKCMS
+                , USECMSYN
+                , NOTMINLIMIT	/*청구정액범위*/
+                , NOTMINFEE	/*청구정액수수료*/
+                , NOTCNTFEE	/*청구건당수수료*/
+                , RCPCNTFEE	/*수납건당수수료*/
+                , RCPBNKFEE	/*수납건당은행수수료*/
+                , CHAGROUPID	/*가맹점그룹코드*/
+                , BILLCONT11	/*바우처카드내용*/
+                , CUSSMS		/*납부자관리SMS*/
+                , RCPREQSVETY	/*현금영수증발급수납구분 [00]:가상계좌, [01]:가상계좌,창구수납*/
+                , NOTSMS2
+                , MAKEIP
+                , PGSERVICEID
+                , CHAGUBN		/*사업자구분 1:법인, 2:개인*/
+                , CONHP		/*	지점담당자핸드폰*/
+                , PRECHAST	/*해피콜미완료:10, 해피콜완료:20, 교육진행완료:30, 미사용:40, 사용동의:50, 사용보류:60, 사용중:70*/
+                , HOLDDT
+                , HOLDREASON
+                , RSLTPGYN	/*연동가맹점 카드수납 전송여부 */
+		  FROM XCHALIST
+		 WHERE CHACD = #{user}
+	</select>
+
+	<!-- 페이징을 위한 header -->
+	<sql id="paging_header">
+		SELECT *
+		  FROM ( SELECT (ROW_NUMBER() OVER()) AS rn, A.*
+		            FROM (
+	</sql>
+
+	<!-- 페이징을 위한 footer -->
+	<sql id="paging_footer">
+		    ) A
+		) X WHERE rn BETWEEN #{start} AND #{end}
+	</sql>
+
+	<!-- 고지서 출력양식 조회 -->
+	<select id="getExistsBillForm" resultType="String">
+		SELECT MAX(BILLGUBN) AS billGubn
+		  FROM XBILLFORM
+		 WHERE CHACD = #{chaCd}
+		   AND BILLGUBN = #{billGubn}
+	</select>
+
+	<select id="getNotiBillList" parameterType="java.util.HashMap" resultType="NotiMgmtPdfResDTO">
+		SELECT * FROM (
+			SELECT
+			MAS.CHACD AS chaCd,
+			MAS.NOTIMASCD AS notiMasCd,
+			FRM.BILLNAME AS billName,
+			MAS.CUSNAME AS cusName,
+			FRM.CUSALS AS cusAls,
+			FRM.BILLCONT1 AS billCont1,
+			FRM.BILLCONT2 AS billCont2,
+			FRM.NOTICHANAME AS notiChaName,
+			CHA.OWNERTEL AS ownerTel,
+			FRM.TELNO AS telNo,
+			FRM.SUMPRINTYN AS sumPrintYn,
+			MAS.VANO AS vaNo,
+			MAS.PRINTDATE AS printDate,
+			MAS.CUSGUBN1 AS cusGubn1,
+			MAS.CUSGUBN2 AS cusGubn2,
+			MAS.CUSGUBN3 AS cusGubn3,
+			MAS.CUSGUBN4 AS cusGubn4,
+			MAS.REGDT AS regDt,
+			CHA.CUSGUBN1 AS xcusGubn1,
+			CHA.CUSGUBN2 AS xcusGubn2,
+			CHA.CUSGUBN3 AS xcusGubn3,
+			CHA.CUSGUBN4 AS xcusGubn4,
+			CHA.CUSGUBNYN1 AS cusGubnYn1,
+			CHA.CUSGUBNYN2 AS cusGubnYn2,
+			CHA.CUSGUBNYN3 AS cusGubnYn3,
+			CHA.CUSGUBNYN4 AS cusGubnYn4,
+			MAS.CHACD || TO_CHAR (NOW(), 'YYYYMMDDHH24MISS') AS xKey,
+			CHA.BILLIMGTY AS billiMgty,
+			CHA.CHRMAIL AS chrMail, /*이메일*/
+			CHA.CHAADDRESS1 AS chaAddress1,
+			CHA.CHAADDRESS2 AS chaAddress2,
+			CHA.CHAADDRESS1 || ' '||CHA.CHAADDRESS2 AS addr,
+			TO_CHAR(TO_DATE(MAS.STARTDATE,'YYYYMMDD'),'YYYY.MM.DD') || '~' || TO_CHAR(TO_DATE(MAS.ENDDATE,'YYYYMMDD'),'YYYY.MM.DD') AS rcpDate,
+			MAS.STARTDATE	AS startDate,
+			MAS.ENDDATE	AS endDate,
+			MAS.MASMONTH AS masMonth,
+			MAS.REMARK,
+			MAS.NOTIMASST
+		FROM   XNOTIMAS MAS, XCHALIST CHA, XBILLFORM FRM, XCUSMAS CUS
+			WHERE  1=1
+			AND    MAS.VANO = CUS.VANO
+			AND    MAS.CHACD = CHA.CHACD
+			AND    MAS.CHACD = FRM.CHACD
+			AND    FRM.BILLGUBN IN(SELECT BG.BILLGUBN FROM (SELECT BILLGUBN FROM XBILLFORM WHERE CHACD = #{chaCd} ORDER BY MAKEDT DESC) BG LIMIT 1)
+			AND    MAS.CHACD = #{chaCd}
+			AND    MAS.MASMONTH = #{masMonth}
+			AND 	MAS.NOTI_CAN_YN = 'N'
+			AND		MAS.NOTIMASST != 'PA00'
+				<if test='notiMasList != null'>
+					AND MAS.NOTIMASCD IN
+					<foreach item="item" collection="notiMasList" index="index" open="(" close=")" separator=",">
+						#{item}
+					</foreach>
+				</if>
+				<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchValue)'>
+					<if test='searchGb == "cusname"'>
+						AND
+						<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+							MAS.CUSNAME LIKE '%' || #{list} || '%'
+						</foreach>
+					</if>
+					<if test='searchGb == "vano"'>
+						AND
+						<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+							MAS.VANO LIKE '%' || #{list} || '%'
+						</foreach>
+					</if>
+				</if>
+				<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusGubnValue)'>
+					<if test='cusGubn == "all"'>
+						AND
+						<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+							( MAS.CUSGUBN1 LIKE '%' || #{list} || '%' OR MAS.CUSGUBN2 LIKE '%' || #{list} || '%' OR MAS.CUSGUBN3 LIKE '%' || #{list} || '%' OR MAS.CUSGUBN4 LIKE '%' || #{list} || '%' )
+						</foreach>
+					</if>
+					<if test='cusGubn == "cusgubn1"'>
+						AND
+						<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+							MAS.CUSGUBN1 LIKE '%' || #{list} || '%'
+						</foreach>
+					</if>
+					<if test='cusGubn == "cusgubn2"'>
+						AND
+						<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+							MAS.CUSGUBN2 LIKE '%' || #{list} || '%'
+						</foreach>
+					</if>
+					<if test='cusGubn == "cusgubn3"'>
+						AND
+						<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+							MAS.CUSGUBN3 LIKE '%' || #{list} || '%'
+						</foreach>
+					</if>
+					<if test='cusGubn == "cusgubn4"'>
+						AND
+						<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+							MAS.CUSGUBN4 LIKE '%' || #{list} || '%'
+						</foreach>
+					</if>
+				</if>
+		)TA,
+		(
+			SELECT   MAX (NOTIMASCD) AS NOTIMASCD,
+			MAX (CASE LV WHEN 1 THEN PAYITEMNAME ELSE '' END) AS payItemName1,
+			MAX (CASE LV WHEN 1 THEN PAYITEMAMT ELSE 0 END) AS payItemAmt1,
+			MAX (CASE LV WHEN 1 THEN PTRITEMREMARK ELSE '' END) AS ptrItemRemark1,
+			MAX (CASE LV WHEN 1 THEN PTRITEMNAME ELSE '' END) AS ptrItemName1,
+			MAX (CASE LV WHEN 2 THEN PAYITEMNAME ELSE '' END) AS payItemName2,
+			MAX (CASE LV WHEN 2 THEN PAYITEMAMT ELSE 0 END) AS payItemAmt2,
+			MAX (CASE LV WHEN 2 THEN PTRITEMREMARK ELSE '' END) AS ptrItemRemark2,
+			MAX (CASE LV WHEN 2 THEN PTRITEMNAME ELSE '' END) AS ptrItemName2,
+			MAX (CASE LV WHEN 3 THEN PAYITEMNAME ELSE '' END) AS payItemName3,
+			MAX (CASE LV WHEN 3 THEN PAYITEMAMT ELSE 0 END) AS payItemAmt3,
+			MAX (CASE LV WHEN 3 THEN PTRITEMREMARK ELSE '' END) AS ptrItemRemark3,
+			MAX (CASE LV WHEN 3 THEN PTRITEMNAME ELSE '' END) AS ptrItemName3,
+			MAX (CASE LV WHEN 4 THEN PAYITEMNAME ELSE '' END) AS payItemName4,
+			MAX (CASE LV WHEN 4 THEN PAYITEMAMT ELSE 0 END) AS payitemamt4,
+			MAX (CASE LV WHEN 4 THEN PTRITEMREMARK ELSE '' END) AS ptrItemRemark4,
+			MAX (CASE LV WHEN 4 THEN PTRITEMNAME ELSE '' END) AS ptrItemName4,
+			MAX (CASE LV WHEN 5 THEN PAYITEMNAME ELSE '' END) AS payItemName5,
+			MAX (CASE LV WHEN 5 THEN PAYITEMAMT ELSE 0 END) AS payItemAmt5,
+			MAX (CASE LV WHEN 5 THEN PTRITEMREMARK ELSE '' END) AS ptrItemRemark5,
+			MAX (CASE LV WHEN 5 THEN PTRITEMNAME ELSE '' END) AS ptrItemName5,
+			MAX (CASE LV WHEN 6 THEN PAYITEMNAME ELSE '' END) AS payItemName6,
+			MAX (CASE LV WHEN 6 THEN PAYITEMAMT ELSE 0 END) AS payItemAmt6,
+			MAX (CASE LV WHEN 6 THEN PTRITEMREMARK ELSE '' END) AS ptrItemRemark6,
+			MAX (CASE LV WHEN 6 THEN PTRITEMNAME ELSE '' END) AS ptrItemName6,
+			MAX (CASE LV WHEN 7 THEN PAYITEMNAME ELSE '' END) AS payItemName7,
+			MAX (CASE LV WHEN 7 THEN PAYITEMAMT ELSE 0 END) AS payItemAmt7,
+			MAX (CASE LV WHEN 7 THEN PTRITEMREMARK ELSE '' END) AS ptrItemRemark7,
+			MAX (CASE LV WHEN 7 THEN PTRITEMNAME ELSE '' END) AS ptrItemName7,
+			MAX (CASE LV WHEN 8 THEN PAYITEMNAME ELSE '' END) AS payItemName8,
+			MAX (CASE LV WHEN 8 THEN PAYITEMAMT ELSE 0 END) AS payItemAmt8,
+			MAX (CASE LV WHEN 8 THEN PTRITEMREMARK ELSE '' END) AS ptrItemRemark8,
+			MAX (CASE LV WHEN 8 THEN PTRITEMNAME ELSE '' END) AS ptrItemName8,
+			MAX (CASE LV WHEN 9 THEN PAYITEMNAME ELSE '' END) AS payItemName9,
+			MAX (CASE LV WHEN 9 THEN PAYITEMAMT ELSE 0 END) AS payItemAmt9,
+			MAX (CASE LV WHEN 9 THEN PTRITEMREMARK ELSE '' END) AS ptrItemRemark9,
+			MAX (CASE LV WHEN 9 THEN PTRITEMNAME ELSE '' END) AS ptrItemName9,
+			MAX (SUMAMT) AS sumAmt
+		FROM (
+			SELECT A.*,
+			ROW_NUMBER() OVER(PARTITION BY NOTIMASCD ORDER BY NOTIMASCD) AS RN,
+			SUM(PAYITEMAMT) OVER (PARTITION BY NOTIMASCD) AS SUMAMT
+			FROM   (
+					SELECT   DET.PAYITEMNAME AS PAYITEMNAME,
+					SUM(DET.PAYITEMAMT) AS PAYITEMAMT,
+					DET.PTRITEMREMARK AS PTRITEMREMARK,
+					DET.PTRITEMNAME AS PTRITEMNAME,
+					DET.NOTIMASCD AS NOTIMASCD,
+					MAX(DET.PTRITEMORDER::integer) AS PTRITEMORDER
+				FROM     XPAYITEM ITM, XNOTIDET DET, XNOTIMAS MAS
+				WHERE    ITM.PAYITEMCD = DET.PAYITEMCD
+					AND      MAS.CHACD = #{chaCd}
+					AND      MAS.MASMONTH = #{masMonth}
+					AND		MAS.NOTI_CAN_YN = 'N'
+					AND		MAS.NOTIMASST != 'PA00'
+					AND       DET.NOTIMASCD = MAS.NOTIMASCD
+					AND		DET.NOTIDETST != 'PA00'
+					AND		DET.NOTI_CAN_YN = 'N'
+					<if test='notiMasList != null'>
+						AND MAS.NOTIMASCD IN
+						<foreach item="item" collection="notiMasList" index="index" open="(" close=")" separator=",">
+							#{item}
+						</foreach>
+					</if>
+				GROUP BY DET.PAYITEMNAME,
+					DET.PTRITEMREMARK,
+					DET.PTRITEMNAME,
+					DET.NOTIMASCD
+				ORDER BY DET.NOTIMASCD, MAX(DET.PTRITEMORDER::integer)) A) AA
+		RIGHT OUTER JOIN (SELECT LV   FROM   (SELECT     LEVEL LV   FROM   GENERATE_SERIES(1,9) LEVEL) CC) BB ON AA.RN = BB.LV
+			GROUP BY NOTIMASCD
+		)TB
+		WHERE TA.NOTIMASCD = TB.NOTIMASCD
+		<choose>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(sort1Cd)">
+				AND	TA.NOTIMASST = 'PA02'
+				ORDER 	BY
+				<choose>
+					<when test="sort1Cd == 'N00001'">
+						TA.CUSNAME ASC
+					</when>
+					<when test="sort1Cd == 'N00002'">
+						TA.CUSGUBN1 ASC
+					</when>
+					<when test="sort1Cd == 'N00003'">
+						TA.CUSGUBN2 ASC
+					</when>
+					<when test="sort1Cd == 'N00004'">
+						TA.CUSGUBN3 ASC
+					</when>
+					<when test="sort1Cd == 'N00005'">
+						TA.CUSGUBN4 ASC
+					</when>
+					<otherwise>
+						TA.CUSGUBN1 ASC
+					</otherwise>
+				</choose>
+				<choose>
+					<when test="sort2Cd == 'N00001'">
+						, TA.CUSNAME ASC
+					</when>
+					<when test="sort2Cd == 'N00002'">
+						, TA.CUSGUBN1 ASC
+					</when>
+					<when test="sort2Cd == 'N00003'">
+						, TA.CUSGUBN2 ASC
+					</when>
+					<when test="sort2Cd == 'N00004'">
+						, TA.CUSGUBN3 ASC
+					</when>
+					<when test="sort2Cd == 'N00005'">
+						, TA.CUSGUBN4 ASC
+					</when>
+					<otherwise>
+
+					</otherwise>
+				</choose>
+				,TA.CUSNAME ASC
+			</when>
+			<otherwise>
+				<include refid="orderByNotiMgmt" />
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="getPrivewBillList" parameterType="java.util.HashMap" resultType="NotiMgmtPdfResDTO">
+		SELECT TRIM(DET.DUE_DT)          AS printDate
+				, TRIM(REQ.MASMONTH)      AS masMonth
+				, TRIM(DET.CUSGUBN1_NAME) AS xcusGubn1
+				, TRIM(DET.CUSGUBN2_NAME) AS xcusGubn2
+				, TRIM(DET.CUSGUBN3_NAME) AS xcusGubn3
+				, TRIM(DET.CUSGUBN4_NAME) AS xcusGubn4
+				, TRIM(DET.CUSGUBN1     ) AS cusGubn1
+				, TRIM(DET.CUSGUBN2     ) AS cusGubn2
+				, TRIM(DET.CUSGUBN3     ) AS cusGubn3
+				, TRIM(DET.CUSGUBN4     ) AS cusGubn4
+				, TRIM(DET.ITEM1_NAME   ) AS ptrItemName1
+				, TRIM(DET.ITEM2_NAME   ) AS ptrItemName2
+				, TRIM(DET.ITEM3_NAME   ) AS ptrItemName3
+				, TRIM(DET.ITEM4_NAME   ) AS ptrItemName4
+				, TRIM(DET.ITEM5_NAME   ) AS ptrItemName5
+				, TRIM(DET.ITEM6_NAME   ) AS ptrItemName6
+				, TRIM(DET.ITEM7_NAME   ) AS ptrItemName7
+				, TRIM(DET.ITEM8_NAME   ) AS ptrItemName8
+				, TRIM(DET.ITEM9_NAME   ) AS ptrItemName9
+				, TRIM(DET.CONTENT      ) AS billCont1
+				, TRIM(DET.CHANAME      ) AS notiChaName
+				, TRIM(DET.TITLE        ) AS billName
+				, TRIM(DET.CUSNAME      ) AS cusName
+				, TRIM(DET.CUSALS       ) AS cusAls
+				, TRIM(DET.TELNO        ) AS telNo
+				, TRIM(DET.NOTIAMT      ) AS sumAmt
+				, TRIM(DET.VANO         ) AS vaNo
+				, TRIM(DET.OPT_CONTENT  ) AS billCont2
+				, TRIM(DET.ITEM1_AMT    ) AS payItemAmt1
+				, TRIM(DET.ITEM2_AMT    ) AS payItemAmt2
+				, TRIM(DET.ITEM3_AMT    ) AS payItemAmt3
+				, TRIM(DET.ITEM4_AMT    ) AS payItemAmt4
+				, TRIM(DET.ITEM5_AMT    ) AS payItemAmt5
+				, TRIM(DET.ITEM6_AMT    ) AS payItemAmt6
+				, TRIM(DET.ITEM7_AMT    ) AS payItemAmt7
+				, TRIM(DET.ITEM8_AMT    ) AS payItemAmt8
+				, TRIM(DET.ITEM9_AMT    ) AS payItemAmt9
+				, TRIM(DET.ITEM1_REMARK ) AS ptrItemRemark1
+				, TRIM(DET.ITEM2_REMARK ) AS ptrItemRemark2
+				, TRIM(DET.ITEM3_REMARK ) AS ptrItemRemark3
+				, TRIM(DET.ITEM4_REMARK ) AS ptrItemRemark4
+				, TRIM(DET.ITEM5_REMARK ) AS ptrItemRemark5
+				, TRIM(DET.ITEM6_REMARK ) AS ptrItemRemark6
+				, TRIM(DET.ITEM7_REMARK ) AS ptrItemRemark7
+				, TRIM(DET.ITEM8_REMARK ) AS ptrItemRemark8
+				, TRIM(DET.ITEM9_REMARK ) AS ptrItemRemark9
+				, TRIM(DET.REMARK       ) AS remark
+				, TRIM(DET.ADDRESS      ) AS addr
+				, TRIM(DET.OWNERTEL     ) AS ownerTel
+				, TRIM(DET.FOOTER1		) AS FOOTER1
+				, TRIM(DET.FOOTER2		) AS FOOTER2
+				, TRIM(DET.FOOTER3		) AS FOOTER3
+		 FROM XNOTIMASREQ REQ LEFT OUTER JOIN XNOTIMASREQDET DET ON REQ.NOTIMASREQCD = DET.NOTIMASREQCD
+		WHERE REQ.CHACD = #{chaCd}
+		  AND REQ.NOTIMASREQCD IN #{notiMasReqCd}
+        ORDER BY DET.SEQ_NO ASC
+	</select>
+
+	<!-- 고지서설정 조회 (최조 : 최종저장한 양식을 보여줌)-->
+	<select id="selectXbillForm" resultType="NotiConfigDTO">
+		SELECT *
+          FROM ( SELECT CHACD         AS chaCd
+                        , BILLGUBN    AS billGubn
+                        , BILLNAME    AS billName
+                        , CUSALS      AS cusAls
+                        , NOTICHANAME AS notiChaName
+                        , TELNO       AS telNo
+                        , BILLCONT1   AS billCont1
+                        , BILLCONT2   AS billCont2
+                        , MAKEDT      AS makeDt
+                        , MAKER       AS maker
+                        , REGDT       AS regDt
+                        , SUMPRINTYN  AS sumPrintYn
+                        , REMARK      AS remark
+                  FROM XBILLFORM
+                 WHERE CHACD = #{chaCd}
+                 ORDER BY MAKEDT DESC
+               ) SUB
+         LIMIT 1
+	</select>
+
+	<!-- 고지서설정 조회 (선택한 양식)-->
+	<select id="selectedXbillForm" resultType="NotiConfigDTO">
+		SELECT CHACD AS chaCd
+		        , BILLGUBN AS billGubn
+		        , BILLNAME AS billName
+		        , CUSALS AS cusAls
+		        , NOTICHANAME AS notiChaName
+		        , TELNO AS telNo
+		        , BILLCONT1 AS billCont1
+		        , BILLCONT2 AS billCont2
+		        , MAKEDT AS makeDt
+		        , MAKER AS maker
+		        , REGDT AS regDt
+		        , SUMPRINTYN AS sumPrintYn
+		        , REMARK as remark
+		  FROM XBILLFORM
+		 WHERE CHACD = #{chaCd}
+		   AND BILLGUBN = #{billGubn}
+	</select>
+
+	<!-- 고지서설정 수정 -->
+	<update id="updateXbillForm">
+		UPDATE XBILLFORM
+			SET BILLNAME   = #{billName}
+				, CUSALS    = #{cusAls}
+				, BILLCONT1 = #{billCont1}
+				, MAKEDT    = NOW()
+		  WHERE CHACD      = #{chaCd}
+			AND BILLGUBN   = #{billGubn}
+	</update>
+
+	<!-- 고지서설정 수납기관, 연락처 조회 -->
+	<select id="selectXchalist" resultType="hashMap">
+		SELECT CHANAME AS chaName
+		        , OWNERTEL AS ownerTel
+		  FROM XCHALIST
+		 WHERE CHACD = #{chaCd}
+	</select>
+
+	<!-- 고지서설정 수정 및 등록 -->
+	<update id="saveNotiConfig" parameterType="hashMap">
+		INSERT INTO xbillform (chacd, billgubn, billname, cusals, notichaname, telno, billcont1, billcont2, makedt, maker, regdt, sumprintyn )
+		VALUES (#{chaCd}, #{billGubn}, #{billName}, #{cusAls}, #{notiChaName}, #{telNo}, #{billCont1}, #{billCont2}, now(), #{chaCd}, now(), 'Y')
+		ON CONFLICT (CHACD, BILLGUBN)
+		DO UPDATE
+		SET billname  = #{billName}
+		, cusals      = #{cusAls}
+		, billcont1   = #{billCont1}
+		, billcont2   = #{billCont2}
+		, makedt      = now()
+		, notichaname = #{notiChaName}
+		, telno       = #{telNo}
+		WHERE xbillform.chacd = #{chaCd}
+		AND xbillform.billgubn = #{billGubn}
+	</update>
+
+	<!-- 고지서 출력의뢰 기본 주소 조회 -->
+	<select id="selectReqAddress" resultType="NotiMgmtPrintResDTO">
+		SELECT CHA.CHACD                  AS CHACD,
+			   MAS.SORTTY                  AS SORTTY,
+			   CHA.CHAZIPCODE              AS ZIPCODE,
+			   CHA.CHAADDRESS1             AS ADDRESS1,
+			   CHA.CHAADDRESS2             AS ADDRESS2,
+			   CHA.CHANAME                 AS REQNAME,
+			   REPLACE(CHA.CHRHP, '-', '') AS REQHP,
+			   MAS.RCUSGUBN                AS RCUSGUBN,
+			   MAS.BILLGUBN                AS BILLGUBN,
+			   '2'                         AS REQSECT,
+			   'N'                         AS SORTTY
+		  FROM XCHALIST CHA LEFT OUTER JOIN XNOTIMASREQ MAS ON MAS.CHACD = CHA.CHACD
+		 WHERE CHA.CHACD = #{chaCd}
+		 ORDER BY MAS.REGDT DESC
+		 LIMIT 1
+	</select>
+
+	<!-- 출력의뢰 리스트 조회 -->
+	<select id="countReqNotiMas" resultType="int">
+		SELECT COUNT(*) cnt
+ 		  FROM XNOTIMASREQ
+		 WHERE CHACD = #{chaCd}
+	</select>
+
+	<select id="pageSelectReqNotiMas" resultType="NotiMgmtPrintResDTO">
+		<include refid="paging_header"/>
+		SELECT B.*
+		  FROM ( SELECT CHACD
+						, SUBSTR(MASMONTH, 1, 4) || '.' || SUBSTR(MASMONTH, 5)                               						AS MASMONTH
+						, SUBSTR(REQDATE, 1, 4) || '.' || SUBSTR(REQDATE, 5, 2) || '.' || SUBSTR(REQDATE, 7) 						AS REQDATE
+						, NOTIMASREQCD
+						, COALESCE(SENDCNT, '')                                                                   					AS SENDCNT
+						, COALESCE(CUSGUBNA, '')                                                                  					AS CUSGUBNA
+						, COALESCE(CUSGUBNB, '')                                                                  					AS CUSGUBNB
+						, '안내문구' || BILLGUBN                                                             						AS BILLGUBN
+						, BILLNO
+						, COALESCE(TO_CHAR(SENDDT, 'YYYY.MM.DD HH24:MI:SS'), '')                                  					AS SENDDT
+						, REQST                                                                              						AS REQSTCD
+						, CASE REQST  WHEN 'BR01' THEN  '요청'  WHEN 'BR02' THEN  '처리완료'  WHEN 'BR03' THEN  '처리중'  WHEN 'BR04' THEN  '취소'  WHEN 'BR09' THEN  '처리중' END 	AS REQST
+						, CASE SORTTY  WHEN 'N' THEN  '고객명'  ELSE '고객구분' END                               						AS SORTTYS
+						, COUNT(CHACD) OVER ( PARTITION BY CHACD )                                           						AS MASCNT
+						, CASE SORT_1_CD WHEN 'N00001' THEN '고객명'
+										  WHEN 'N00002' THEN '고객구분1'
+										  WHEN 'N00003' THEN '고객구분2'
+										  WHEN 'N00004' THEN '고객구분3'
+										  WHEN 'N00005' THEN '고객구분4'
+										  ELSE '선택안함' END                                               						AS sort1Cd
+						, CASE SORT_2_CD WHEN 'N00001' THEN '고객명'
+										  WHEN 'N00002' THEN '고객구분1'
+										  WHEN 'N00003' THEN '고객구분2'
+										  WHEN 'N00004' THEN '고객구분3'
+										  WHEN 'N00005' THEN '고객구분4'
+										  ELSE '선택안함' END                                               						AS sort2Cd
+						, CASE   WHEN DLVR_TYPE_CD = 'N20001' THEN  '택배'  WHEN DLVR_TYPE_CD = 'N20002' THEN  '퀵'  WHEN DLVR_TYPE_CD is null THEN  ' ' END	AS dlvrTypeCd
+				 FROM XNOTIMASREQ
+				WHERE CHACD = #{chaCd}
+				ORDER BY REGDT DESC, REQST ASC
+			) B
+		WHERE 1 = 1
+		<include refid="paging_footer"/>
+	</select>
+
+	<select id="selectMonReqNotiMas" resultType="hashMap">
+		SELECT COUNT(CHACD) AS MASCNT 
+		  FROM XNOTIMAS
+		 WHERE CHACD = #{chaCd}
+		   AND MASMONTH = #{masMonth}
+		   AND	NOTIMASST = 'PA02'
+		   AND NOTI_CAN_YN = 'N'
+	</select>
+
+	<!-- 고지 안내문구 줄수 비교 -->
+	<select id="cont1LengthCheck" resultType="NotiConfigDTO">
+		SELECT *
+		  FROM XBILLFORM
+		 WHERE CHACD = #{chaCd}
+		   AND BILLGUBN = #{billGubn}
+	</select>
+
+	<!-- 출력의뢰 validation check -->
+	<select id="selectXnotimasReq" resultType="java.lang.Integer">
+		SELECT COUNT(CHACD) AS CNT
+		  FROM XNOTIMASREQ
+		 WHERE CHACD = #{chaCd}
+		   AND BILLGUBN = #{billGubn}
+		   AND REQST = 'BR01'
+	</select>
+
+	<!-- 출력의뢰 조회 등록 -->
+	<insert id="saveXnotimasReq" parameterType="NotiMgmtPrintResDTO">
+		<selectKey keyProperty="notimasReqCd" order="AFTER" resultType="java.lang.String">
+			SELECT SEQNOTIMASREQCD.CURRVAL
+		</selectKey>
+		INSERT INTO XNOTIMASREQ ( CHACD, MASMONTH, ZIPCODE, ADDRESS1, ADDRESS2, REQNAME, REQHP, SORTTY, REQST, REQDATE, REGDT, NOTIMASREQCD, BILLGUBN, SORT_1_CD, SORT_2_CD, DLVR_TYPE_CD, MAKER, MAKEDT, SENDCNT )
+		                  VALUES ( #{chaCd}, #{masMonth}, #{zipCode}, #{address1}, #{address2}, #{reqName}, #{reqHp}, #{sortTy}, #{reqSt}, TO_CHAR(NOW(), 'YYYYMMDD'), NOW(), NEXTVAL('seqnotimasreqcd'), #{billGubn}, #{sort1Cd}, #{sort2Cd}, #{dlvrTypeCd}, #{chaCd}, NOW()
+                                  , (SELECT COUNT(*)
+                                       FROM XBILLFORM A
+                                            , XNOTIMAS B
+                                            , XCHALIST C
+                                      WHERE A.CHACD = B.CHACD
+                                        AND A.CHACD = C.CHACD
+                                        AND B.NOTIMASST = 'PA02'
+                                        AND B.NOTI_CAN_YN = 'N'
+                                        AND A.CHACD = #{chaCd}
+                                        AND A.BILLGUBN = #{billGubn}
+                                        AND B.MASMONTH = #{masMonth}
+                                     )
+		                          )
+	</insert>
+
+	<!-- 출력 의뢰 시 요청한 자세한 데이터 저장 -->
+	<insert id="saveXnotimasReqDet" parameterType="NotiMgmtPrintResDetDTO">
+		INSERT INTO XNOTIMASREQDET (
+		  NOTIMASREQCD, SEQ_NO, TITLE, CUSALS, CONTENT, CHANAME, TELNO, OPT_CONTENT, OWNERTEL, ADDRESS, NOTIMASCD, VANO, CUSNAME, CUSGUBN1_NAME, CUSGUBN2_NAME, CUSGUBN3_NAME, CUSGUBN4_NAME, NOTIAMT, DUE_DT,
+		  ITEM1_NAME, ITEM1_AMT, ITEM1_REMARK, ITEM2_NAME, ITEM2_AMT, ITEM2_REMARK, ITEM3_NAME, ITEM3_AMT, ITEM3_REMARK, ITEM4_NAME, ITEM4_AMT, ITEM4_REMARK, ITEM5_NAME, ITEM5_AMT, ITEM5_REMARK,
+		  ITEM6_NAME, ITEM6_AMT, ITEM6_REMARK, ITEM7_NAME, ITEM7_AMT, ITEM7_REMARK, ITEM8_NAME, ITEM8_AMT, ITEM8_REMARK, ITEM9_NAME, ITEM9_AMT, ITEM9_REMARK, CUSGUBN1, CUSGUBN2, CUSGUBN3, CUSGUBN4,
+		  FOOTER1, FOOTER2, FOOTER3
+		) SELECT NOTIMASREQCD,
+				 LPAD(RANK() OVER (ORDER BY
+		<choose>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(sort1Cd)">
+				<choose>
+					<when test="sort1Cd == 'N00001'">
+						TA.CUSNAME ASC
+					</when>
+					<when test="sort1Cd == 'N00002'">
+						TA.CUSGUBN1 ASC
+					</when>
+					<when test="sort1Cd == 'N00003'">
+						TA.CUSGUBN2 ASC
+					</when>
+					<when test="sort1Cd == 'N00004'">
+						TA.CUSGUBN3 ASC
+					</when>
+					<when test="sort1Cd == 'N00005'">
+						TA.CUSGUBN4 ASC
+					</when>
+					<otherwise>
+						TA.CUSGUBN1 ASC
+					</otherwise>
+				</choose>
+				<choose>
+					<when test="sort2Cd == 'N00001'">
+						, TA.CUSNAME ASC
+					</when>
+					<when test="sort2Cd == 'N00002'">
+						, TA.CUSGUBN1 ASC
+					</when>
+					<when test="sort2Cd == 'N00003'">
+						, TA.CUSGUBN2 ASC
+					</when>
+					<when test="sort2Cd == 'N00004'">
+						, TA.CUSGUBN3 ASC
+					</when>
+					<when test="sort2Cd == 'N00005'">
+						, TA.CUSGUBN4 ASC
+					</when>
+					<otherwise>
+
+					</otherwise>
+				</choose>
+				,TA.CUSNAME ASC
+			</when>
+		    <otherwise>
+				TA.CUSNAME ASC
+			</otherwise>
+		</choose>, TA.NOTIMASCD ASC
+		), 10, '0') SEQ_NO,
+		         SUBSTR(TITLE, 0, 20) TITLE, SUBSTR(CUSALS, 0, 10) CUSALS, CONTENT, SUBSTR(CHANAME, 0, 30) CHANAME, TELNO, OPT_CONTENT, OWNERTEL, ADDRESS, TA.NOTIMASCD AS NOTIMASCD,
+				  VANO, SUBSTR(CUSNAME, 0, 19) CUSNAME, CUSGUBN1_NAME, CUSGUBN2_NAME, CUSGUBN3_NAME, CUSGUBN4_NAME, NOTIAMT, DUE_DT,
+				  SUBSTR(ITEM1_NAME, 0, 30) ITEM1_NAME, ITEM1_AMT, SUBSTR(ITEM1_REMARK, 0, 50) ITEM1_REMARK, SUBSTR(ITEM2_NAME, 0, 30) ITEM2_NAME, ITEM2_AMT, SUBSTR(ITEM2_REMARK, 0, 50) ITEM2_REMARK,
+				  SUBSTR(ITEM3_NAME, 0, 30) ITEM3_NAME, ITEM3_AMT, SUBSTR(ITEM3_REMARK, 0, 50) ITEM3_REMARK, SUBSTR(ITEM4_NAME, 0, 30) ITEM4_NAME, ITEM4_AMT, SUBSTR(ITEM4_REMARK, 0, 50) ITEM4_REMARK,
+				  SUBSTR(ITEM5_NAME, 0, 30) ITEM5_NAME, ITEM5_AMT, SUBSTR(ITEM5_REMARK, 0, 50) ITEM5_REMARK, SUBSTR(ITEM6_NAME, 0, 30) ITEM6_NAME, ITEM6_AMT, SUBSTR(ITEM6_REMARK, 0, 50) ITEM6_REMARK,
+				  SUBSTR(ITEM7_NAME, 0, 30) ITEM7_NAME, ITEM7_AMT, SUBSTR(ITEM7_REMARK, 0, 50) ITEM7_REMARK, SUBSTR(ITEM8_NAME, 0, 30) ITEM8_NAME, ITEM8_AMT, SUBSTR(ITEM8_REMARK, 0, 50) ITEM8_REMARK,
+				  SUBSTR(ITEM9_NAME, 0, 30) ITEM9_NAME, ITEM9_AMT, SUBSTR(ITEM9_REMARK, 0, 50) ITEM9_REMARK, CUSGUBN1, CUSGUBN2, CUSGUBN3, CUSGUBN4,
+				  ( SELECT (REGEXP_SPLIT_TO_ARRAY(REMARK, '[#@#]+'))[generate_series(1,1)] ) AS REMARK1,
+				  ( SELECT (REGEXP_SPLIT_TO_ARRAY(REMARK, '[#@#]+'))[generate_series(2,2)] ) AS REMARK2,
+				  ( SELECT (REGEXP_SPLIT_TO_ARRAY(REMARK, '[#@#]+'))[generate_series(3,3)] ) AS REMARK3
+			FROM ( SELECT MAS.CHACD                                AS CHACD,
+						  MAS.MASMONTH                              AS MASMONTH,
+						  FRM.BILLNAME                              AS TITLE,
+						  FRM.CUSALS                                AS CUSALS,
+						  FRM.BILLCONT1                             AS CONTENT,
+						  FRM.NOTICHANAME                           AS CHANAME,
+						  FRM.TELNO                                 AS TELNO,
+						  FRM.BILLCONT2                             AS OPT_CONTENT,
+						  CHA.OWNERTEL                              AS OWNERTEL,
+						  CHA.CHAADDRESS1 || ' ' || CHA.CHAADDRESS2 AS ADDRESS,
+						  MAS.NOTIMASCD                             AS NOTIMASCD,
+						  MAS.VANO                                  AS VANO,
+						  MAS.CUSNAME                               AS CUSNAME,
+						  CASE WHEN CHA.CUSGUBNYN1 = 'Y' THEN CHA.CUSGUBN1 ELSE '' END AS CUSGUBN1_NAME,
+						  CASE WHEN CHA.CUSGUBNYN2 = 'Y' THEN CHA.CUSGUBN2 ELSE '' END AS CUSGUBN2_NAME,
+						  CASE WHEN CHA.CUSGUBNYN3 = 'Y' THEN CHA.CUSGUBN3 ELSE '' END AS CUSGUBN3_NAME,
+						  CASE WHEN CHA.CUSGUBNYN4 = 'Y' THEN CHA.CUSGUBN4 ELSE '' END AS CUSGUBN4_NAME,
+						  MAS.PRINTDATE                             AS DUE_DT,
+						  MAS.NOTIMASST                             AS NOTIMASST,
+						  CASE WHEN CHA.CUSGUBNYN1 = 'Y' THEN MAS.CUSGUBN1 ELSE '' END AS CUSGUBN1,
+						  CASE WHEN CHA.CUSGUBNYN2 = 'Y' THEN MAS.CUSGUBN2 ELSE '' END AS CUSGUBN2,
+						  CASE WHEN CHA.CUSGUBNYN3 = 'Y' THEN MAS.CUSGUBN3 ELSE '' END AS CUSGUBN3,
+						  CASE WHEN CHA.CUSGUBNYN4 = 'Y' THEN MAS.CUSGUBN4 ELSE '' END AS CUSGUBN4,
+						  REGEXP_REPLACE(MAS.REMARK, CHR(10), '#@#')  AS REMARK
+				   FROM XNOTIMAS MAS, XCHALIST CHA, XBILLFORM FRM, XCUSMAS CUS
+				   WHERE MAS.VANO = CUS.VANO
+						 AND MAS.CHACD = CHA.CHACD
+						 AND MAS.CHACD = FRM.CHACD
+						 AND FRM.BILLGUBN IN ( SELECT BILLGUBN
+											   FROM ( SELECT BILLGUBN
+													  FROM XBILLFORM
+													  WHERE CHACD = #{chaCd}
+                                                      AND BILLGUBN = #{billGubn}
+													  ORDER BY MAKEDT DESC
+											   )
+												LIMIT 1 )
+						 AND MAS.CHACD = #{chaCd}
+						 AND MAS.MASMONTH = #{masMonth}
+						 AND MAS.NOTI_CAN_YN = 'N'
+						 AND MAS.NOTIMASST != 'PA00') TA
+			  , ( SELECT MAX(NOTIMASCD)                        AS NOTIMASCD,
+						 MAX(NOTIMASREQCD)                     AS NOTIMASREQCD,
+						 MAX(SUMAMT)                           AS NOTIAMT,
+						 MAX(CASE LV WHEN 1 THEN PAYITEMNAME ELSE '' END)   AS ITEM1_NAME,
+						 MAX(CASE LV WHEN 1 THEN PAYITEMAMT ELSE '' END)    AS ITEM1_AMT,
+						 MAX(CASE LV WHEN 1 THEN PTRITEMREMARK ELSE '' END) AS ITEM1_REMARK,
+						 MAX(CASE LV WHEN 2 THEN PAYITEMNAME ELSE '' END)   AS ITEM2_NAME,
+						 MAX(CASE LV WHEN 2 THEN PAYITEMAMT ELSE '' END)    AS ITEM2_AMT,
+						 MAX(CASE LV WHEN 2 THEN PTRITEMREMARK ELSE '' END) AS ITEM2_REMARK,
+						 MAX(CASE LV WHEN 3 THEN PAYITEMNAME ELSE '' END)   AS ITEM3_NAME,
+						 MAX(CASE LV WHEN 3 THEN PAYITEMAMT ELSE '' END)    AS ITEM3_AMT,
+						 MAX(CASE LV WHEN 3 THEN PTRITEMREMARK ELSE '' END) AS ITEM3_REMARK,
+						 MAX(CASE LV WHEN 4 THEN PAYITEMNAME ELSE '' END)   AS ITEM4_NAME,
+						 MAX(CASE LV WHEN 4 THEN PAYITEMAMT ELSE '' END)    AS ITEM4_AMT,
+						 MAX(CASE LV WHEN 4 THEN PTRITEMREMARK ELSE '' END) AS ITEM4_REMARK,
+						 MAX(CASE LV WHEN 5 THEN PAYITEMNAME ELSE '' END)   AS ITEM5_NAME,
+						 MAX(CASE LV WHEN 5 THEN PAYITEMAMT ELSE '' END)    AS ITEM5_AMT,
+						 MAX(CASE LV WHEN 5 THEN PTRITEMREMARK ELSE '' END) AS ITEM5_REMARK,
+						 MAX(CASE LV WHEN 6 THEN PAYITEMNAME ELSE '' END)   AS ITEM6_NAME,
+						 MAX(CASE LV WHEN 6 THEN PAYITEMAMT ELSE '' END)    AS ITEM6_AMT,
+						 MAX(CASE LV WHEN 6 THEN PTRITEMREMARK ELSE '' END) AS ITEM6_REMARK,
+						 MAX(CASE LV WHEN 7 THEN PAYITEMNAME ELSE '' END)   AS ITEM7_NAME,
+						 MAX(CASE LV WHEN 7 THEN PAYITEMAMT ELSE '' END)    AS ITEM7_AMT,
+						 MAX(CASE LV WHEN 7 THEN PTRITEMREMARK ELSE '' END) AS ITEM7_REMARK,
+						 MAX(CASE LV WHEN 8 THEN PAYITEMNAME ELSE '' END)   AS ITEM8_NAME,
+						 MAX(CASE LV WHEN 8 THEN PAYITEMAMT ELSE '' END)    AS ITEM8_AMT,
+						 MAX(CASE LV WHEN 8 THEN PTRITEMREMARK ELSE '' END) AS ITEM8_REMARK,
+						 MAX(CASE LV WHEN 9 THEN PAYITEMNAME ELSE '' END)   AS ITEM9_NAME,
+						 MAX(CASE LV WHEN 9 THEN PAYITEMAMT ELSE '' END)    AS ITEM9_AMT,
+						 MAX(CASE LV WHEN 9 THEN PTRITEMREMARK ELSE '' END) AS ITEM9_REMARK
+				  FROM ( SELECT A.*,
+						ROW_NUMBER() OVER ( PARTITION BY NOTIMASCD ORDER BY NOTIMASCD )     AS RN,
+						SUM(PAYITEMAMT) OVER ( PARTITION BY NOTIMASCD )       AS SUMAMT
+						FROM ( SELECT COALESCE(DET.PTRITEMNAME, DET.PAYITEMNAME)      AS PAYITEMNAME,
+						SUM(DET.PAYITEMAMT)              						AS PAYITEMAMT,
+						DET.PTRITEMREMARK                						AS PTRITEMREMARK,
+						DET.PTRITEMNAME                  						AS PTRITEMNAME,
+						DET.NOTIMASCD                    						AS NOTIMASCD,
+						MAX(DET.PTRITEMORDER::integer) 						AS PTRITEMORDER,
+						#{notimasReqCd}					 						AS NOTIMASREQCD
+						FROM XPAYITEM ITM, XNOTIDET DET, XNOTIMAS MAS
+						WHERE ITM.PAYITEMCD = DET.PAYITEMCD
+						AND MAS.CHACD = #{chaCd}
+						AND MAS.MASMONTH = #{masMonth}
+						AND MAS.NOTI_CAN_YN = 'N'
+						AND MAS.NOTIMASST != 'PA00'
+						AND DET.NOTIMASCD = MAS.NOTIMASCD
+						AND DET.NOTIDETST != 'PA00'
+						AND DET.NOTI_CAN_YN = 'N'
+						GROUP BY DET.PAYITEMNAME, DET.PTRITEMREMARK, DET.PTRITEMNAME, DET.NOTIMASCD
+						ORDER BY DET.NOTIMASCD, MAX(DET.PTRITEMORDER::integer)) A) AA LEFT OUTER JOIN
+						( SELECT LV
+						FROM ( SELECT LEVEL LV
+						CONNECT BY LEVEL &lt; 10 )
+						) BB ON AA.RN = BB.LV
+							GROUP BY NOTIMASCD
+						) TB
+			WHERE TA.NOTIMASCD = TB.NOTIMASCD
+			  AND TA.NOTIMASST = 'PA02'
+			ORDER BY TA.CUSNAME ASC, TA.CUSNAME ASC
+	</insert>
+
+	<!-- 출력의뢰 건수 카운트 -->
+	<select id="printCount" resultType="int">
+		SELECT COUNT(*)
+		  FROM XBILLFORM A
+		        , XNOTIMAS B
+		        , XCHALIST C
+		 WHERE A.CHACD = B.CHACD
+		   AND A.CHACD = C.CHACD
+		   AND B.NOTIMASST = 'PA02'
+		   AND B.NOTI_CAN_YN = 'N'
+		   AND A.CHACD = #{chaCd}
+		   AND A.BILLGUBN = #{billGubn}
+		   AND B.MASMONTH = #{masMonth}
+	</select>
+
+	<!-- 출력의뢰조회 취소 시 BR04으로 코드 변경 -->
+	<update id="deleteXnotimasReq" parameterType="java.util.HashMap">
+		UPDATE XNOTIMASREQ
+		   SET REQST = 'BR04'
+			  	, MAKER = #{chaCd}
+				, MAKEDT = NOW()
+		WHERE NOTIMASREQCD IN (
+		<foreach item="item" index="index" collection="codeList" separator="," >
+			#{item}
+		</foreach>
+		)
+	</update>
+
+	<sql id="search">
+	<if test='payGb1 != null and payGb1 !="ALL"'>
+    	<if test='payList != null and !payList.equals("")'>
+	     	<if test='rcpDtDupYn != null and rcpDtDupYn.equals("P")'>
+	      		AND	DET.NOTIDETST IN
+	      	<foreach item="item" collection="payList" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+	     	</if>
+	     	<if test='rcpDtDupYn != null and !rcpDtDupYn.equals("P")'>
+		      	AND	MAS.NOTIMASST IN
+		      	<foreach item="item" collection="payList" index="index" open="(" close=")" separator=",">
+					#{item}
+				</foreach>
+     		</if>
+    	</if>
+    </if>
+	</sql>
+</mapper>

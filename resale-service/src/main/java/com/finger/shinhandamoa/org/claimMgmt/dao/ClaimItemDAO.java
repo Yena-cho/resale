@@ -1,0 +1,104 @@
+package com.finger.shinhandamoa.org.claimMgmt.dao;
+
+import com.finger.shinhandamoa.org.claimMgmt.dto.ClaimItemDTO;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * @author puki
+ * @author wisehouse@finger.co.kr
+ */
+public interface ClaimItemDAO {
+	/**
+	 * 청구 항목 관리
+	 * 
+	 * @param map
+	 * @return
+	 * @throws Exception
+	 */
+	List<ClaimItemDTO> claimItemList(Map<String, Object> map) throws Exception;
+
+	/**
+	 * 청구 항목 관리 - total count
+	 * 
+	 * @param chaCd
+	 * @return
+	 * @throws Exception
+	 */
+	int claimItemTotalCount(String chaCd) throws Exception;
+
+	/**
+	 * 청구 항목 관리 - 내입금통장 정보
+	 * 
+	 * @param chaCd
+	 * @return
+	 * @throws Exception
+	 */
+	List<ClaimItemDTO> moneyPassbookList(String chaCd) throws Exception;
+
+	/**
+	 * 청구 항목 삭제
+	 * 
+ 	 * @param map
+	 * @throws Exception
+	 */ 
+	void deleteClaimItem(Map<String, Object> map) throws Exception;
+
+	/**
+	 * 청구 항목 수정 - 기본정보 가져오기
+	 * 
+	 * @param map
+	 * @return
+	 * @throws Exception
+	 */
+	ClaimItemDTO detailClaimItem(Map<String, Object> map) throws Exception;
+
+	/**
+	 * 청구 항목 수정 및  등록
+	 * 
+	 * @param claimItem
+	 * @throws Exception
+	 */
+	void modifyClaimItem(ClaimItemDTO claimItem) throws Exception;
+
+	/**
+	 * 청구 출력 순서 재배치
+	 */
+	void updatePtritemOrder(Map<String, Object> map) throws Exception;
+
+	/**
+	 * 청구항목명 중복 체크
+	 * 
+	 * @param map
+	 * @return
+	 * @throws Exception
+	 */
+	String payItemNameCheck(Map<String, Object> map) throws Exception;
+
+	/**
+	 * 청구항목 순서변경
+	 * 
+	 * @param map
+	 * @throws Exception
+	 */
+	void updatePayItem(Map<String, Object> map) throws Exception;
+
+	/**
+	 * 청구항목 등록 갯수 확인 - 9개 이상 불가
+	 * 
+	 * @param map
+	 * @return
+	 * @throws Exception
+	 */
+	int cusPayItemCnt(Map<String, Object> map) throws Exception;
+
+	/**
+	 * 입금통장 유무 확인
+	 * 
+	 * @param map
+	 * @return
+	 * @throws Exception
+	 */
+	String selXadjGroup(Map<String, Object> map) throws Exception;
+}

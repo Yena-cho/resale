@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ClaimItemDao">	
+<!--
+	<resultMap type="ClaimItemDTO" id="selCmsAcctNo">
+		<result column="cmsAcctNo" property="cmsAcctNo" javaType="encrypt" jdbcType="CLOB" />
+	</resultMap>-->
+
+	<!-- 페이징을 위한 header -->
+	<sql id="paging_header">
+		select *
+		from (
+		    select (ROW_NUMBER() OVER()) as rn, Z.*
+		    from (	
+	</sql>
+	<!-- 페이징을 위한 footer -->
+	<sql id="paging_footer">
+		    ) Z
+		) X where rn between #{start} and #{end}
+	</sql>
+	
+	<!-- 청구 항목 목록 -->
+	<select id="selectClaimItem" resultType="ClaimItemDTO">
+		<include refid="paging_header" />
+		SELECT	ITEM.PAYITEMCD 		AS payItemCd 
+			, 	ITEM.CHACD 			AS chaCd
+			, 	ITEM.ADJFIREGKEY 	AS adjfiRegKey  -- 통장번호
+			, 	ITEM.PAYITEMNAME 	AS payItemName 	-- 항목명
+			, 	ITEM.PAYITEMSELYN 	AS payItemSelYN -- 필수입금여부
+			, 	ITEM.RCPITEMYN 		AS rcpItemYN 	-- 현금영수증발급여부
+			, 	ITEM.CHAOFFNO 		AS chaOffNo		-- 현금영수증 발급 사업자번호
+			, 	ITEM.PTRITEMNAME 	AS ptrItemName	-- 고지서출력 대체항목명
+			, 	ITEM.PTRITEMORDER 	AS ptrItemOrder	-- 출력순서
+			, 	ITEM.DISABLEDYN 	AS disabledYN
+			, 	XG.GRPADJNAME 		AS grpadjName 	--분할입금명 
+		FROM 	XPAYITEM 	ITEM
+		LEFT OUTER JOIN XADJGROUP XG 	ON ITEM.CHACD = XG.CHACD AND ITEM.ADJFIREGKEY = XG.ADJFIREGKEY
+		WHERE 	ITEM.PAYITEMST     = 'ST01' --등록
+		AND 	ITEM.CHACD 		   = #{chaCd} 
+		AND 	COALESCE(ITEM.DISABLEDYN, 'N') = 'N'
+		ORDER	BY ITEM.PTRITEMORDER::integer, PAYITEMCD
+		<!-- <include refid="paging_footer" /> -->
+			) Z
+		) T
+		
+	</select>
+	
+	<!-- 청구 항목 total count -->
+	<select id="selectClaimItemCnt" resultType="int">
+		SELECT	COUNT(*) 	AS cnt
+		FROM 	XPAYITEM 	ITEM
+		LEFT OUTER JOIN	XADJGROUP XG ON ITEM.CHACD = XG.CHACD AND ITEM.ADJFIREGKEY   = XG.ADJFIREGKEY
+		WHERE  	ITEM.PAYITEMST     = 'ST01' --등록
+		AND 	ITEM.CHACD 		   = #{chaCd} 
+		AND 	COALESCE(ITEM.DISABLEDYN, 'N') = 'N'
+	</select>
+	
+	<!-- 청구 항목 내입금통장 정보 -->
+	<select id="selectAccNum" resultType="ClaimItemDTO">
+		SELECT	(ROW_NUMBER() OVER())	AS rn
+			,	CHACD					AS chaCd
+			,	ADJFIREGKEY				AS adjfiRegKey
+			,	GRPADJNAME				AS grpadjName
+		FROM	XADJGROUP
+		WHERE  	CHACD = #{chaCd} 
+		ORDER	BY ADJFIREGKEY
+	</select>
+	
+	<!-- 청구 항목 삭제 -->
+	<update id="updateItemST02">
+		UPDATE	XPAYITEM
+		SET		PAYITEMST  = 'ST02'		-- 삭제
+			,	DISABLEDYN = 'Y'
+			,	MAKEDT	   = NOW()
+			,	MAKER 	   = #{chaCd}
+		WHERE	CHACD 	   = #{chaCd} 
+		AND		PAYITEMCD  = #{payItemCd}
+	</update>
+	
+	<!-- 청구 항목 상세 -->
+	<select id="detailClaimItem" resultType="ClaimItemDTO">
+		SELECT	PAYITEMCD 		AS payItemCd 
+			, 	CHACD 			AS chaCd
+			, 	ADJFIREGKEY 	AS adjfiRegKey  -- 통장번호
+			, 	PAYITEMNAME 	AS payItemName 	-- 항목명
+			, 	PAYITEMSELYN 	AS payItemSelYN -- 필수입금여부
+			, 	RCPITEMYN 		AS rcpItemYN 	-- 현금영수증발급여부
+			, 	CHAOFFNO 		AS chaOffNo		-- 현금영수증 발급 사업자번호
+			, 	PTRITEMNAME 	AS ptrItemName	-- 고지서출력 대체항목명
+			, 	PTRITEMORDER 	AS ptrItemOrder	-- 출력순서
+			,	PAYITEMST		AS payItemSt
+			,	CMSACCTNO		AS cmsAcctNo	-- 자동이체정산계좌번호
+			, 	CMSBNKCD		AS cmsBnkCd		-- 자동이체정산은행
+		FROM	XPAYITEM
+		WHERE	CHACD			= #{chaCd}
+		AND		PAYITEMCD   	= #{payItemCd}
+	</select>
+	
+	<!-- 청구 항목 수정 및 등록 -->
+	<update id="modifyClaimItem" parameterType="ClaimItemDTO">
+		WITH T AS (
+			UPDATE XPAYITEM
+			SET ADJFIREGKEY 	= #{adjfiRegKey}
+			, 	PAYITEMNAME 	= #{payItemName}
+			, 	RCPITEMYN 		= #{rcpItemYN}
+			, 	PTRITEMNAME 	= #{ptrItemName}
+			, 	PAYITEMSELYN 	= #{payItemSelYN}
+			,	MAKEDT			= NOW()
+			,   MAKER			= #{chaCd}
+			,	MAKEIP			= ''
+			WHERE CHACD = #{chaCd}
+			  AND PAYITEMCD = #{payItemCd}
+			RETURNING*)
+		INSERT INTO XPAYITEM (PAYITEMCD
+							 ,	 CHACD
+							 ,	 ADJFIREGKEY
+							 ,	 PAYITEMNAME
+							 ,	 PAYITEMSELYN
+							 ,	 RCPITEMYN
+							 ,	 CHAOFFNO
+							 ,	 PTRITEMNAME
+							 ,	 PTRITEMORDER
+							 ,	 PAYITEMST
+							 ,	 MAKEDT
+							 ,	 MAKER
+							 ,	 REGDT
+							 ,	 MAKEIP
+							 ,	 DISABLEDYN)
+		SELECT NEXTVAL('seqxpayitemcd')
+			 ,	 #{chaCd}
+			 ,	 #{adjfiRegKey}
+			 ,	 #{payItemName}
+			 ,	 #{payItemSelYN}
+			 ,	 #{rcpItemYN}
+			 ,	 (SELECT CHAOFFNO
+					FROM   XCHALIST
+					WHERE  CHACD = #{chaCd})
+			 ,	 #{ptrItemName}
+			 ,	 (SELECT COALESCE(MAX(PTRITEMORDER::integer), 0) + 1
+					FROM   XPAYITEM
+					WHERE  CHACD 	= #{chaCd}
+					  AND PAYITEMST = 'ST01')
+			 ,	 'ST01'
+			 ,	 NOW()
+			 ,	 #{chaCd}
+			 ,	 NOW()
+			 ,	 ''
+			 ,	 #{disabledYN}
+		WHERE NOT EXISTS (SELECT * FROM T)
+	</update>
+
+	<!-- 청구항목 출력순서 재배치 -->
+	<update id="updatePtritemOrder">
+		UPDATE XPAYITEM
+		SET  PTRITEMORDER = #{ptritemOrder}
+		WHERE CHACD = #{chaCd}
+		AND PAYITEMCD = #{payItemCd}
+	</update>
+	
+	<!-- 청구항목명 중복 체크 -->
+	<select id="payItemNameCheck" resultType="String">
+		SELECT	CASE COUNT(*)  WHEN 0 THEN  'Y'  ELSE 'N' END AS payItemName
+		FROM	XPAYITEM
+		WHERE	PAYITEMST 	  	  = 'ST01'
+		AND		CHACD 			  = #{chaCd}
+		<if test="adjaccyn != null and adjaccyn != '' and adjaccyn == 'Y'">
+		AND 	ADJFIREGKEY 	  = #{adjfiRegKey}
+		</if>
+		AND 	TRIM(PAYITEMNAME) = #{payItemName}
+	</select>
+	
+	<!-- 청구항목 순서변경 -->
+	<update id="updatePayItem">
+		UPDATE	XPAYITEM
+		SET		PTRITEMORDER = #{ptrItemOrder}
+			,	MAKEDT		 = NOW()
+			,	MAKER		 = #{chaCd}
+		WHERE	CHACD 		 = #{chaCd}
+		AND		PAYITEMCD	 = #{payItemCd}
+	</update>
+	
+	<!-- 고객별 청구항목 최대 9개까지 등록 - 확인 -->
+	<select id="cusPayItemCnt" resultType="int">
+		SELECT 	COUNT(*) AS cnt
+		FROM  	XNOTIMAS MAS
+			, 	XNOTIDET DET
+		WHERE 	MAS.NOTIMASCD 	= DET.NOTIMASCD
+		AND 	MAS.NOTI_CAN_YN = DET.NOTI_CAN_YN
+		AND 	MAS.NOTI_CAN_YN = 'N'
+		AND 	MAS.CHACD 		= #{chaCd}
+		AND 	MAS.VANO 		= #{vano}
+		AND 	MAS.MASMONTH 	= #{masMonth}
+		<if test="notiMasCd != null and notiMasCd != ''">
+		AND		MAS.NOTIMASCD	= #{notiMasCd}
+		</if>
+	</select>
+	<!-- 
+	<if test="payItemCd != null and payItemCd != ''">
+		AND		DET.PAYITEMCD	= #{payItemCd}
+		</if>
+	 -->
+	
+	<!-- 입금통장 유무확인 -->
+	<select id="selXadjGroup" resultType="String">
+		SELECT 	COALESCE(ADJACCYN, 'N') 	AS adjaccyn
+		FROM 	XCHALIST
+		WHERE 	CHACD 	 = #{chaCd}
+	</select>
+	
+</mapper>

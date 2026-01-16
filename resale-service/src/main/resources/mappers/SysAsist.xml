@@ -1,0 +1,800 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SysAsist">	
+<!--
+	<resultMap type="SysDTO" id="resultSysDTO">
+		<result column="data1" property="data1" javaType="encrypt" jdbcType="CLOB" />
+	</resultMap>-->
+		
+	<!-- 페이징을 위한 header -->
+	<sql id="paging_header">
+		select *
+		from (
+		    select (row_number() over()) as rn, A.*
+		    from (	
+	</sql>
+	<!-- 페이징을 위한 footer -->
+	<sql id="paging_footer">
+		    ) A
+		) X where rn between #{start} and #{end}
+	</sql>
+	
+	<!-- 공지사항 COUNT -->
+	<select id="noticeTotalCount"  resultType="int">
+		SELECT 	COUNT(*) AS CNT 
+        FROM 	BOARD
+        WHERE 	1 = 1
+        <include refid="noticeBbsByRole"/>
+        <include refid="search" />
+        <include refid="dayBetween" />
+	</select>
+	
+	<!-- 공지사항 관리 리스트 가져오기 -->
+	<select id="noticeListAll" resultType="SysDTO">
+		<include refid="paging_header" />
+		SELECT	NO
+			,	DAY
+			,	TITLE
+			,	BBS
+			,	FILENAME
+			,	WRITER
+		FROM 	BOARD 
+		WHERE 	1 = 1
+		<include refid="noticeBbsByRole"/>
+		<include refid="search" />
+		<include refid="dayBetween" />
+		<choose>
+			<!-- 검색조건 조회 -->
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchOrderBy) and searchOrderBy == 'day'">
+				ORDER BY DAY DESC
+			</when>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchOrderBy) and searchOrderBy == 'title'">
+				ORDER BY TITLE ASC
+			</when>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchOrderBy) and searchOrderBy == 'auth'">
+				ORDER BY BBS DESC
+			</when>
+			<otherwise>
+				ORDER BY no DESC
+			</otherwise>
+		</choose>
+		<include refid="paging_footer" />
+	</select>
+	
+	
+	<select id="selectByNo" resultType="SysDTO">
+		SELECT 	NO 			AS no
+			,	BBS 		AS bbs
+			,	NUM 		AS num
+			,	FROMNO 		AS fromno
+			,	STEP 		AS step
+			,	ID 			AS id
+			,	PASSWORD 	AS password
+			,	WRITER 		AS writer
+			,	EMAIL 		AS email
+			,	TITLE 		AS title
+			,	CONTENTS 	AS contents
+			,	FILENAME 	AS filename
+			,	FILESIZE 	AS filesize
+			,	IP 			AS ip
+			,	ISHTML 		AS ishtml
+			,	ISFIX 		AS isfix
+			,	COUNT 		AS count
+			,	DAY 		AS day
+			,	SENDEMAIL	AS sendemail
+			,	ISSEND 		AS issend
+			,	CODE 		AS code
+			,	DAY1 		AS day1
+			,	DATA1 		AS data1 /* clob */ 
+			,	DATA2 		AS data2
+			,	DATA3 		AS data3
+			,	DATA4 		AS data4
+			,	DATA5 		AS data5
+			,	DATA6 		AS data6
+			,	DATA7 		AS data7
+			,	DATA8 		AS data8
+			,	FILE_ID 	AS fileid
+			,	FILE_EXT 	AS fileext
+		FROM  	BOARD
+		WHERE  	NO 	= #{no}
+	</select>
+	
+	<insert id="doNoticeWrite">
+		INSERT INTO BOARD (NO, BBS, NUM, FROMNO, STEP, ID, WRITER, EMAIL, TITLE, CONTENTS, FILENAME, FILESIZE, IP, ISHTML, ISFIX, FILE_ID, FILE_EXT)
+		VALUES (NEXTVAL('board_seq'),
+				#{bbs},
+				COALESCE((SELECT MAX(num)
+						  FROM board
+						  WHERE bbs = #{bbs}), 0) + 1,
+                NULL,
+                '0',
+                #{id},
+                #{writer},
+                #{email},
+                #{title},
+                #{contents},
+                #{filename},
+                #{filesize},
+                '',
+                0,
+                #{isfix},
+                #{fileid},
+                #{fileext}
+				)
+	</insert>
+	
+	<!-- 접근권한구분 공지사항 -->
+	<sql id="noticeBbsByRole">
+		<choose>
+			<!-- 검색조건 조회 -->
+			<when test="bbs == 6 ">
+			    AND	BBS = 6			
+			</when>
+			<when test="bbs == 7 ">
+			    AND	BBS = 7			
+			</when>
+			<when test="bbs == 8 ">
+			    AND	BBS = 8			
+			</when>
+			<when test="bbs == 9 ">
+			    AND	(BBS = 6 OR BBS = 7)		
+			</when>
+			<when test="bbs == 10 ">
+			    AND	(BBS = 6 OR BBS = 8)		
+			</when>
+			<when test="bbs == 11 ">
+			    AND	(BBS = 7 OR BBS = 8)		
+			</when>
+			<otherwise>
+				AND (BBS = 6 OR BBS = 7 OR BBS = 8) 
+			</otherwise>
+		</choose>
+	</sql>
+	
+	<!-- 검색어 조건 -->
+	<sql id="search">
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(keyword)">
+			<if test="search_option == 'title'">
+			AND		TITLE like '%' || #{keyword} || '%'
+			</if>
+			<if test="search_option == 'contents'">
+			AND		CONTENTS like '%' || #{keyword} ||'%'
+			</if>
+			<if test="search_option == 'writer'">
+			AND		WRITER like '%'	|| #{keyword} || '%'	
+			</if>
+		</if>
+	</sql>
+	
+	<!-- 검색어 조건 -->
+	<sql id="popupSearch">
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(keyword)">
+			<choose>
+				<!-- 검색조건 조회 -->
+				<when test="search_option == 'title' ">
+				    AND	TITLE like '%'|| #{keyword} ||'%'			
+				</when>
+				<when test="search_option == 'contents' ">
+				    AND	CONTENTS like '%'|| #{keyword} ||'%'		
+				</when>
+				<when test="search_option == 'writer' ">
+				    AND	WRITER like '%'|| #{keyword} ||'%'			
+				</when>
+				<otherwise>
+					AND (TITLE like '%'|| #{keyword} ||'%'
+				        OR CONTENTS like '%'|| #{keyword} ||'%')
+				</otherwise>
+			</choose>
+		</if>
+	</sql>
+
+	<sql id="popupOrderBy">
+		<choose>
+			<when test="searchOrderBy == 'regDt' ">
+				ORDER BY REG_DT DESC
+			</when>
+			<when test="searchOrderBy == 'name' ">
+				ORDER BY TITLE ASC
+			</when>
+		</choose>
+	</sql>
+	
+	<sql id="dayBetween">
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startday) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endday)">
+			AND 	TO_CHAR(DAY, 'YYYYMMDD') BETWEEN #{startday} AND #{endday}
+		</if>
+	</sql>
+	
+	<!-- 자주하는 질문 총 개수 -->
+	<select id="faqTotalCount" resultType="int">
+		SELECT 	COUNT(*) AS CNT 
+        FROM 	BOARD
+        WHERE 	1 = 1
+        <include refid="faqBbsByRole"/>
+        <include refid="search" />
+        <include refid="dayBetween" />
+	</select>
+	<!-- 자주하는 질문 리스트 받아오기 -->
+	<select id="faqListAll" resultType="SysDTO">
+		<include refid="paging_header" />
+		SELECT	NO
+			,	to_char(DAY, 'yyyy-mm-dd-hh-MM-ss') as day
+			,	TITLE
+			,	BBS
+			,	FILENAME
+			,	WRITER
+		FROM BOARD 
+		WHERE 1=1
+		<include refid="faqBbsByRole"/>
+		<include refid="search" />
+		<include refid="dayBetween" />
+		ORDER BY no DESC
+		<include refid="paging_footer" />
+	</select>
+	
+	<insert id="doFaqWrite">
+		INSERT INTO BOARD (NO, BBS, NUM, FROMNO, STEP, ID, WRITER, EMAIL, TITLE, CONTENTS, IP, ISHTML, ISFIX)
+		VALUES (NEXTVAL('board_seq'),
+				#{bbs},
+				COALESCE((SELECT MAX(num)
+                	FROM board
+                    WHERE bbs = #{bbs}), 0) + 1,
+                NULL,
+                '0',
+                #{id},
+                #{writer},
+                #{email},
+                #{title},
+                #{contents},
+                '',
+                0,
+                0
+				)
+	</insert>
+	
+	<update id="faqUpdate">
+		UPDATE BOARD SET
+			TITLE = #{title},
+			CONTENTS = #{contents},
+			WRITER = #{writer},
+			IP = ''
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(isfix)">,ISFIX = #{isfix}</if>
+		WHERE NO = #{no}
+	</update>
+	
+	<update id="noticeUpdate">
+		UPDATE BOARD SET
+			TITLE = #{title}, 
+			CONTENTS = #{contents},
+			FILENAME = #{filename},
+			FILESIZE = #{filesize},
+			IP = '',
+			ISFIX = #{isfix},
+			FILE_ID = #{fileid},
+			FILE_EXT = #{fileext}
+		WHERE NO = #{no}
+	</update>
+	
+	<sql id="faqBbsByRole">
+		<choose>
+			<when test="role == 'all'">
+				<choose>
+					<when test="category == 'req'">AND (BBS = 51 OR BBS = 61 OR BBS = 71) </when>
+					<when test="category == 'pay'">AND (BBS = 52 OR BBS = 62 OR BBS = 72) </when>
+					<when test="category == 'site'">AND (BBS = 53 OR BBS = 63 OR BBS = 73) </when>
+					<when test="category == 'noti'">AND (BBS = 54 OR BBS = 64 OR BBS = 74) </when>
+					<when test="category == 'receive'">AND (BBS = 55 OR BBS = 65 OR BBS = 75) </when>
+					<when test="category == 'additional'">AND (BBS = 56 OR BBS = 66 OR BBS = 76) </when>
+					<when test="category == 'cash'">AND (BBS = 57 OR BBS = 67 OR BBS = 77) </when>
+					<when test="category == 'all'">AND BBS BETWEEN 51 AND 77 </when>
+					<otherwise>AND BBS BETWEEN 51 AND 77</otherwise>
+				</choose>
+			</when>
+			<when test="role == 'login'">
+			    <choose>
+					<when test="category == 'req'">AND BBS = 51 </when>
+					<when test="category == 'pay'">AND BBS = 52 </when>
+					<when test="category == 'site'">AND BBS = 53 </when>
+					<when test="category == 'noti'">AND BBS = 54 </when>
+					<when test="category == 'receive'">AND BBS = 55 </when>
+					<when test="category == 'additional'">AND BBS = 56 </when>
+					<when test="category == 'cash'">AND BBS = 57 </when>
+					<when test="category == 'all'">AND BBS BETWEEN 51 AND 57 </when>
+					<otherwise>AND BBS BETWEEN 51 AND 77</otherwise>
+				</choose>			
+			</when>
+			<when test="role == 'org'">
+				<choose>
+					<when test="category == 'req'">AND BBS = 61 </when>
+					<when test="category == 'pay'">AND BBS = 62 </when>
+					<when test="category == 'site'">AND BBS = 63 </when>
+					<when test="category == 'noti'">AND BBS = 64 </when>
+					<when test="category == 'receive'">AND BBS = 65 </when>
+					<when test="category == 'additional'">AND BBS = 66 </when>
+					<when test="category == 'cash'">AND BBS = 67 </when>
+					<when test="category == 'all'">AND BBS BETWEEN 61 AND 67 </when>
+					<otherwise>AND BBS BETWEEN 51 AND 77</otherwise>
+				</choose>			
+			</when>
+			<when test="role == 'submit'">
+				<choose>
+					<when test="category == 'req'">AND BBS = 71 </when>
+					<when test="category == 'pay'">AND BBS = 72 </when>
+					<when test="category == 'site'">AND BBS = 73 </when>
+					<when test="category == 'noti'">AND BBS = 74 </when>
+					<when test="category == 'receive'">AND BBS = 75 </when>
+					<when test="category == 'additional'">AND BBS = 76 </when>
+					<when test="category == 'cash'">AND BBS = 77 </when>
+					<when test="category == 'all'">AND BBS BETWEEN 71 AND 77 </when>
+					<otherwise>AND BBS BETWEEN 51 AND 77</otherwise>
+				</choose>			
+			</when>
+			<when test="role == 'lo'">
+				<choose>
+					<when test="category == 'req'">AND (BBS = 51 OR BBS = 61)</when>
+					<when test="category == 'pay'">AND (BBS = 52 OR BBS = 62)</when>
+					<when test="category == 'site'">AND (BBS = 53 OR BBS = 63)</when>
+					<when test="category == 'noti'">AND (BBS = 54 OR BBS = 64)</when>
+					<when test="category == 'receive'">AND (BBS = 55 OR BBS = 65)</when>
+					<when test="category == 'additional'">AND (BBS = 56 OR BBS = 66)</when>
+					<when test="category == 'cash'">AND (BBS = 57 OR BBS = 67)</when>
+					<when test="category == 'all'">AND (BBS BETWEEN 51 AND 67)</when>
+					<otherwise>AND BBS BETWEEN 51 AND 77</otherwise>
+				</choose>			
+			</when>
+			<when test="role == 'ls'">
+				<choose>
+					<when test="category == 'req'">AND (BBS = 51 OR BBS = 71)</when>
+					<when test="category == 'pay'">AND (BBS = 52 OR BBS = 72)</when>
+					<when test="category == 'site'">AND (BBS = 53 OR BBS = 73)</when>
+					<when test="category == 'noti'">AND (BBS = 54 OR BBS = 74)</when>
+					<when test="category == 'receive'">AND (BBS = 55 OR BBS = 75)</when>
+					<when test="category == 'additional'">AND (BBS = 56 OR BBS = 76)</when>
+					<when test="category == 'cash'">AND (BBS = 57 OR BBS = 77)</when>
+					<when test="category == 'all'">AND ((BBS BETWEEN 51 AND 57) or (BBS BETWEEN 71 AND 77))</when>
+					<otherwise>AND BBS BETWEEN 51 AND 77</otherwise>
+				</choose>				
+			</when>
+			<when test="role == 'os'">
+				<choose>
+					<when test="category == 'req'">AND (BBS = 61 OR BBS = 71)</when>
+					<when test="category == 'pay'">AND (BBS = 62 OR BBS = 72)</when>
+					<when test="category == 'site'">AND (BBS = 63 OR BBS = 73)</when>
+					<when test="category == 'noti'">AND (BBS = 64 OR BBS = 74)</when>
+					<when test="category == 'receive'">AND (BBS = 65 OR BBS = 75)</when>
+					<when test="category == 'additional'">AND (BBS = 66 OR BBS = 76)</when>
+					<when test="category == 'cash'">AND (BBS = 67 OR BBS = 77)</when>
+					<when test="category == 'all'">AND (BBS BETWEEN 61 AND 77)</when>
+					<otherwise>AND BBS BETWEEN 51 AND 77</otherwise>
+				</choose>			
+			</when>
+			<otherwise>
+				AND BBS BETWEEN 51 AND 77
+			</otherwise>
+		</choose>
+	</sql>
+	
+	
+	<select id="qnaListAllold" resultType="SysDTO">
+		<include refid="paging_header" />
+			select board.*, xchalist.chacd, xchalist.CHANAME, (SELECT COUNT(*) FROM BOARD B WHERE B.FROMNO = BOARD.NO) AS DATCNT
+			from board,xchalist
+			where board.code = xchalist.chacd
+			and bbs = 10
+			and fromno is null
+			<include refid="search" />
+			<include refid="dayBetween" />
+			<include refid="codesearch" />
+			<include refid="chanamesearch" />
+			<include refid="repleStatus"/>
+			<include refid="categorysearch"/>
+			ORDER BY no DESC
+		<include refid="paging_footer" />
+	</select>
+	
+	<select id="qnaListAll" resultType="SysDTO">
+		<include refid="paging_header" />	
+			select 
+				  NO			
+				, CODE
+				, WRITER
+				, TITLE
+				, CONTENTS
+				, DAY
+				, DATA1
+				, DATA7
+				, DATCNT
+				, CHANAME
+			from (
+				SELECT A.NO
+					, A.CODE
+					, A.WRITER
+					, A.TITLE
+					, A.CONTENTS
+					, A.DAY
+					, A.DATA1
+					, A.DATA7
+					, (SELECT COUNT(B.NO) FROM BOARD A LEFT OUTER JOIN BOARD B ON A.BBS = B.BBS AND A.NO = B.FROMNO) AS DATCNT
+					, C.CHANAME
+				FROM BOARD A
+					, XCHALIST C
+				WHERE 1=1
+				AND A.CODE = C.CHACD
+				AND A.BBS = 10
+				AND A.FROMNO IS NULL
+				) t
+			WHERE 1=1
+			<include refid="search" />
+	        <include refid="dayBetween" />
+	        <include refid="codesearch" />
+	        <include refid="chanamesearch" />
+			<include refid="NewRepleStatus"/>
+			<include refid="categorysearch"/>
+			AND TITLE != '통신서비스 이용증명원 신청'
+			ORDER BY no DESC
+			<include refid="paging_footer" />
+	</select>
+	
+	<select id="qnaTotalCount" resultType="int">
+		SELECT COUNT(*) AS CNT
+        FROM board, xchalist
+        where board.code = xchalist.chacd
+        and bbs = 10
+        and fromno is null
+        AND TITLE != '통신서비스 이용증명원 신청'
+        <include refid="search" />
+        <include refid="dayBetween" />
+        <include refid="codesearch" />
+        <include refid="chanamesearch" />
+		<include refid="repleStatus"/>
+		<include refid="categorysearch"/>
+	</select>
+	<!-- 검색조건 기관 코드 -->
+	<sql id="codesearch">
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(code)">
+	    AND	code like '%'|| #{code} ||'%'		
+	    </if>
+	</sql>
+	<!-- 검색조건 기관명 -->
+	<sql id="chanamesearch">
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaname)">
+	    AND	CHANAME like '%'|| #{chaname} ||'%'			
+	    </if>
+	</sql>
+	<!-- 검색 조건 답변 상태 -->
+	<sql id="NewRepleStatus">
+		<choose>
+			<when test="reple == 'all'">AND t.DATCNT >= 0</when>
+			<when test="reple == 'wait'">AND t.DATCNT = 0</when>
+			<when test="reple == 'complete'">AND t.DATCNT >= 1</when>
+			<otherwise>AND t.DATCNT >= 0</otherwise>
+		</choose>
+	</sql>
+	
+	<!-- 검색 조건 답변 상태 -->
+	<sql id="repleStatus">
+		<choose>
+			<when test="reple == 'all'">and (SELECT COUNT(*) FROM BOARD B WHERE B.FROMNO = BOARD.NO) >= 0</when>
+			<when test="reple == 'wait'">and (SELECT COUNT(*) FROM BOARD B WHERE B.FROMNO = BOARD.NO) = 0</when>
+			<when test="reple == 'complete'">and (SELECT COUNT(*) FROM BOARD B WHERE B.FROMNO = BOARD.NO) >= 1</when>
+			<otherwise>and (SELECT COUNT(*) FROM BOARD B WHERE B.FROMNO = BOARD.NO) >= 0</otherwise>
+		</choose>
+	</sql>
+	<!-- 검색 조건 카테고리 -->
+	<sql id="categorysearch">
+		<choose>
+			<when test="category == 'all'"></when>
+			<when test="category == '고객관리'">AND data7 like '%'|| #{category} ||'%'</when>
+			<when test="category == '청구'">AND data7 like '%'|| #{category} ||'%'</when>
+			<when test="category == '고지'">AND data7 like '%'|| #{category} ||'%'</when>
+			<when test="category == '수납'">AND data7 like '%'|| #{category} ||'%'</when>
+			<when test="category == '설정'">AND data7 like '%'|| #{category} ||'%'</when>
+			<when test="category == '사이트이용'">AND data7 like '%'|| #{category} ||'%'</when>
+			<when test="category == '신청/해지'">AND data7 like '%'|| #{category} ||'%'</when>
+			<when test="category == '기타'">AND data7 like '%'|| #{category} ||'%'</when>
+			<otherwise></otherwise>
+		</choose>
+	</sql>
+	
+	<select id="selectByFromno" resultType="SysDTO">
+		SELECT * FROM BOARD
+		WHERE FROMNO = #{no}
+	</select>
+	
+	<insert id="qnaInsert">
+		INSERT INTO BOARD (NO, BBS, NUM, FROMNO, STEP, ID, WRITER, EMAIL, TITLE, CONTENTS, IP, ISHTML, ISFIX, CODE, ISSEND)
+		VALUES (NEXTVAL('board_seq'),
+				10,
+				COALESCE((SELECT MAX(num)
+						  FROM board
+						  WHERE bbs = 10), 0)+1,
+                #{fromno},
+                '00',
+                #{id},
+                #{writer},
+                #{email},
+                #{title},
+                #{contents},
+                '',
+                0,
+                0,
+                #{code},
+                0
+				)
+	</insert>
+	
+	<update id="qnaUpdate">
+		UPDATE BOARD SET
+			CONTENTS = #{contents},
+			IP = ''
+		WHERE NO = #{no}
+	</update>
+	
+	
+	<delete id="popupDelete">
+		DELETE FROM POPUP
+		WHERE NO = #{no}
+	</delete>
+	
+	
+	<select id="popupTotCount"  resultType="int">
+		SELECT COUNT(*) AS CNT 
+        FROM POPUP
+        WHERE 1=1
+        <include refid="popupSearch"/>
+        <include refid="exposyn"/>
+        <include refid="reg_dt_between"/>
+	</select>
+	
+	<!-- 기존에 노출건이 있는지 확인 -->
+	<select id="exposynCount" resultType="int">
+		SELECT COUNT(*) FROM POPUP
+		WHERE 1 = 1
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(no)'>
+			AND NO != #{no}
+		</if>
+			AND EXPOSYN = 'Y'
+	</select>
+	
+	<!-- 등록건 이외의 다른 팝업들 비노출 처리 -->
+	<update id="updateExposeN">
+		UPDATE POPUP
+		SET EXPOSYN = 'N'
+		WHERE 1 = 1
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(no)'>
+			AND NO != #{no}
+		</if>
+			AND EXPOSYN = 'Y'
+	</update>
+
+	<select id="popupListAll" resultType="PopupDTO">
+		<include refid="paging_header" />
+		select NO
+		,	TITLE
+		,	CONTENTS
+		,	TO_CHAR(REG_DT, 'yyyy.mm.dd') as REGDT
+		,	TO_CHAR(TO_DATE(START_DT,'yyyymmdd'),'yyyy.mm.dd') AS STARTDT
+		,	TO_CHAR(TO_DATE(END_DT,'yyyymmdd'),'yyyy.mm.dd') AS ENDDT
+		,	EXPOSYN
+		,	DXPSTYPE
+		,	CASE   WHEN URL IS NULL THEN  'X'  ELSE 'O' END AS URL
+		FROM POPUP
+		WHERE 1 = 1
+		<include refid="popupSearch"/>
+		<include refid="exposyn"/>
+		<include refid="reg_dt_between"/>
+		<include refid="popupOrderBy"/>
+		<include refid="paging_footer"/>
+	</select>
+	
+	<select id="popupDetail" resultType="PopupDTO">
+		SELECT NO
+			,	TITLE
+			, 	CONTENTS
+			,	TO_CHAR(REG_DT, 'yyyy.mm.dd') as regDt
+			,	TO_CHAR(TO_DATE(START_DT, 'yyyy.mm.dd'), 'yyyy.mm.dd') as startDt
+			,	TO_CHAR(TO_DATE(END_DT, 'yyyy.mm.dd'), 'yyyy.mm.dd') as endDt
+			,	EXPOSYN
+			,	DXPSTYPE
+			,	FILENAME
+			,	URL
+		FROM POPUP
+		WHERE NO = #{no}
+	</select>
+	
+	<sql id="reg_dt_between">
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startday) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endday)">
+			and REG_DT between to_date(#{startday}, 'YYYYMMDD') and to_date(#{endday}, 'YYYYMMDD')+1
+		</if>
+	</sql>
+	
+	<sql id="exposyn">
+		<choose>
+			<when test="exposYn == 'Y'">and exposyn = 'Y'</when>
+			<when test="exposYn == 'N'">and exposyn = 'N'</when>
+			<otherwise></otherwise>
+		</choose>
+	</sql>
+	
+	<insert id="popupWrite">
+		INSERT INTO POPUP (NO, TITLE, CONTENTS, EXPOSYN, DXPSTYPE, START_DT, END_DT, FILENAME, FILESIZE, REG_DT, ADM_ID, URL)
+		VALUES (COALESCE((SELECT MAX(NO) FROM POPUP),0)+1
+			,	#{title}
+			,	#{contents}
+			,	#{exposyn}
+			,	#{dxpstype}
+			,	#{start_dt}
+			,	#{end_dt}
+			,	#{filename}
+			,	#{filesize}
+			,	NOW()
+			,	#{adm_id}
+			,	#{url}
+		)
+	</insert>
+	
+	<update id="popupUpdateNofile">
+		UPDATE POPUP SET
+			TITLE = #{title},
+			CONTENTS = #{contents},
+			EXPOSYN  = #{exposyn},
+			DXPSTYPE = #{dxpstype}, 
+			START_DT = #{start_dt},
+			END_DT = #{end_dt},
+			ADM_ID = #{adm_id},
+			URL = #{url}
+		WHERE NO = #{no}
+	</update>
+	
+	<update id="popupUpdateWithFile">
+		UPDATE POPUP SET
+			TITLE = #{title},
+			CONTENTS = #{contents},
+			EXPOSYN  = #{exposyn},
+			DXPSTYPE = #{dxpstype}, 
+			START_DT = #{start_dt},
+			END_DT = #{end_dt},
+			ADM_ID = #{adm_id},
+			FILENAME = #{filename},
+			FILESIZE = #{filesize},
+			URL = #{url}
+		WHERE NO = #{no}
+	</update>
+
+	<!-- 배너 관리 -->
+	<select id="bannerTotCount"  resultType="int">
+		SELECT COUNT(*) AS CNT
+		  FROM BANNER
+		 WHERE 1 = 1
+		<include refid="bannerSearch"/>
+	</select>
+
+	<select id="bannerTypeCount"  resultType="int">
+		SELECT COUNT(*) AS CNT
+		  FROM BANNER
+		 WHERE VIEW_TYPE_CD = #{viewTypeCd}
+	</select>
+
+	<select id="bannerListAll" resultType="BannerDTO">
+		<include refid="paging_header" />
+		SELECT ID
+				, NAME
+				, TITLE
+				, CONTENT
+				, FILE_ID		AS "fileId"
+				, SHOW_YN		AS "showYn"
+				, DELETE_YN		AS "deleteYn"
+				, CREATE_DATE	AS "createDate"
+				, CREATE_USER	AS "createUser"
+				, MODIFY_DATE	AS "modifyDate"
+				, MODIFY_USER	AS "modifyUser"
+				, VIEW_TYPE_CD	AS "viewTypeCd"
+				, ORDER_NO		AS "orderNo"
+		  FROM BANNER
+		 WHERE 1 = 1
+		<include refid="bannerSearch"/>
+		<include refid="bannerOrderBy"/>
+		<include refid="paging_footer"/>
+	</select>
+
+	<select id="bannerInfo" resultType="BannerDTO">
+		SELECT B.ID , B.NAME , B.TITLE , B.CONTENT , B.FILE_ID AS "fileId", B.VIEW_TYPE_CD AS "viewTypeCd"
+		  FROM BANNER B LEFT OUTER JOIN FW_FILE F ON B.FILE_ID = F.ID
+		 WHERE B.FILE_ID = #{fileId}
+	</select>
+
+	<insert id="bannerWrite">
+		INSERT INTO BANNER ( ID, NAME, TITLE, CONTENT, SHOW_YN, CREATE_DATE, CREATE_USER, MODIFY_DATE, MODIFY_USER, FILE_ID, VIEW_TYPE_CD, ORDER_NO )
+		VALUES ( COALESCE( ( SELECT MAX (ID::integer) FROM BANNER ), 0 ) + 1, #{name}, #{title}, #{content}, #{showYn}, NOW(), #{createUser}, NOW(), #{modifyUser}, #{fileId}, #{viewTypeCd}, #{orderNo} )
+	</insert>
+
+	<select id="bannerDetail" resultType="BannerDTO">
+		SELECT B.ID
+				, B.NAME
+				, B.TITLE
+				, B.CONTENT
+				, B.FILE_ID	            AS "fileId"
+				, B.SHOW_YN	            AS "showYn"
+				, B.DELETE_YN	        AS "deleteYn"
+				, B.CREATE_DATE         AS "createDate"
+				, B.CREATE_USER         AS "createUser"
+				, B.MODIFY_DATE         AS "modifyDate"
+				, B.MODIFY_USER         AS "modifyUser"
+				, B.VIEW_TYPE_CD        AS "viewTypeCd"
+				, B.ORDER_NO            AS "orderNo"
+				, F.BUCKET      		AS "bucket"
+				, F.NAME                AS "fileName"
+		  FROM BANNER B LEFT OUTER JOIN FW_FILE F ON B.FILE_ID = F.ID
+		 WHERE B.ID = #{id}
+	</select>
+
+	<delete id="bannerDelete">
+		DELETE FROM BANNER
+		WHERE ID = #{id}
+	</delete>
+
+	<update id="bannerUpdate">
+		UPDATE BANNER SET
+				NAME = #{name}
+				, TITLE = #{title}
+				, CONTENT = #{content}
+				, SHOW_YN = #{showYn}
+				, VIEW_TYPE_CD = #{viewTypeCd}
+				, MODIFY_DATE = NOW()
+				, MODIFY_USER = #{modifyUser}
+				, ORDER_NO = #{orderNo}
+				<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(fileId)">
+				, FILE_ID  = #{fileId}
+				</if>
+		 WHERE ID = #{id}
+	</update>
+
+	<select id="orderCheck" resultType="int">
+		SELECT COUNT(*) CNT
+		  FROM BANNER
+		 WHERE VIEW_TYPE_CD = #{viewTypeCd}
+		   AND ORDER_NO = #{orderNo}
+	</select>
+
+	<!-- 배너 검색 조건 -->
+	<sql id="bannerSearch">
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDate)">
+			AND TO_CHAR(CREATE_DATE, 'YYYYMMDD') BETWEEN #{startDate} AND #{endDate}
+		</if>
+
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(keyword)">
+			<choose>
+				<when test="searchOption == 'name' ">
+					AND NAME LIKE '%'|| #{keyword} ||'%'
+				</when>
+				<when test="searchOption == 'content' ">
+					AND (TITLE LIKE '%'|| #{keyword} ||'%' OR CONTENT LIKE '%'|| #{keyword} ||'%')
+				</when>
+			</choose>
+		</if>
+
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(viewType)">
+			AND VIEW_TYPE_CD = #{viewType}
+		</if>
+
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(showYn)">
+			AND SHOW_YN = #{showYn}
+		</if>
+	</sql>
+
+	<sql id="bannerOrderBy">
+		<choose>
+			<when test="searchOrderBy == 'createDate' ">
+				ORDER BY CREATE_DATE DESC
+			</when>
+			<when test="searchOrderBy == 'name' ">
+				ORDER BY NAME ASC
+			</when>
+			<when test="searchOrderBy == 'orderNo' ">
+				ORDER BY ORDER_NO ASC
+			</when>
+		</choose>
+	</sql>
+</mapper>

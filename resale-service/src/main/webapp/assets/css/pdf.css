@@ -1,0 +1,37 @@
+.logo-area0{text-align:right;margin-bottom:7px;}
+.name-n-date{font-size:11pt;text-align:center;}
+p{line-height: 14pt;}
+.bill-title{font-size:18pt;font-weight:700;text-align:center;}
+.divider{border-bottom:1px solid #d6d6d6;margin:24px 0;}
+.receiver{margin-bottom:0;line-height:23px}
+.notice-context{font-size:9pt; margin-bottom:4pt; height:216px; line-height:16pt}
+.sender{text-align:right;margin-top:16px;margin-bottom:12px;}
+.payment-summary{width:100%; border-collapse:collapse; margin-bottom:16px;border-top:2px solid #1e2022; border-bottom:1px solid #babed4;margin-top:4pt;}
+table.payment-summary td{padding:11pt}
+table.payment-summary .first-row{border-bottom:1px solid #e6e6e6}
+.month-charge{font-size:13pt; font-weight:bold; padding:8pt; border-bottom:1px solid #babed4;}
+.amount{text-align:right; font-size:14pt; font-weight:bold; padding:8pt; border-bottom:1px solid #babed4;}
+table.payment-summary .second-row{font-size:9pt}
+table.payment-summary .second-row td{text-align:center;padding:8pt;}
+.title{font-size:14pt; margin-bottom:4pt;}
+.description-wrapper{width:100%; border-collapse:collapse; border-top:2px solid #3779d0;}
+table.bill-description{text-align:center; border-top:2px solid #3779d0; font-size:10pt;}
+table.bill-description thead tr{border-bottom:1px solid #babed4;}
+table.bill-description thead th{padding:5pt;}
+table.bill-description tbody tr{border-bottom:1px solid #babed4;}
+table.bill-description tbody td{padding:4pt;}
+table.bill-description tbody th{background:#f9f9f9;border-right:1px solid #e6e6e6;border-bottom:1px solid #e6e6e6;color:#444}
+table.bill-description tbody th:last-child{border-right:0px}
+table.bill-description tbody td{border-bottom:1px solid #e6e6e6;text-align:center;color:#666}
+table.bill-description tfoot td{padding:8px;background:#f6f9fe;border-top:1px solid #babed4;border-bottom:1px solid #babed4;color:#444;font-weight:700}
+.notice-mobile-payment{width:100%; border-collapse:collapse;font-size:9pt;color:#666;margin-top: 8px;}
+.notice-mobile-payment td{padding:12px}
+.img-area{text-align:center; width: 150px;}
+.notice-mobile-payment strong{font-size:11pt;font-weight:700;color:#000;}
+.notice-mobile-payment p{margin-top:0px;margin-bottom:12px;line-height: 10pt;}
+.notice-mobile-payment p.emphasis{color:#000}
+.footer{background:#f4f5f5;padding:14px 8px;color:#666;width:100%;}
+.footer td{padding:19px}
+.logo-area{text-align:center;padding:19px;border-right:1px solid #d2d2d2; width: 118px;}
+.footer p{margin-top:0px;margin-bottom:6px;font-size:8pt;line-height: 9pt;}
+.emphasis{color:#000}

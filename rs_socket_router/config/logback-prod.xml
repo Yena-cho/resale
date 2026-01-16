@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property name="LOG_NAME_SVC" value="service" />
+    <property name="LOG_NAME_DBG" value="debug" />
+    <property name="LOG_HOME" value="${BUILD_PATH}/logs/" />
+    <property name="LOGBAK_HOME" value="${BUILD_PATH}/logs/back/" />
+    <property name="logPattern"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{10} [%file:%line] - %msg%n"/>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}${LOG_NAME_DBG}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- rollover daily -->
+            <fileNamePattern>${LOGBAK_HOME}${LOG_NAME_DBG}-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <!-- each file should be at most 100MB, keep 60 days worth of history, but at most 20GB -->
+<!--                        <maxFileSize>2GB</maxFileSize>-->
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
+            <maxHistory>365</maxHistory>
+            <!--            <totalSizeCap>10GB</totalSizeCap>-->
+        </rollingPolicy>
+        <encoder>
+            <pattern>${logPattern}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>%d{yyyy-MM-dd HH:mm:ss} %highlight(%-5p) %-40.40logger{40} - %yellow(%msg) %n</Pattern>
+        </layout>
+    </appender>
+
+    <logger name="co.finger.socket.router.common" level="debug"/>
+
+    <root level="DEBUG">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+    </root>
+</configuration>

@@ -1,0 +1,468 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Notification">	
+	
+	<resultMap type="NotificationDTO" id="selChrHp">
+		<result	column="CUSHP" property="cusHp" javaType="encrypt"	jdbcType="CLOB"/>
+	</resultMap>
+	
+	<sql id="paging_header">
+		select *
+		from (
+		    select (ROW_NUMBER() OVER()) as rn, A.*
+		    from (	
+	</sql>
+	
+	<sql id="paging_footer">
+		    ) A
+		) X where rn between #{start} and #{end}
+	</sql>
+	
+	<sql id="orderBy">
+		<choose>
+			<when test="search_orderBy == 'endDate'">
+				ORDER BY ENDDATE DESC
+			</when>
+			<otherwise>
+				ORDER BY MASMONTH DESC
+			</otherwise>
+		</choose>
+	</sql>
+	
+	<!-- 기관정보조회 -->
+	<select id="selectChaInfo" resultType="NotificationDTO">
+			SELECT 	CHA.USEPGYN
+				, 	CHA.CHACD
+				, 	CHANAME
+				, 	CHA.RCPDTDUPYN
+				,	CHA.CHAADDRESS1
+				,	CHA.CHAADDRESS2
+				,	CHA.OWNERTEL
+				,	CHA.PARTIAL_PAYMENT
+  				,	CHA.AMTCHKTY
+			FROM 	XCHALIST CHA, VALIST VA
+			WHERE	CHA.CHACD = VA.CHACD
+			AND		VA.USEYN = 'Y'
+			AND		VA.VANO = #{vano}
+			AND		CHA.CHAST = 'ST06'
+	</select>
+
+	<!-- 고지내역 총 개수 -->
+	<select id="notificationTotalCount" resultType="hashMap">
+			SELECT	COUNT(*) AS CNT, COALESCE(SUM(UNSUBTOT),0) AS SUBTOT
+			FROM
+			(
+			SELECT A.NOTIMASCD
+			    ,  A.ENDDATE
+				,  A.CUSNAME
+				,  B.PAYITEMAMT AS SUBTOT
+			    ,  B.DETCNT
+				,  A.NOTIMASST
+			    ,  A.MASMONTH
+			    ,  SUM (COALESCE(C.RCPAMT,0)) AS RCPAMT
+			    ,  MAX(COALESCE(B.PAYITEMAMT, 0)) - SUM( COALESCE(C.RCPAMT, 0) )  AS UNSUBTOT
+			    ,  A.NOTI_CAN_YN
+			FROM XNOTIMAS A LEFT OUTER JOIN ( SELECT NOTIMASCD, SUM(COALESCE(PAYITEMAMT, 0)) AS PAYITEMAMT, COUNT(NOTIDETCD) AS DETCNT
+				FROM   XNOTIDET
+				WHERE NOTIDETST != 'PA00'
+				AND NOTI_CAN_YN = 'N'
+				GROUP BY NOTIMASCD ) B ON A.NOTIMASCD = B.NOTIMASCD
+				LEFT OUTER JOIN  ( SELECT *
+				FROM  XRCPMAS
+				WHERE RCPMASST  IN ('PA03') ) C ON A.NOTIMASCD = C.NOTIMASCD AND A.CHACD = C.CHACD
+				LEFT OUTER JOIN XREPAYMAS D ON C.RCPMASCD = D.RCPMASCD
+			WHERE A.DISABLED != 'Y'
+			AND	  A.NOTI_CAN_YN != 'Y'
+			AND	  A.NOTIMASST IN ('PA02', 'PA04')
+			<if test='(fmasMonth != "" and tmasMonth != "") and (fmasMonth != null and tmasMonth != null)'>
+				AND A.MASMONTH BETWEEN #{fmasMonth} AND #{tmasMonth}
+			</if>
+			AND	  A.VANO = #{vaNo}
+			GROUP BY A.NOTIMASCD
+	     		,A.ENDDATE
+	     		,A.CUSNAME
+	     		,A.MASMONTH
+	     		,A.NOTIMASST
+	     		,A.NOTI_CAN_YN
+	     		,B.PAYITEMAMT
+	     		,B.DETCNT
+	     		,C.RCPMASST
+			) T
+	</select>
+	
+	<!-- 고지내역조회 -->
+	<select id="notificationList" resultType="notificationDTO">
+		<include refid="paging_header" />
+			SELECT NOTIMASCD, ENDDATE, CUSNAME, SUBTOT, DETCNT, NOTIMASST, MASMONTH, RCPAMT, UNSUBTOT, CASE NOTIMASST  WHEN 'PA03' THEN  '완납'  WHEN 'PA02' THEN  '미납'  WHEN 'PA04' THEN  '일부납' END AS NOTIMASNM, TO_CHAR(NOW(), 'YYYYMMDD') AS TODAY
+			FROM
+			(
+			SELECT A.NOTIMASCD
+			    ,  A.ENDDATE
+				,  A.CUSNAME
+				,  B.PAYITEMAMT AS SUBTOT
+			    ,  B.DETCNT
+				,  A.NOTIMASST
+			    ,  A.MASMONTH
+			    ,  SUM (COALESCE(C.RCPAMT,0)) AS RCPAMT
+			    ,  MAX(COALESCE(B.PAYITEMAMT, 0)) - SUM( COALESCE(C.RCPAMT, 0) )  AS UNSUBTOT
+			    ,  A.NOTI_CAN_YN
+			FROM XNOTIMAS  A LEFT OUTER JOIN ( SELECT NOTIMASCD, SUM(COALESCE(PAYITEMAMT, 0)) AS PAYITEMAMT, COUNT(NOTIDETCD) AS DETCNT
+				FROM   XNOTIDET
+				WHERE NOTIDETST != 'PA00'
+				AND NOTI_CAN_YN = 'N'
+				GROUP BY NOTIMASCD ) B ON A.NOTIMASCD = B.NOTIMASCD
+				LEFT OUTER JOIN (SELECT *
+				FROM  XRCPMAS
+				WHERE RCPMASST  IN ('PA03')) C ON A.NOTIMASCD = C.NOTIMASCD AND A.CHACD = C.CHACD
+				LEFT OUTER JOIN XREPAYMAS D ON C.RCPMASCD = D.RCPMASCD
+			WHERE A.DISABLED != 'Y'
+			AND	  A.NOTI_CAN_YN = 'N'
+			AND	  A.NOTIMASST IN ('PA02', 'PA04')
+			<if test='(fmasMonth != "" and tmasMonth != "") and (fmasMonth != null and tmasMonth != null)'>
+				AND A.MASMONTH BETWEEN #{fmasMonth} AND #{tmasMonth}
+			</if>
+			AND	  A.VANO = #{vaNo}
+			GROUP BY A.NOTIMASCD
+	     		,A.ENDDATE
+	     		,A.CUSNAME
+	     		,A.MASMONTH
+	     		,A.NOTIMASST
+	     		,A.NOTI_CAN_YN
+	     		,B.PAYITEMAMT
+	     		,B.DETCNT
+	     		,C.RCPMASST
+			) T
+		<include refid="orderBy" />
+		<include refid="paging_footer" />
+	</select>
+	
+	<!-- 고지정보 조회 -->
+	<select id="selectNotiMas" resultType="NotificationDTO">
+        SELECT 
+            MAS.CHACD
+			, 	CHA.PGSERVICEID                                                                      
+			,	CHA.PG_LICEN_KEY                                                                     
+			, 	CHA.CHANAME                                                                          
+			, 	CHA.RCPDTDUPYN                                                                       
+			,	DET.AMT                                                                              
+			,	MAS.CUSKEY                                                                           
+			,	MAS.CUSNAME                                                                          
+			,	MAS.CUSHP                                                                            
+			,	MAS.CUSMAIL                                                                          
+			,	MAS.ENDDATE                                                                          
+			,	CASE DET.DETCNT WHEN 1 THEN DET.ITEMNAME ELSE DET.ITEMNAME || '외 ' || (DET.DETCNT - 1) || '건' END AS ITEMNAME
+        FROM XNOTIMAS MAS
+        INNER JOIN XCHALIST CHA ON MAS.CHACD = CHA.CHACD
+        INNER JOIN ( SELECT NOTIMASCD,
+							SUM (PAYITEMAMT) AS AMT,
+							COUNT (NOTIDETCD) AS DETCNT,
+							MIN (PAYITEMNAME) AS ITEMNAME
+					FROM XNOTIDET D
+					WHERE NOTIMASCD = #{notimasCd}
+						AND D.NOTIDETST != 'PA00'
+						AND D.NOTI_CAN_YN = 'N'
+					GROUP BY NOTIMASCD ) DET ON MAS.NOTIMASCD = DET.NOTIMASCD
+        WHERE MAS.NOTIMASCD = #{notimasCd}
+            AND MAS.NOTIMASST = 'PA02'
+		    AND MAS.NOTI_CAN_YN = 'N'
+		    AND MAS.DISABLED = 'N'		
+	</select>
+
+	<!-- 수납코드 채번 -->
+	<select id="getRcpMasCd" resultType="NotificationDTO">
+		SELECT NEXTVAL('seqxrcpmascd') AS RCPMASCD
+	</select>
+
+	<select id="totalNotiMasAmt" resultType="NotificationDTO">
+		SELECT SUM(PAYITEMAMT) TOTALAMT
+		  FROM XNOTIDET
+		WHERE NOTIMASCD = #{notiMasCd}
+		  AND (NOTIDETST = 'PA02' OR NOTIDETST = 'PA04')
+	</select>
+
+	<insert id="insertRcpMas" parameterType="hashMap">
+			INSERT INTO XRCPMAS
+				(RCPMASCD, NOTIMASCD, SVECD, CHACD, VANO, MASKEY, MASMONTH,
+				 MASDAY, CUSKEY, CUSGUBN1, CUSGUBN2, CUSGUBN3, CUSGUBN4, CUSNAME,
+				 CUSHP, CUSMAIL, SMSYN, MAILYN, PAYDAY, PAYTIME, RCPAMT, SUCDAY,
+				 SUCTIME, RCPMASST, MAKEDT, MAKER, REGDT, CHATRTY, BNKMSGNO, BNKCD,
+				 PACKETNO, RCPUSRNAME)
+				 	SELECT   #{rcpMasCd} AS RCPMASCD,
+					         NOTIMASCD,
+					         'OCD' AS SVECD,
+					         CHACD,
+					         VANO,
+					         MASKEY,
+					         MASMONTH,
+					         MASDAY,
+					         CUSKEY,
+					         CUSGUBN1,
+					         CUSGUBN2,
+					         CUSGUBN3,
+					         CUSGUBN4,
+					         CUSNAME,
+					         CUSHP,
+					         CUSMAIL,
+					         SMSYN,
+					         MAILYN,
+					         #{payDay} AS PAYDAY,
+					         #{payTime} AS PAYTIME,
+					         #{amt} AS RCPAMT,
+					         TO_CHAR (NOW(), 'YYYYMMDD') AS SUCDAY,
+					         TO_CHAR (NOW(), 'HH24MISS') AS SUCTIME,
+					         'PA03' AS RCPMASST,
+					         NOW() AS MAKEDT,
+					         #{chaCd} AS MAKER,
+					         NOW() AS REGDT,
+					         CHATRTY,
+							 #{authCode} AS BNKMSGNO,
+							 #{bankCode} AS BNKCD,
+							 #{tid} AS PACKETNO,
+							 #{cardCode} AS RCPUSRNAME
+					 FROM   XNOTIMAS
+					 WHERE  NOTIMASCD = #{notiMasCd} AND NOTIMASST IN ( 'PA02', 'PA04' )
+	</insert>
+	
+	<insert id="insertRcpDet" parameterType="hashMap">
+            INSERT INTO XRCPDET
+					            (RCPDETCD, RCPMASCD, NOTIDETCD, DETKEY, PAYITEMCD, ADJFIREGKEY,
+					             PAYITEMNAME, PAYITEMAMT, RCPITEMYN, CHAOFFNO, CUSOFFNO,
+					             PTRITEMNAME, PTRITEMREMARK, RCPDETST, MAKEDT, MAKER, REGDT, CHATRTY)
+				 	SELECT NEXTVAL('seqxrcpdetcd') AS RCPDETCD,
+					          #{rcpMasCd} AS RCPMASCD,
+					          NOTIDETCD,
+					          DETKEY,
+					          PAYITEMCD,
+					          ADJFIREGKEY,
+					          PAYITEMNAME,
+					          PAYITEMAMT,
+					          RCPITEMYN,
+					          CHAOFFNO,
+					          CUSOFFNO,
+					          PTRITEMNAME,
+					          PTRITEMREMARK,
+					          'PA03' AS RCPDETST,
+					          NOW() AS MAKEDT,
+					          #{chaCd} AS MAKER,
+					          NOW() AS REGDT,
+					          CHATRTY
+					   FROM   XNOTIDET
+					   WHERE  NOTIMASCD = #{notiMasCd}
+					   	AND NOTIDETST = 'PA02'
+					   	AND NOTI_CAN_YN  = 'N'
+		<if test="notiDetCd != null">
+			AND	NOTIDETCD IN
+			<foreach collection="notiDetCd" item="list" index="index" separator="," open="(" close=")">
+				#{list}
+			</foreach>
+		</if>
+	</insert>
+	
+	<update id="updateNotiMas" parameterType="hashMap">
+			UPDATE	XNOTIMAS
+			SET MAKEDT = NOW(),
+		<choose>
+			<when  test="notimasSt != null">
+				NOTIMASST = #{notimasSt},
+			</when>
+			<otherwise>
+				NOTIMASST = 'PA03',
+			</otherwise>
+		</choose>
+		  		MAKER = #{chaCd}
+			WHERE NOTIMASCD = #{notiMasCd}
+	</update>
+	
+	<update id="updateNotiDet" parameterType="hashMap">
+			UPDATE	XNOTIDET
+			SET MAKER = #{chaCd},
+		<choose>
+			<when  test="notidetSt != null">
+				NOTIDETST = #{notidetSt},
+			</when>
+			<otherwise>
+				NOTIDETST = 'PA03',
+			</otherwise>
+		</choose>
+			    MAKEDT = NOW()
+			WHERE  NOTIMASCD = #{notiMasCd}
+		<if test="notiDetCd != null">
+			  AND	NOTIDETCD IN
+					<foreach collection="notiDetCd" item="list" index="index" separator="," open="(" close=")">
+						#{list}
+					</foreach>
+		</if>
+	</update>
+	
+	<!-- 고지상세항목 조회 -->
+ 	<select id="notiDetList" resultType="NotificationDTO" parameterType="hashMap">
+		SELECT  B.PAYITEMNAME,
+				B.PAYITEMAMT,
+				C.PAYITEMAMT AS RCPAMT
+		FROM XNOTIMAS A LEFT OUTER JOIN XNOTIDET B ON A.NOTIMASCD = B.NOTIMASCD
+                LEFT OUTER JOIN (SELECT A.CHACD
+                                      ,B.NOTIDETCD
+                                      ,B.PAYITEMCD
+                                      ,B.PAYITEMNAME
+                                      ,SUM(B.PAYITEMAMT) PAYITEMAMT
+                                 FROM XRCPMAS A, XRCPDET B
+                                 WHERE A.RCPMASCD = B.RCPMASCD
+                                 GROUP BY A.CHACD
+                                        ,B.NOTIDETCD
+                                        ,B.NOTIDETCD
+                                        ,B.PAYITEMCD
+                                        ,B.PAYITEMNAME
+                                ) C ON B.NOTIDETCD = C.NOTIDETCD
+		WHERE A.NOTIMASCD = #{notimasCd}
+			AND	A.NOTIMASST != 'PA00'
+			AND A.NOTI_CAN_YN = 'N'   
+			AND B.NOTIDETST != 'PA00'
+			GROUP BY B.PAYITEMCD, B.PAYITEMNAME, B.PAYITEMAMT, C.PAYITEMAMT
+			ORDER BY B.PAYITEMCD			
+	</select>
+	
+	<!-- 모바일청구서 고지 개수 -->
+	<select id="mMasNotificationTotalCount" resultType="hashMap">
+			SELECT	COUNT(*) AS CNT, SUM(SUBTOT) AS SUBTOT 	
+			FROM 	(SELECT MAS.NOTIMASCD
+    					 ,  MAS.ENDDATE
+						 ,	MAS.CUSNAME
+						 ,	(SELECT SUM (COALESCE(PAYITEMAMT,0)) FROM XNOTIDET WHERE NOTIMASCD = MAS.NOTIMASCD AND NOTI_CAN_YN  = 'N') AS SUBTOT
+						 ,	(SELECT COALESCE(SUM(COALESCE(RCP.RCPAMT, 0)), 0)
+								FROM XNOTIMAS MAS LEFT OUTER JOIN XRCPMAS RCP
+								ON MAS.NOTIMASCD = RCP.NOTIMASCD AND RCP.RCPMASST = 'PA03') AS RCPAMT
+    					 ,  (SELECT COUNT(NOTIDETCD) FROM XNOTIDET WHERE NOTIMASCD = MAS.NOTIMASCD AND NOTI_CAN_YN  = 'N') AS DETCNT
+						 ,	MAS.NOTIMASST
+    					 ,  MAS.MASMONTH
+					FROM	XNOTIMAS MAS
+					WHERE 	MAS.CHACD = #{chaCd}
+					AND		MAS.NOTIMASST IN ('PA02', 'PA04')
+					AND		MAS.DISABLED != 'Y'
+					AND     MAS.NOTI_CAN_YN ='N'
+					AND		MAS.VANO = #{vaNo}) T
+	</select>
+	
+	<!-- 모바일청구서 고지 내역 -->
+	<select id="mMasNotificationList" resultType="notificationDTO">
+			SELECT NOTIMASCD, ENDDATE, CUSNAME, SUBTOT, RCPAMT, SUBTOT-RCPAMT AS UNSUBTOT, DETCNT, NOTIMASST AS STCD, MASMONTH, CASE NOTIMASST  WHEN 'PA03' THEN  '완납'  WHEN 'PA02' THEN  '미납'  WHEN 'PA04' THEN  '일부납' END AS NOTIMASST, TO_CHAR(NOW(), 'YYYYMMDD') AS TODAY
+			FROM
+			(SELECT MAS.NOTIMASCD
+			    ,  MAS.ENDDATE
+				,	MAS.CUSNAME
+				,	(SELECT SUM (COALESCE(PAYITEMAMT,0)) FROM XNOTIDET WHERE NOTIMASCD = MAS.NOTIMASCD AND NOTI_CAN_YN  = 'N') AS SUBTOT
+				,	(SELECT COALESCE(SUM (COALESCE(RCP.RCPAMT, 0)),0)
+						FROM XNOTIMAS MAS LEFT OUTER JOIN XRCPMAS RCP
+						ON MAS.NOTIMASCD = RCP.NOTIMASCD AND RCP.RCPMASST = 'PA03') AS RCPAMT
+			    ,   (SELECT COUNT(NOTIDETCD) FROM XNOTIDET WHERE NOTIMASCD = MAS.NOTIMASCD AND NOTI_CAN_YN  = 'N') AS DETCNT
+				,	MAS.NOTIMASST
+			    ,   MAS.MASMONTH
+			FROM	XNOTIMAS MAS
+			WHERE MAS.CHACD = #{chaCd}
+			AND		MAS.DISABLED != 'Y'
+			AND     MAS.NOTI_CAN_YN ='N'
+			AND		MAS.NOTIMASST IN ('PA02', 'PA04')
+			AND		MAS.VANO = #{vaNo}) SUB
+			ORDER BY MASMONTH DESC
+	</select>
+	
+	<!-- 모바일청구서 항목개수 -->
+	<select id="mDetNotificationTotalCount" resultType="hashMap">
+		SELECT COALESCE(MAX(SUBTOT),0) AS SUBTOT, COALESCE(MAX(DETCNT),0) AS DETCNT, COALESCE(MAX(CNT),0) AS CNT
+		FROM (
+			SELECT	NOTIMASCD
+				, 	ENDDATE
+				, 	CUSNAME
+				, 	SUBTOT
+				, 	PAYITEMNAME
+				,	NOTIDETCD
+				,	NOTIDETST
+				,	CASE NOTIMASST  WHEN 'PA03' THEN  '완납'  WHEN 'PA02' THEN  '미납'  WHEN 'PA04' THEN  '일부납' END AS NOTIMASST
+				,	NOTIMASST AS STCD
+				,	SUM (COALESCE(PAYITEMAMT,0)) AS PAYITEMAMT
+				,	COUNT(NOTIMASCD) OVER(PARTITION BY NOTIMASCD) AS DETCNT
+				,	COUNT(CUSNAME) OVER(PARTITION BY CUSNAME) AS CNT	 	
+			FROM 	(SELECT MAS.NOTIMASCD
+						,	MAS.ENDDATE
+						,	MAS.CUSNAME
+						,	SUM (COALESCE(PAYITEMAMT,0)) OVER (PARTITION BY MAS.NOTIMASCD) AS SUBTOT
+						,	CASE    WHEN DET.PTRITEMNAME IS NULL THEN  DET.PAYITEMNAME  ELSE DET.PTRITEMNAME END AS PAYITEMNAME
+						,	DET.NOTIDETCD
+						,	DET.NOTIDETST
+						,	MAS.NOTIMASST
+						,	DET.PAYITEMAMT
+					FROM	XNOTIMAS MAS, XNOTIDET DET
+					WHERE	MAS.NOTIMASCD=DET.NOTIMASCD
+					AND		MAS.NOTIMASST IN ('PA02', 'PA04')
+					AND		MAS.CHACD = #{chaCd}
+					AND		MAS.DISABLED != 'Y'
+					AND		MAS.NOTI_CAN_YN = 'N' 
+					AND		DET.NOTIDETST != 'PA00'
+					AND 	DET.NOTI_CAN_YN = 'N'
+					AND		MAS.VANO = #{vaNo}) SUB
+			GROUP BY NOTIMASCD, ENDDATE, CUSNAME, SUBTOT, PAYITEMNAME, NOTIDETCD, NOTIDETST, NOTIMASST
+			) T
+	</select>
+	
+	 <!-- 모바일청구서 상세항목 조회 -->
+	<select id="mDetNotificationList" resultType="notificationDTO">
+			SELECT 	NOTIMASCD
+				, 	ENDDATE
+				, 	CUSNAME
+				, 	SUBTOT
+				, 	PAYITEMNAME
+				,	NOTIDETCD
+				,	NOTIDETST
+				,	CASE NOTIMASST  WHEN 'PA03' THEN  '완납'  WHEN 'PA02' THEN  '미납'  WHEN 'PA04' THEN  '일부납' END AS NOTIMASST
+				,	NOTIMASST AS STCD
+				,	SUM (COALESCE(PAYITEMAMT,0)) AS PAYITEMAMT
+				,	COUNT(NOTIMASCD) OVER(PARTITION BY NOTIMASCD) AS DETCNT
+				,   MASMONTH
+			FROM 	(SELECT MAS.NOTIMASCD
+						,	MAS.ENDDATE
+						,	MAS.CUSNAME
+						,	SUM (COALESCE(PAYITEMAMT,0)) OVER (PARTITION BY MAS.NOTIMASCD) AS SUBTOT
+						,	CASE    WHEN DET.PTRITEMNAME IS NULL THEN  DET.PAYITEMNAME  ELSE DET.PTRITEMNAME END AS PAYITEMNAME
+						,	DET.NOTIDETCD
+						,	DET.NOTIDETST
+						,	MAS.NOTIMASST
+						,	DET.PAYITEMAMT
+						,   MAS.MASMONTH
+					FROM	XNOTIMAS MAS, XNOTIDET DET
+					WHERE	MAS.NOTIMASCD=DET.NOTIMASCD
+					AND		MAS.NOTIMASST IN ('PA02', 'PA04')
+					AND		MAS.CHACD = #{chaCd}
+					AND		MAS.NOTI_CAN_YN = 'N'
+					AND		MAS.DISABLED != 'Y'
+					AND		DET.NOTIDETST != 'PA00'
+					AND 	DET.NOTI_CAN_YN = 'N'
+					AND		MAS.VANO = #{vaNo}) SUB
+			GROUP BY NOTIMASCD, ENDDATE, CUSNAME, SUBTOT, PAYITEMNAME, NOTIDETCD, NOTIDETST, NOTIMASST, MASMONTH
+	</select>
+	
+	<!-- 마지막 청구월 구하기 -->
+	<select id="maxMonth" resultType="NotificationDTO">
+		SELECT 	COALESCE(MAX(MASMONTH), TO_CHAR(NOW(), 'YYYYMM')) AS MASMONTH
+		FROM 	XNOTIMAS 
+		WHERE 	VANO 		= #{vano}
+		AND		NOTIMASST 	!= 'PA00'
+		AND 	NOTI_CAN_YN = 'N'   
+		AND 	DISABLED  	= 'N' 
+	</select>
+
+	<update id="resetPickRcpYn">
+		UPDATE XNOTIDET
+		   SET PICKRCPYN = 'N'
+		WHERE NOTIMASCD = #{notimasCd}
+	</update>
+
+	<update id="updatePickRcpYn">
+		UPDATE XNOTIDET
+		   SET PICKRCPYN = 'Y'
+		WHERE NOTIDETCD IN
+			<foreach collection="notidetCd" item="list" index="index" separator="," open="(" close=")">
+				#{list}
+			</foreach>
+	</update>
+</mapper>

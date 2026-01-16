@@ -1,0 +1,1135 @@
+2024-04-04 10:23:30.066  INFO o.h.v.i.u.Version [] - HV000001: Hibernate Validator 6.2.0.Final
+2024-04-04 10:23:30.073  INFO c.f.n.ResaleNotiApplication [] - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 5124 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 10:23:30.074  INFO c.f.n.ResaleNotiApplication [] - The following profiles are active: local
+2024-04-04 10:23:30.097  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor [] - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-04-04 10:23:30.097  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor [] - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-04-04 10:23:30.446  INFO o.s.d.r.c.RepositoryConfigurationDelegate [] - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 10:23:30.447  INFO o.s.d.r.c.RepositoryConfigurationDelegate [] - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 10:23:30.459  INFO o.s.d.r.c.RepositoryConfigurationDelegate [] - Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+2024-04-04 10:23:30.847  INFO o.s.b.w.e.t.TomcatWebServer [] - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 10:23:30.855  INFO o.a.c.h.Http11NioProtocol [] - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 10:23:30.856  INFO o.a.c.c.StandardService [] - Starting service [Tomcat]
+2024-04-04 10:23:30.856  INFO o.a.c.c.StandardEngine [] - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 10:23:33.969  INFO o.a.j.s.TldScanner [] - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 10:23:33.976  INFO o.a.c.c.C.[.[.[/] [] - Initializing Spring embedded WebApplicationContext
+2024-04-04 10:23:33.976  INFO o.s.b.w.s.c.ServletWebServerApplicationContext [] - Root WebApplicationContext: initialization completed in 3878 ms
+2024-04-04 10:23:34.703  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration [] - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 10:23:35.076  INFO o.s.b.d.a.OptionalLiveReloadServer [] - LiveReload server is running on port 35729
+2024-04-04 10:23:35.087  INFO o.a.c.h.Http11NioProtocol [] - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 10:23:35.096  INFO o.s.b.w.e.t.TomcatWebServer [] - Tomcat started on port(s): 8089 (http) with context path ''
+2024-04-04 10:23:35.108  INFO c.f.n.ResaleNotiApplication [] - Started ResaleNotiApplication in 5.282 seconds (JVM running for 5.685)
+2024-04-04 10:23:52.220  INFO o.a.c.c.C.[.[.[/] [] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-04-04 10:23:52.221  INFO o.s.w.s.DispatcherServlet [] - Initializing Servlet 'dispatcherServlet'
+2024-04-04 10:23:52.221  INFO o.s.w.s.DispatcherServlet [] - Completed initialization in 0 ms
+2024-04-04 10:23:52.257  INFO c.f.n.b.XcpmasNotiController [] - 컨트롤러 XrcpmasDTO(svecd=VAS, rcpMasCd=4000000000000000250, chaCd=30001076, masMonth=202404, cusName=이미래 테스트, vano=56216276551440, rcpAmt=1, payDay=20240404, rcpUsrName=신한전문봇, rcpMasSt=수납)
+2024-04-04 10:23:52.257  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 서비스 XrcpmasDTO
+2024-04-04 10:23:52.271  INFO c.f.n.u.CommunicateUtil [] - response :: MonoPeekTerminal
+2024-04-04 10:23:52.271  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 서비스
+2024-04-04 10:23:52.381  INFO c.f.n.d.StandardResponseDTO [] - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 10:23:54.419  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 10:56:52.295  INFO c.f.n.b.XcpmasNotiController [] - 컨트롤러 XrcpmasDTO(svecd=VAS, rcpMasCd=4000000000000000251, chaCd=30001076, masMonth=202404, cusName=이미래 테스트, vano=56216276551440, rcpAmt=1, payDay=20240404, rcpUsrName=신한전문봇, rcpMasSt=수납)
+2024-04-04 10:56:52.295  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 서비스 XrcpmasDTO
+2024-04-04 10:56:52.296  INFO c.f.n.u.CommunicateUtil [] - response :: MonoPeekTerminal
+2024-04-04 10:56:52.296  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 서비스
+2024-04-04 10:56:52.297  INFO c.f.n.d.StandardResponseDTO [] - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 10:56:53.588  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 11:30:40.461  INFO o.h.v.i.u.Version [] - HV000001: Hibernate Validator 6.2.0.Final
+2024-04-04 11:30:40.463  INFO c.f.n.ResaleNotiApplication [] - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 6484 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 11:30:40.464  INFO c.f.n.ResaleNotiApplication [] - The following profiles are active: local
+2024-04-04 11:30:40.483  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor [] - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-04-04 11:30:40.483  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor [] - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-04-04 11:30:40.769  INFO o.s.d.r.c.RepositoryConfigurationDelegate [] - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 11:30:40.770  INFO o.s.d.r.c.RepositoryConfigurationDelegate [] - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 11:30:40.781  INFO o.s.d.r.c.RepositoryConfigurationDelegate [] - Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+2024-04-04 11:30:41.074  INFO o.s.b.w.e.t.TomcatWebServer [] - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 11:30:41.081  INFO o.a.c.h.Http11NioProtocol [] - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 11:30:41.081  INFO o.a.c.c.StandardService [] - Starting service [Tomcat]
+2024-04-04 11:30:41.081  INFO o.a.c.c.StandardEngine [] - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 11:30:43.236  INFO o.a.j.s.TldScanner [] - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 11:30:43.241  INFO o.a.c.c.C.[.[.[/] [] - Initializing Spring embedded WebApplicationContext
+2024-04-04 11:30:43.241  INFO o.s.b.w.s.c.ServletWebServerApplicationContext [] - Root WebApplicationContext: initialization completed in 2758 ms
+2024-04-04 11:30:43.997  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration [] - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 11:30:44.335  INFO o.s.b.d.a.OptionalLiveReloadServer [] - LiveReload server is running on port 35729
+2024-04-04 11:30:44.344  INFO o.a.c.h.Http11NioProtocol [] - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 11:30:44.353  INFO o.s.b.w.e.t.TomcatWebServer [] - Tomcat started on port(s): 8089 (http) with context path ''
+2024-04-04 11:30:44.365  INFO c.f.n.ResaleNotiApplication [] - Started ResaleNotiApplication in 4.116 seconds (JVM running for 4.503)
+2024-04-04 11:30:47.426  INFO o.a.c.c.C.[.[.[/] [] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-04-04 11:30:47.426  INFO o.s.w.s.DispatcherServlet [] - Initializing Servlet 'dispatcherServlet'
+2024-04-04 11:30:47.427  INFO o.s.w.s.DispatcherServlet [] - Completed initialization in 1 ms
+2024-04-04 11:30:47.464  INFO c.f.n.b.XcpmasNotiController [] - 컨트롤러 XrcpmasDTO(svecd=VAS, rcpMasCd=4000000000000000254, chaCd=30001076, masMonth=202404, cusName=이미래 테스트, vano=56216276551440, rcpAmt=1, payDay=20240404, rcpUsrName=신한전문봇, rcpMasSt=수납)
+2024-04-04 11:30:47.465  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 서비스 XrcpmasDTO
+2024-04-04 11:30:47.492  INFO c.f.n.u.CommunicateUtil [] - response :: MonoPeekTerminal
+2024-04-04 11:30:47.492  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 서비스
+2024-04-04 11:30:47.586  INFO c.f.n.d.StandardResponseDTO [] - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 11:30:48.860  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 13:04:40.607  INFO c.f.n.b.XcpmasNotiController [] - 컨트롤러 XrcpmasDTO(svecd=VAS, rcpMasCd=4000000000000000256, chaCd=30001076, masMonth=202404, cusName=이미래 테스트, vano=56216276551440, rcpAmt=1, payDay=20240404, rcpUsrName=신한전문봇, rcpMasSt=수납)
+2024-04-04 13:04:40.608  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 서비스 XrcpmasDTO
+2024-04-04 13:04:40.609  INFO c.f.n.u.CommunicateUtil [] - response :: MonoPeekTerminal
+2024-04-04 13:04:40.609  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 서비스
+2024-04-04 13:04:40.610  INFO c.f.n.d.StandardResponseDTO [] - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 13:04:42.212  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 13:26:12.963  INFO c.f.n.b.XcpmasNotiController [] - 컨트롤러 XrcpmasDTO(svecd=VAS, rcpMasCd=4000000000000000258, chaCd=30001076, masMonth=202404, cusName=이미래 테스트, vano=56216276551440, rcpAmt=1, payDay=20240404, rcpUsrName=신한전문봇, rcpMasSt=수납)
+2024-04-04 13:26:12.963  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 서비스 XrcpmasDTO
+2024-04-04 13:26:12.965  INFO c.f.n.u.CommunicateUtil [] - response :: MonoPeekTerminal
+2024-04-04 13:26:12.965  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 서비스
+2024-04-04 13:26:12.966  INFO c.f.n.d.StandardResponseDTO [] - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 13:26:14.325  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 13:27:28.237  INFO c.f.n.b.XcpmasNotiController [] - 컨트롤러 XrcpmasDTO(svecd=VAS, rcpMasCd=4000000000000000260, chaCd=30001076, masMonth=202404, cusName=이미래 테스트, vano=56216276551440, rcpAmt=1, payDay=20240404, rcpUsrName=신한전문봇, rcpMasSt=수납)
+2024-04-04 13:27:28.237  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 서비스 XrcpmasDTO
+2024-04-04 13:27:28.238  INFO c.f.n.u.CommunicateUtil [] - response :: MonoPeekTerminal
+2024-04-04 13:27:28.238  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 서비스
+2024-04-04 13:27:28.239  INFO c.f.n.d.StandardResponseDTO [] - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 13:27:29.353  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 13:51:18.854  INFO c.f.n.b.XcpmasNotiController [] - 컨트롤러 XrcpmasDTO(svecd=VAS, rcpMasCd=4000000000000000262, chaCd=30001076, masMonth=202404, cusName=이미래 테스트, vano=56216276551440, rcpAmt=1, payDay=20240404, rcpUsrName=신한전문봇, rcpMasSt=수납)
+2024-04-04 13:51:18.854  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 서비스 XrcpmasDTO
+2024-04-04 13:51:18.856  INFO c.f.n.u.CommunicateUtil [] - response :: MonoPeekTerminal
+2024-04-04 13:51:18.856  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 서비스
+2024-04-04 13:51:18.857  INFO c.f.n.d.StandardResponseDTO [] - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 13:51:19.916  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 13:58:50.833  INFO c.f.n.b.XcpmasNotiController [] - 컨트롤러 XrcpmasDTO(svecd=VAS, rcpMasCd=4000000000000000264, chaCd=30001076, masMonth=202404, cusName=이미래 테스트, vano=56216276551440, rcpAmt=1, payDay=20240404, rcpUsrName=신한전문봇, rcpMasSt=수납)
+2024-04-04 13:58:50.833  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 서비스 XrcpmasDTO
+2024-04-04 13:58:50.834  INFO c.f.n.u.CommunicateUtil [] - response :: MonoPeekTerminal
+2024-04-04 13:58:50.834  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 서비스
+2024-04-04 13:58:50.835  INFO c.f.n.d.StandardResponseDTO [] - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 13:58:52.182  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 14:01:44.401  INFO c.f.n.b.XcpmasNotiController [] - 컨트롤러 XrcpmasDTO(svecd=VAS, rcpMasCd=4000000000000000266, chaCd=30001076, masMonth=202404, cusName=이미래 테스트, vano=56216276551440, rcpAmt=1, payDay=20240404, rcpUsrName=신한전문봇, rcpMasSt=수납)
+2024-04-04 14:01:44.402  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 서비스 XrcpmasDTO
+2024-04-04 14:01:44.403  INFO c.f.n.u.CommunicateUtil [] - response :: MonoPeekTerminal
+2024-04-04 14:01:44.403  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 서비스
+2024-04-04 14:01:44.404  INFO c.f.n.d.StandardResponseDTO [] - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 14:01:45.452  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 14:05:50.613  INFO c.f.n.b.XcpmasNotiController [] - 컨트롤러 XrcpmasDTO(svecd=VAS, rcpMasCd=4000000000000000268, chaCd=30001076, masMonth=202404, cusName=이미래 테스트, vano=56216276551440, rcpAmt=1, payDay=20240404, rcpUsrName=신한전문봇, rcpMasSt=수납)
+2024-04-04 14:05:50.614  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 서비스 XrcpmasDTO
+2024-04-04 14:05:50.615  INFO c.f.n.u.CommunicateUtil [] - response :: MonoPeekTerminal
+2024-04-04 14:05:50.615  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 서비스
+2024-04-04 14:05:50.616  INFO c.f.n.d.StandardResponseDTO [] - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 14:05:52.027  INFO c.f.n.b.n.s.i.XrcpmasNotiServiceImpl [] - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 15:22:07.223  INFO o.h.v.i.u.Version [] - HV000001: Hibernate Validator 6.2.0.Final
+2024-04-04 15:22:07.228  INFO c.f.n.ResaleNotiApplication [] - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 11192 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 15:22:07.228  INFO c.f.n.ResaleNotiApplication [] - The following profiles are active: local
+2024-04-04 15:22:07.247  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor [] - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-04-04 15:22:07.248  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor [] - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-04-04 15:22:07.533  INFO o.s.d.r.c.RepositoryConfigurationDelegate [] - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 15:22:07.534  INFO o.s.d.r.c.RepositoryConfigurationDelegate [] - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 15:22:07.545  INFO o.s.d.r.c.RepositoryConfigurationDelegate [] - Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+2024-04-04 15:22:07.836  INFO o.s.b.w.e.t.TomcatWebServer [] - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 15:22:07.841  INFO o.a.c.h.Http11NioProtocol [] - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 15:22:07.842  INFO o.a.c.c.StandardService [] - Starting service [Tomcat]
+2024-04-04 15:22:07.842  INFO o.a.c.c.StandardEngine [] - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 15:22:09.886  INFO o.a.j.s.TldScanner [] - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 15:22:09.891  INFO o.a.c.c.C.[.[.[/] [] - Initializing Spring embedded WebApplicationContext
+2024-04-04 15:22:09.891  INFO o.s.b.w.s.c.ServletWebServerApplicationContext [] - Root WebApplicationContext: initialization completed in 2643 ms
+2024-04-04 15:22:10.468  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration [] - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 15:22:10.800  INFO o.s.b.d.a.OptionalLiveReloadServer [] - LiveReload server is running on port 35729
+2024-04-04 15:22:10.810  INFO o.a.c.h.Http11NioProtocol [] - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 15:22:10.818  INFO o.s.b.w.e.t.TomcatWebServer [] - Tomcat started on port(s): 8089 (http) with context path ''
+2024-04-04 15:22:10.830  INFO c.f.n.ResaleNotiApplication [] - Started ResaleNotiApplication in 3.817 seconds (JVM running for 4.204)
+2024-04-04 15:44:40.595 [restartedMain] ERROR o.s.b.SpringApplication - Application run failed
+java.lang.IllegalStateException: java.lang.IllegalStateException: Logback configuration error detected: 
+ERROR in ch.qos.logback.classic.joran.action.ContextNameAction - Failed to rename context [kakao-scraping-admin] as [cbm-backoffice-server] java.lang.IllegalStateException: Context has been already given a name
+	at org.springframework.boot.context.logging.LoggingApplicationListener.initializeSystem(LoggingApplicationListener.java:328)
+	at org.springframework.boot.context.logging.LoggingApplicationListener.initialize(LoggingApplicationListener.java:282)
+	at org.springframework.boot.context.logging.LoggingApplicationListener.onApplicationEnvironmentPreparedEvent(LoggingApplicationListener.java:240)
+	at org.springframework.boot.context.logging.LoggingApplicationListener.onApplicationEvent(LoggingApplicationListener.java:216)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.doInvokeListener(SimpleApplicationEventMulticaster.java:176)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.invokeListener(SimpleApplicationEventMulticaster.java:169)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:143)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:131)
+	at org.springframework.boot.context.event.EventPublishingRunListener.environmentPrepared(EventPublishingRunListener.java:85)
+	at org.springframework.boot.SpringApplicationRunListeners.lambda$environmentPrepared$2(SpringApplicationRunListeners.java:66)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:120)
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:114)
+	at org.springframework.boot.SpringApplicationRunListeners.environmentPrepared(SpringApplicationRunListeners.java:65)
+	at org.springframework.boot.SpringApplication.prepareEnvironment(SpringApplication.java:338)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:296)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1301)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1290)
+	at com.finger.note.ResaleNotiApplication.main(ResaleNotiApplication.java:17)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at org.springframework.boot.devtools.restart.RestartLauncher.run(RestartLauncher.java:49)
+Caused by: java.lang.IllegalStateException: Logback configuration error detected: 
+ERROR in ch.qos.logback.classic.joran.action.ContextNameAction - Failed to rename context [kakao-scraping-admin] as [cbm-backoffice-server] java.lang.IllegalStateException: Context has been already given a name
+	at org.springframework.boot.logging.logback.LogbackLoggingSystem.loadConfiguration(LogbackLoggingSystem.java:179)
+	at org.springframework.boot.logging.AbstractLoggingSystem.initializeWithSpecificConfig(AbstractLoggingSystem.java:66)
+	at org.springframework.boot.logging.AbstractLoggingSystem.initialize(AbstractLoggingSystem.java:57)
+	at org.springframework.boot.logging.logback.LogbackLoggingSystem.initialize(LogbackLoggingSystem.java:132)
+	at org.springframework.boot.context.logging.LoggingApplicationListener.initializeSystem(LoggingApplicationListener.java:316)
+	... 23 common frames omitted
+2024-04-04 15:44:44.058 [restartedMain] ERROR o.s.b.SpringApplication - Application run failed
+java.lang.IllegalStateException: java.lang.IllegalStateException: Logback configuration error detected: 
+ERROR in ch.qos.logback.classic.joran.action.ContextNameAction - Failed to rename context [kakao-scraping-admin] as [cbm-backoffice-server] java.lang.IllegalStateException: Context has been already given a name
+	at org.springframework.boot.context.logging.LoggingApplicationListener.initializeSystem(LoggingApplicationListener.java:328)
+	at org.springframework.boot.context.logging.LoggingApplicationListener.initialize(LoggingApplicationListener.java:282)
+	at org.springframework.boot.context.logging.LoggingApplicationListener.onApplicationEnvironmentPreparedEvent(LoggingApplicationListener.java:240)
+	at org.springframework.boot.context.logging.LoggingApplicationListener.onApplicationEvent(LoggingApplicationListener.java:216)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.doInvokeListener(SimpleApplicationEventMulticaster.java:176)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.invokeListener(SimpleApplicationEventMulticaster.java:169)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:143)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:131)
+	at org.springframework.boot.context.event.EventPublishingRunListener.environmentPrepared(EventPublishingRunListener.java:85)
+	at org.springframework.boot.SpringApplicationRunListeners.lambda$environmentPrepared$2(SpringApplicationRunListeners.java:66)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:120)
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:114)
+	at org.springframework.boot.SpringApplicationRunListeners.environmentPrepared(SpringApplicationRunListeners.java:65)
+	at org.springframework.boot.SpringApplication.prepareEnvironment(SpringApplication.java:338)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:296)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1301)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1290)
+	at com.finger.note.ResaleNotiApplication.main(ResaleNotiApplication.java:17)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at org.springframework.boot.devtools.restart.RestartLauncher.run(RestartLauncher.java:49)
+Caused by: java.lang.IllegalStateException: Logback configuration error detected: 
+ERROR in ch.qos.logback.classic.joran.action.ContextNameAction - Failed to rename context [kakao-scraping-admin] as [cbm-backoffice-server] java.lang.IllegalStateException: Context has been already given a name
+	at org.springframework.boot.logging.logback.LogbackLoggingSystem.loadConfiguration(LogbackLoggingSystem.java:179)
+	at org.springframework.boot.logging.AbstractLoggingSystem.initializeWithSpecificConfig(AbstractLoggingSystem.java:66)
+	at org.springframework.boot.logging.AbstractLoggingSystem.initialize(AbstractLoggingSystem.java:57)
+	at org.springframework.boot.logging.logback.LogbackLoggingSystem.initialize(LogbackLoggingSystem.java:132)
+	at org.springframework.boot.context.logging.LoggingApplicationListener.initializeSystem(LoggingApplicationListener.java:316)
+	... 23 common frames omitted
+2024-04-04 15:44:45.676 [restartedMain] ERROR o.s.b.SpringApplication - Application run failed
+java.lang.IllegalStateException: java.lang.IllegalStateException: Logback configuration error detected: 
+ERROR in ch.qos.logback.classic.joran.action.ContextNameAction - Failed to rename context [kakao-scraping-admin] as [cbm-backoffice-server] java.lang.IllegalStateException: Context has been already given a name
+	at org.springframework.boot.context.logging.LoggingApplicationListener.initializeSystem(LoggingApplicationListener.java:328)
+	at org.springframework.boot.context.logging.LoggingApplicationListener.initialize(LoggingApplicationListener.java:282)
+	at org.springframework.boot.context.logging.LoggingApplicationListener.onApplicationEnvironmentPreparedEvent(LoggingApplicationListener.java:240)
+	at org.springframework.boot.context.logging.LoggingApplicationListener.onApplicationEvent(LoggingApplicationListener.java:216)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.doInvokeListener(SimpleApplicationEventMulticaster.java:176)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.invokeListener(SimpleApplicationEventMulticaster.java:169)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:143)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:131)
+	at org.springframework.boot.context.event.EventPublishingRunListener.environmentPrepared(EventPublishingRunListener.java:85)
+	at org.springframework.boot.SpringApplicationRunListeners.lambda$environmentPrepared$2(SpringApplicationRunListeners.java:66)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:120)
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:114)
+	at org.springframework.boot.SpringApplicationRunListeners.environmentPrepared(SpringApplicationRunListeners.java:65)
+	at org.springframework.boot.SpringApplication.prepareEnvironment(SpringApplication.java:338)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:296)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1301)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1290)
+	at com.finger.note.ResaleNotiApplication.main(ResaleNotiApplication.java:17)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at org.springframework.boot.devtools.restart.RestartLauncher.run(RestartLauncher.java:49)
+Caused by: java.lang.IllegalStateException: Logback configuration error detected: 
+ERROR in ch.qos.logback.classic.joran.action.ContextNameAction - Failed to rename context [kakao-scraping-admin] as [cbm-backoffice-server] java.lang.IllegalStateException: Context has been already given a name
+	at org.springframework.boot.logging.logback.LogbackLoggingSystem.loadConfiguration(LogbackLoggingSystem.java:179)
+	at org.springframework.boot.logging.AbstractLoggingSystem.initializeWithSpecificConfig(AbstractLoggingSystem.java:66)
+	at org.springframework.boot.logging.AbstractLoggingSystem.initialize(AbstractLoggingSystem.java:57)
+	at org.springframework.boot.logging.logback.LogbackLoggingSystem.initialize(LogbackLoggingSystem.java:132)
+	at org.springframework.boot.context.logging.LoggingApplicationListener.initializeSystem(LoggingApplicationListener.java:316)
+	... 23 common frames omitted
+2024-04-04 15:44:47.136 [restartedMain] ERROR o.s.b.SpringApplication - Application run failed
+java.lang.IllegalStateException: java.lang.IllegalStateException: Logback configuration error detected: 
+ERROR in ch.qos.logback.classic.joran.action.ContextNameAction - Failed to rename context [kakao-scraping-admin] as [cbm-backoffice-server] java.lang.IllegalStateException: Context has been already given a name
+	at org.springframework.boot.context.logging.LoggingApplicationListener.initializeSystem(LoggingApplicationListener.java:328)
+	at org.springframework.boot.context.logging.LoggingApplicationListener.initialize(LoggingApplicationListener.java:282)
+	at org.springframework.boot.context.logging.LoggingApplicationListener.onApplicationEnvironmentPreparedEvent(LoggingApplicationListener.java:240)
+	at org.springframework.boot.context.logging.LoggingApplicationListener.onApplicationEvent(LoggingApplicationListener.java:216)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.doInvokeListener(SimpleApplicationEventMulticaster.java:176)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.invokeListener(SimpleApplicationEventMulticaster.java:169)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:143)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:131)
+	at org.springframework.boot.context.event.EventPublishingRunListener.environmentPrepared(EventPublishingRunListener.java:85)
+	at org.springframework.boot.SpringApplicationRunListeners.lambda$environmentPrepared$2(SpringApplicationRunListeners.java:66)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:120)
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:114)
+	at org.springframework.boot.SpringApplicationRunListeners.environmentPrepared(SpringApplicationRunListeners.java:65)
+	at org.springframework.boot.SpringApplication.prepareEnvironment(SpringApplication.java:338)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:296)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1301)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1290)
+	at com.finger.note.ResaleNotiApplication.main(ResaleNotiApplication.java:17)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at org.springframework.boot.devtools.restart.RestartLauncher.run(RestartLauncher.java:49)
+Caused by: java.lang.IllegalStateException: Logback configuration error detected: 
+ERROR in ch.qos.logback.classic.joran.action.ContextNameAction - Failed to rename context [kakao-scraping-admin] as [cbm-backoffice-server] java.lang.IllegalStateException: Context has been already given a name
+	at org.springframework.boot.logging.logback.LogbackLoggingSystem.loadConfiguration(LogbackLoggingSystem.java:179)
+	at org.springframework.boot.logging.AbstractLoggingSystem.initializeWithSpecificConfig(AbstractLoggingSystem.java:66)
+	at org.springframework.boot.logging.AbstractLoggingSystem.initialize(AbstractLoggingSystem.java:57)
+	at org.springframework.boot.logging.logback.LogbackLoggingSystem.initialize(LogbackLoggingSystem.java:132)
+	at org.springframework.boot.context.logging.LoggingApplicationListener.initializeSystem(LoggingApplicationListener.java:316)
+	... 23 common frames omitted
+2024-04-04 15:44:48.598 [restartedMain] ERROR o.s.b.SpringApplication - Application run failed
+java.lang.IllegalStateException: java.lang.IllegalStateException: Logback configuration error detected: 
+ERROR in ch.qos.logback.classic.joran.action.ContextNameAction - Failed to rename context [kakao-scraping-admin] as [cbm-backoffice-server] java.lang.IllegalStateException: Context has been already given a name
+	at org.springframework.boot.context.logging.LoggingApplicationListener.initializeSystem(LoggingApplicationListener.java:328)
+	at org.springframework.boot.context.logging.LoggingApplicationListener.initialize(LoggingApplicationListener.java:282)
+	at org.springframework.boot.context.logging.LoggingApplicationListener.onApplicationEnvironmentPreparedEvent(LoggingApplicationListener.java:240)
+	at org.springframework.boot.context.logging.LoggingApplicationListener.onApplicationEvent(LoggingApplicationListener.java:216)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.doInvokeListener(SimpleApplicationEventMulticaster.java:176)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.invokeListener(SimpleApplicationEventMulticaster.java:169)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:143)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:131)
+	at org.springframework.boot.context.event.EventPublishingRunListener.environmentPrepared(EventPublishingRunListener.java:85)
+	at org.springframework.boot.SpringApplicationRunListeners.lambda$environmentPrepared$2(SpringApplicationRunListeners.java:66)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:120)
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:114)
+	at org.springframework.boot.SpringApplicationRunListeners.environmentPrepared(SpringApplicationRunListeners.java:65)
+	at org.springframework.boot.SpringApplication.prepareEnvironment(SpringApplication.java:338)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:296)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1301)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1290)
+	at com.finger.note.ResaleNotiApplication.main(ResaleNotiApplication.java:17)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at org.springframework.boot.devtools.restart.RestartLauncher.run(RestartLauncher.java:49)
+Caused by: java.lang.IllegalStateException: Logback configuration error detected: 
+ERROR in ch.qos.logback.classic.joran.action.ContextNameAction - Failed to rename context [kakao-scraping-admin] as [cbm-backoffice-server] java.lang.IllegalStateException: Context has been already given a name
+	at org.springframework.boot.logging.logback.LogbackLoggingSystem.loadConfiguration(LogbackLoggingSystem.java:179)
+	at org.springframework.boot.logging.AbstractLoggingSystem.initializeWithSpecificConfig(AbstractLoggingSystem.java:66)
+	at org.springframework.boot.logging.AbstractLoggingSystem.initialize(AbstractLoggingSystem.java:57)
+	at org.springframework.boot.logging.logback.LogbackLoggingSystem.initialize(LogbackLoggingSystem.java:132)
+	at org.springframework.boot.context.logging.LoggingApplicationListener.initializeSystem(LoggingApplicationListener.java:316)
+	... 23 common frames omitted
+2024-04-04 15:45:02.646 [background-preinit]  INFO o.h.v.i.u.Version - HV000001: Hibernate Validator 6.2.0.Final
+2024-04-04 15:45:02.648 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 14836 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 15:45:02.649 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 15:45:02.677 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-04-04 15:45:02.677 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-04-04 15:45:02.956 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 15:45:02.957 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 15:45:02.967 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+2024-04-04 15:45:03.234 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 15:45:03.238 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 15:45:03.238 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 15:45:03.239 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 15:45:03.337 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 15:45:03.341 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 15:45:03.341 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 664 ms
+2024-04-04 15:45:03.836 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 15:45:04.132 [restartedMain]  INFO o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-04-04 15:45:04.140 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 15:45:04.147 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat started on port(s): 8089 (http) with context path ''
+2024-04-04 15:45:04.157 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Started ResaleNotiApplication in 1.72 seconds (JVM running for 2.11)
+2024-04-04 15:45:31.628 [http-nio-8089-exec-1]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-04-04 15:45:31.628 [http-nio-8089-exec-1]  INFO o.s.w.s.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-04-04 15:45:31.629 [http-nio-8089-exec-1]  INFO o.s.w.s.DispatcherServlet - Completed initialization in 1 ms
+2024-04-04 15:45:31.677 [http-nio-8089-exec-1]  INFO c.f.d.b.XcpmasNotiController - 컨트롤러 XrcpmasDTO(svecd=VAS, rcpMasCd=4000000000000000270, chaCd=30001076, masMonth=202404, cusName=이미래 테스트, vano=56216276551440, rcpAmt=1, payDay=20240404, rcpUsrName=신한전문봇, rcpMasSt=수납)
+2024-04-04 15:45:31.677 [http-nio-8089-exec-1]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 서비스 XrcpmasDTO
+2024-04-04 15:45:31.689 [http-nio-8089-exec-1]  INFO c.f.d.u.CommunicateUtil - response :: MonoPeekTerminal
+2024-04-04 15:45:31.689 [http-nio-8089-exec-1]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 서비스
+2024-04-04 15:45:31.771 [http-nio-8089-exec-1]  INFO c.f.d.d.StandardResponseDTO - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 15:45:33.161 [reactor-http-nio-2]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 15:53:13.461 [background-preinit]  INFO o.h.v.i.u.Version - HV000001: Hibernate Validator 6.2.0.Final
+2024-04-04 15:53:13.463 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 18624 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 15:53:13.464 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 15:53:13.482 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-04-04 15:53:13.482 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-04-04 15:53:13.755 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 15:53:13.756 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 15:53:13.765 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+2024-04-04 15:53:14.043 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 15:53:14.048 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 15:53:14.048 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 15:53:14.048 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 15:53:14.148 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 15:53:14.153 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 15:53:14.153 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 671 ms
+2024-04-04 15:53:14.621 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 15:53:14.930 [restartedMain]  WARN o.s.b.d.a.OptionalLiveReloadServer - Unable to start LiveReload server
+2024-04-04 15:53:14.940 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 15:53:14.949 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat started on port(s): 8089 (http) with context path ''
+2024-04-04 15:53:14.960 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Started ResaleNotiApplication in 1.71 seconds (JVM running for 2.077)
+2024-04-04 15:53:15.727 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 14836 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 15:53:15.727 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 15:53:15.809 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 15:53:15.809 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 15:53:15.811 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 1 ms. Found 0 Redis repository interfaces.
+2024-04-04 15:53:15.852 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 15:53:15.852 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 15:53:15.852 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 15:53:15.852 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 15:53:15.888 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 15:53:15.889 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 15:53:15.889 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 160 ms
+2024-04-04 15:53:15.967 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 15:53:16.000 [restartedMain]  INFO o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-04-04 15:53:16.004 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 15:53:16.005 [restartedMain]  WARN o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'; nested exception is org.springframework.boot.web.server.PortInUseException: Port 8089 is already in use
+2024-04-04 15:53:16.013 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Pausing ProtocolHandler ["http-nio-8089"]
+2024-04-04 15:53:16.013 [restartedMain]  INFO o.a.c.c.StandardService - Stopping service [Tomcat]
+2024-04-04 15:53:16.014 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Stopping ProtocolHandler ["http-nio-8089"]
+2024-04-04 15:53:16.014 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Destroying ProtocolHandler ["http-nio-8089"]
+2024-04-04 15:53:16.027 [restartedMain] ERROR o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8089 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8089 or configure this application to listen on another port.
+
+2024-04-04 16:18:54.010 [background-preinit]  INFO o.h.v.i.u.Version - HV000001: Hibernate Validator 6.2.0.Final
+2024-04-04 16:18:54.012 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 22340 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 16:18:54.012 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 16:18:54.031 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-04-04 16:18:54.031 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-04-04 16:18:54.308 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 16:18:54.309 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 16:18:54.319 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+2024-04-04 16:18:54.595 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 16:18:54.600 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 16:18:54.600 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 16:18:54.600 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 16:18:54.700 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 16:18:54.705 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 16:18:54.705 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 674 ms
+2024-04-04 16:18:55.166 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 16:18:55.455 [restartedMain]  WARN o.s.b.d.a.OptionalLiveReloadServer - Unable to start LiveReload server
+2024-04-04 16:18:55.464 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 16:18:55.465 [restartedMain]  WARN o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'; nested exception is org.springframework.boot.web.server.PortInUseException: Port 8089 is already in use
+2024-04-04 16:18:55.479 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Pausing ProtocolHandler ["http-nio-8089"]
+2024-04-04 16:18:55.479 [restartedMain]  INFO o.a.c.c.StandardService - Stopping service [Tomcat]
+2024-04-04 16:18:55.483 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Stopping ProtocolHandler ["http-nio-8089"]
+2024-04-04 16:18:55.483 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Destroying ProtocolHandler ["http-nio-8089"]
+2024-04-04 16:18:55.499 [restartedMain] ERROR o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8089 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8089 or configure this application to listen on another port.
+
+2024-04-04 16:19:32.065 [background-preinit]  INFO o.h.v.i.u.Version - HV000001: Hibernate Validator 6.2.0.Final
+2024-04-04 16:19:32.066 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 21496 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 16:19:32.067 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 16:19:32.086 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-04-04 16:19:32.086 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-04-04 16:19:32.367 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 16:19:32.368 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 16:19:32.378 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+2024-04-04 16:19:32.659 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 16:19:32.662 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 16:19:32.663 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 16:19:32.663 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 16:19:32.765 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 16:19:32.769 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 16:19:32.770 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 684 ms
+2024-04-04 16:19:33.253 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 16:19:33.568 [restartedMain]  WARN o.s.b.d.a.OptionalLiveReloadServer - Unable to start LiveReload server
+2024-04-04 16:19:33.578 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 16:19:33.579 [restartedMain]  WARN o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'; nested exception is org.springframework.boot.web.server.PortInUseException: Port 8089 is already in use
+2024-04-04 16:19:33.594 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Pausing ProtocolHandler ["http-nio-8089"]
+2024-04-04 16:19:33.594 [restartedMain]  INFO o.a.c.c.StandardService - Stopping service [Tomcat]
+2024-04-04 16:19:33.598 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Stopping ProtocolHandler ["http-nio-8089"]
+2024-04-04 16:19:33.598 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Destroying ProtocolHandler ["http-nio-8089"]
+2024-04-04 16:19:33.614 [restartedMain] ERROR o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8089 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8089 or configure this application to listen on another port.
+
+2024-04-04 16:21:21.280 [background-preinit]  INFO o.h.v.i.u.Version - HV000001: Hibernate Validator 6.2.0.Final
+2024-04-04 16:21:21.281 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 22192 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 16:21:21.281 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 16:21:21.300 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-04-04 16:21:21.300 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-04-04 16:21:21.586 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 16:21:21.587 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 16:21:21.597 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+2024-04-04 16:21:21.878 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 16:21:21.883 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 16:21:21.883 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 16:21:21.883 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 16:21:21.986 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 16:21:21.991 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 16:21:21.991 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 691 ms
+2024-04-04 16:21:22.486 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 16:21:22.786 [restartedMain]  WARN o.s.b.d.a.OptionalLiveReloadServer - Unable to start LiveReload server
+2024-04-04 16:21:22.795 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 16:21:22.802 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat started on port(s): 8089 (http) with context path ''
+2024-04-04 16:21:22.813 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Started ResaleNotiApplication in 1.743 seconds (JVM running for 2.128)
+2024-04-04 16:47:40.642 [http-nio-8089-exec-1]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-04-04 16:47:40.643 [http-nio-8089-exec-1]  INFO o.s.w.s.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-04-04 16:47:40.644 [http-nio-8089-exec-1]  INFO o.s.w.s.DispatcherServlet - Completed initialization in 1 ms
+2024-04-04 16:47:40.696 [http-nio-8089-exec-1]  INFO c.f.d.b.XcpmasNotiController - 컨트롤러 XrcpmasDTO(svecd=VAS, rcpMasCd=4000000000000000272, chaCd=30001076, masMonth=202404, cusName=이미래 테스트, vano=56216276551440, rcpAmt=1, payDay=20240404, rcpUsrName=신한전문봇, rcpMasSt=수납)
+2024-04-04 16:47:40.697 [http-nio-8089-exec-1]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 서비스 XrcpmasDTO
+2024-04-04 16:47:40.729 [http-nio-8089-exec-1]  INFO c.f.d.u.CommunicateUtil - response :: MonoPeekTerminal
+2024-04-04 16:47:40.729 [http-nio-8089-exec-1]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 서비스
+2024-04-04 16:47:40.822 [http-nio-8089-exec-1]  INFO c.f.d.d.StandardResponseDTO - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 16:47:42.045 [reactor-http-nio-2]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 16:51:14.502 [http-nio-8089-exec-3]  INFO c.f.d.b.XcpmasNotiController - 컨트롤러 XrcpmasDTO(svecd=VAS, rcpMasCd=4000000000000000276, chaCd=30001076, masMonth=202404, cusName=이미래 테스트, vano=56216276551440, rcpAmt=1, payDay=20240404, rcpUsrName=신한전문봇, rcpMasSt=수납)
+2024-04-04 16:51:14.502 [http-nio-8089-exec-3]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 서비스 XrcpmasDTO
+2024-04-04 16:51:14.503 [http-nio-8089-exec-3]  INFO c.f.d.u.CommunicateUtil - response :: MonoPeekTerminal
+2024-04-04 16:51:14.503 [http-nio-8089-exec-3]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 서비스
+2024-04-04 16:51:14.504 [http-nio-8089-exec-3]  INFO c.f.d.d.StandardResponseDTO - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 16:51:15.589 [reactor-http-nio-3]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 17:04:00.255 [http-nio-8089-exec-5]  WARN o.s.w.s.m.s.DefaultHandlerExceptionResolver - Resolved [org.springframework.http.converter.HttpMessageNotReadableException: JSON parse error: Cannot deserialize value of type `com.finger.damoa.dto.xrcpmas.XrcpmasDTO` from Array value (token `JsonToken.START_ARRAY`); nested exception is com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot deserialize value of type `com.finger.damoa.dto.xrcpmas.XrcpmasDTO` from Array value (token `JsonToken.START_ARRAY`)<LF> at [Source: (PushbackInputStream); line: 1, column: 1]]
+2024-04-04 17:09:35.147 [http-nio-8089-exec-6]  WARN o.s.w.s.m.s.DefaultHandlerExceptionResolver - Resolved [org.springframework.http.converter.HttpMessageNotReadableException: JSON parse error: Cannot deserialize value of type `com.finger.damoa.dto.xrcpmas.XrcpmasDTO` from Array value (token `JsonToken.START_ARRAY`); nested exception is com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot deserialize value of type `com.finger.damoa.dto.xrcpmas.XrcpmasDTO` from Array value (token `JsonToken.START_ARRAY`)<LF> at [Source: (PushbackInputStream); line: 1, column: 1]]
+2024-04-04 17:17:00.323 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 14836 (started by mirae in C:\git\resale_noti)
+2024-04-04 17:17:00.324 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 17:17:00.731 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 17:17:00.731 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 17:17:00.733 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 0 ms. Found 0 Redis repository interfaces.
+2024-04-04 17:17:00.939 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 17:17:00.941 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:00.942 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 17:17:00.942 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 17:17:01.004 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 17:17:01.005 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 17:17:01.005 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 659 ms
+2024-04-04 17:17:01.091 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 17:17:01.135 [restartedMain]  INFO o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-04-04 17:17:01.140 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:01.141 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat started on port(s): 8089 (http) with context path ''
+2024-04-04 17:17:01.147 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Started ResaleNotiApplication in 0.914 seconds (JVM running for 5519.1)
+2024-04-04 17:17:01.148 [restartedMain]  INFO o.s.b.d.a.ConditionEvaluationDeltaLoggingListener - Condition evaluation unchanged
+2024-04-04 17:17:02.002 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 22192 (started by mirae in C:\git\resale_noti)
+2024-04-04 17:17:02.002 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 17:17:02.087 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 17:17:02.087 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 17:17:02.088 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 0 ms. Found 0 Redis repository interfaces.
+2024-04-04 17:17:02.144 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 17:17:02.144 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:02.144 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 17:17:02.144 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 17:17:02.183 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 17:17:02.184 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 17:17:02.184 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 181 ms
+2024-04-04 17:17:02.258 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 17:17:02.300 [restartedMain]  WARN o.s.b.d.a.OptionalLiveReloadServer - Unable to start LiveReload server
+2024-04-04 17:17:02.304 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:02.306 [restartedMain]  WARN o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'; nested exception is org.springframework.boot.web.server.PortInUseException: Port 8089 is already in use
+2024-04-04 17:17:02.311 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Pausing ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:02.311 [restartedMain]  INFO o.a.c.c.StandardService - Stopping service [Tomcat]
+2024-04-04 17:17:02.313 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Stopping ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:02.313 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Destroying ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:02.330 [restartedMain] ERROR o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8089 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8089 or configure this application to listen on another port.
+
+2024-04-04 17:17:03.678 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 14836 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 17:17:03.678 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 17:17:03.753 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 17:17:03.753 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 17:17:03.754 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 0 ms. Found 0 Redis repository interfaces.
+2024-04-04 17:17:03.770 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 22192 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 17:17:03.770 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 17:17:03.791 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 17:17:03.791 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:03.791 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 17:17:03.791 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 17:17:03.822 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 17:17:03.823 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 17:17:03.823 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 144 ms
+2024-04-04 17:17:03.846 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 17:17:03.846 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 17:17:03.847 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 0 ms. Found 0 Redis repository interfaces.
+2024-04-04 17:17:03.877 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 17:17:03.886 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 17:17:03.886 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:03.886 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 17:17:03.886 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 17:17:03.905 [restartedMain]  INFO o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-04-04 17:17:03.909 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:03.909 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat started on port(s): 8089 (http) with context path ''
+2024-04-04 17:17:03.913 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Started ResaleNotiApplication in 0.254 seconds (JVM running for 5521.867)
+2024-04-04 17:17:03.914 [restartedMain]  INFO o.s.b.d.a.ConditionEvaluationDeltaLoggingListener - Condition evaluation unchanged
+2024-04-04 17:17:03.917 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 17:17:03.917 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 17:17:03.917 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 146 ms
+2024-04-04 17:17:03.971 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 17:17:03.998 [restartedMain]  WARN o.s.b.d.a.OptionalLiveReloadServer - Unable to start LiveReload server
+2024-04-04 17:17:04.002 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:04.002 [restartedMain]  WARN o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'; nested exception is org.springframework.boot.web.server.PortInUseException: Port 8089 is already in use
+2024-04-04 17:17:04.004 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Pausing ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:04.004 [restartedMain]  INFO o.a.c.c.StandardService - Stopping service [Tomcat]
+2024-04-04 17:17:04.005 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Stopping ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:04.005 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Destroying ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:04.010 [restartedMain] ERROR o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8089 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8089 or configure this application to listen on another port.
+
+2024-04-04 17:17:15.989 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 14836 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 17:17:15.989 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 17:17:16.030 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 22192 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 17:17:16.030 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 17:17:16.112 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 17:17:16.112 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 17:17:16.115 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 2 ms. Found 0 Redis repository interfaces.
+2024-04-04 17:17:16.138 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 17:17:16.138 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 17:17:16.142 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 2 ms. Found 0 Redis repository interfaces.
+2024-04-04 17:17:16.163 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 17:17:16.164 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:16.164 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 17:17:16.164 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 17:17:16.250 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 17:17:16.250 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:16.250 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 17:17:16.250 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 17:17:16.258 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 17:17:16.258 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 17:17:16.259 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 267 ms
+2024-04-04 17:17:16.334 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 17:17:16.336 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 17:17:16.336 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 305 ms
+2024-04-04 17:17:16.622 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 17:17:16.648 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 17:17:16.683 [restartedMain]  INFO o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-04-04 17:17:16.689 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:16.693 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat started on port(s): 8089 (http) with context path ''
+2024-04-04 17:17:16.700 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Started ResaleNotiApplication in 0.736 seconds (JVM running for 5534.653)
+2024-04-04 17:17:16.700 [restartedMain]  INFO o.s.b.d.a.ConditionEvaluationDeltaLoggingListener - Condition evaluation unchanged
+2024-04-04 17:17:16.719 [restartedMain]  WARN o.s.b.d.a.OptionalLiveReloadServer - Unable to start LiveReload server
+2024-04-04 17:17:16.724 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:16.724 [restartedMain]  WARN o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'; nested exception is org.springframework.boot.web.server.PortInUseException: Port 8089 is already in use
+2024-04-04 17:17:16.726 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Pausing ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:16.726 [restartedMain]  INFO o.a.c.c.StandardService - Stopping service [Tomcat]
+2024-04-04 17:17:16.727 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Stopping ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:16.728 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Destroying ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:16.735 [restartedMain] ERROR o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8089 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8089 or configure this application to listen on another port.
+
+2024-04-04 17:17:22.725 [background-preinit]  INFO o.h.v.i.u.Version - HV000001: Hibernate Validator 6.2.0.Final
+2024-04-04 17:17:22.728 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 21912 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 17:17:22.728 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 17:17:22.749 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-04-04 17:17:22.749 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-04-04 17:17:23.054 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 14836 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 17:17:23.054 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 17:17:23.074 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 17:17:23.075 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 17:17:23.087 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+2024-04-04 17:17:23.132 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 17:17:23.132 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 17:17:23.133 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 1 ms. Found 0 Redis repository interfaces.
+2024-04-04 17:17:23.169 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 17:17:23.170 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:23.170 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 17:17:23.170 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 17:17:23.202 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 17:17:23.203 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 17:17:23.203 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 148 ms
+2024-04-04 17:17:23.268 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 17:17:23.299 [restartedMain]  INFO o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-04-04 17:17:23.303 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:23.307 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat started on port(s): 8089 (http) with context path ''
+2024-04-04 17:17:23.311 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Started ResaleNotiApplication in 0.272 seconds (JVM running for 5541.265)
+2024-04-04 17:17:23.312 [restartedMain]  INFO o.s.b.d.a.ConditionEvaluationDeltaLoggingListener - Condition evaluation unchanged
+2024-04-04 17:17:23.410 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 17:17:23.415 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:23.416 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 17:17:23.416 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 17:17:23.524 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 17:17:23.531 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 17:17:23.531 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 781 ms
+2024-04-04 17:17:24.125 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 17:17:24.474 [restartedMain]  WARN o.s.b.d.a.OptionalLiveReloadServer - Unable to start LiveReload server
+2024-04-04 17:17:24.484 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:24.485 [restartedMain]  WARN o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'; nested exception is org.springframework.boot.web.server.PortInUseException: Port 8089 is already in use
+2024-04-04 17:17:24.499 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Pausing ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:24.499 [restartedMain]  INFO o.a.c.c.StandardService - Stopping service [Tomcat]
+2024-04-04 17:17:24.503 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Stopping ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:24.503 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Destroying ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:24.518 [restartedMain] ERROR o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8089 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8089 or configure this application to listen on another port.
+
+2024-04-04 17:17:57.837 [background-preinit]  INFO o.h.v.i.u.Version - HV000001: Hibernate Validator 6.2.0.Final
+2024-04-04 17:17:57.839 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 12384 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 17:17:57.839 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 17:17:57.858 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-04-04 17:17:57.858 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-04-04 17:17:58.157 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 17:17:58.158 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 17:17:58.169 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+2024-04-04 17:17:58.473 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 17:17:58.478 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:58.478 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 17:17:58.478 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 17:17:58.584 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 17:17:58.589 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 17:17:58.589 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 731 ms
+2024-04-04 17:17:59.132 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 17:17:59.455 [restartedMain]  INFO o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-04-04 17:17:59.465 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:17:59.474 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat started on port(s): 8089 (http) with context path ''
+2024-04-04 17:17:59.487 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Started ResaleNotiApplication in 1.86 seconds (JVM running for 2.267)
+2024-04-04 17:18:09.786 [http-nio-8089-exec-1]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-04-04 17:18:09.786 [http-nio-8089-exec-1]  INFO o.s.w.s.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-04-04 17:18:09.787 [http-nio-8089-exec-1]  INFO o.s.w.s.DispatcherServlet - Completed initialization in 1 ms
+2024-04-04 17:18:09.849 [http-nio-8089-exec-1]  INFO c.f.d.u.CommunicateUtil - response :: MonoPeekTerminal
+2024-04-04 17:18:09.849 [http-nio-8089-exec-1]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 서비스
+2024-04-04 17:18:09.936 [http-nio-8089-exec-1]  INFO c.f.d.d.StandardResponseDTO - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 17:18:11.197 [reactor-http-nio-2] ERROR c.f.d.u.CommunicateUtil - communicateWithNotiServer error :: 404 서버를 찾을 수 없습니다.
+2024-04-04 17:18:11.197 [reactor-http-nio-2] ERROR c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 입금 통지 중계 서버와 통신 실패 404 서버를 찾을 수 없습니다.
+2024-04-04 17:20:42.922 [http-nio-8089-exec-5]  WARN o.s.w.s.m.s.DefaultHandlerExceptionResolver - Resolved [org.springframework.web.HttpRequestMethodNotSupportedException: Request method 'GET' not supported]
+2024-04-04 17:21:01.336 [http-nio-8089-exec-6]  WARN o.s.w.s.m.s.DefaultHandlerExceptionResolver - Resolved [org.springframework.web.HttpMediaTypeNotSupportedException: Content type 'text/plain;charset=UTF-8' not supported]
+2024-04-04 17:22:01.865 [http-nio-8089-exec-7]  INFO c.f.d.u.CommunicateUtil - response :: MonoPeekTerminal
+2024-04-04 17:22:01.865 [http-nio-8089-exec-7]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 서비스
+2024-04-04 17:22:01.866 [http-nio-8089-exec-7]  INFO c.f.d.d.StandardResponseDTO - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 17:22:02.975 [reactor-http-nio-3] ERROR c.f.d.u.CommunicateUtil - communicateWithNotiServer error :: 404 서버를 찾을 수 없습니다.
+2024-04-04 17:22:02.975 [reactor-http-nio-3] ERROR c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 입금 통지 중계 서버와 통신 실패 404 서버를 찾을 수 없습니다.
+2024-04-04 17:23:15.642 [background-preinit]  INFO o.h.v.i.u.Version - HV000001: Hibernate Validator 6.2.0.Final
+2024-04-04 17:23:15.644 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 22812 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 17:23:15.644 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 17:23:15.663 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-04-04 17:23:15.663 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-04-04 17:23:15.956 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 17:23:15.957 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 17:23:15.968 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+2024-04-04 17:23:16.262 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 17:23:16.267 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:23:16.267 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 17:23:16.267 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 17:23:16.374 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 17:23:16.380 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 17:23:16.380 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 717 ms
+2024-04-04 17:23:16.917 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 17:23:17.240 [restartedMain]  INFO o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-04-04 17:23:17.251 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:23:17.260 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat started on port(s): 8089 (http) with context path ''
+2024-04-04 17:23:17.273 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Started ResaleNotiApplication in 1.843 seconds (JVM running for 2.235)
+2024-04-04 17:23:27.146 [background-preinit]  INFO o.h.v.i.u.Version - HV000001: Hibernate Validator 6.2.0.Final
+2024-04-04 17:23:27.148 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 20584 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 17:23:27.148 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 17:23:27.167 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-04-04 17:23:27.167 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-04-04 17:23:27.465 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 17:23:27.466 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 17:23:27.476 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+2024-04-04 17:23:27.764 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 17:23:27.770 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:23:27.770 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 17:23:27.771 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 17:23:27.886 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 17:23:27.891 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 17:23:27.892 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 725 ms
+2024-04-04 17:23:28.418 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 17:23:28.715 [restartedMain]  INFO o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-04-04 17:23:28.722 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:23:28.730 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat started on port(s): 8089 (http) with context path ''
+2024-04-04 17:23:28.740 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Started ResaleNotiApplication in 1.808 seconds (JVM running for 2.204)
+2024-04-04 17:23:35.862 [http-nio-8089-exec-1]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-04-04 17:23:35.862 [http-nio-8089-exec-1]  INFO o.s.w.s.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-04-04 17:23:35.862 [http-nio-8089-exec-1]  INFO o.s.w.s.DispatcherServlet - Completed initialization in 0 ms
+2024-04-04 17:23:35.920 [http-nio-8089-exec-1]  INFO c.f.d.u.CommunicateUtil - response :: MonoPeekTerminal
+2024-04-04 17:23:35.920 [http-nio-8089-exec-1]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 서비스
+2024-04-04 17:23:36.009 [http-nio-8089-exec-1]  INFO c.f.d.d.StandardResponseDTO - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 17:23:37.272 [reactor-http-nio-2]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 17:30:50.105 [background-preinit]  INFO o.h.v.i.u.Version - HV000001: Hibernate Validator 6.2.0.Final
+2024-04-04 17:30:50.107 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 16308 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 17:30:50.108 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 17:30:50.128 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-04-04 17:30:50.128 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-04-04 17:30:50.432 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 17:30:50.432 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 17:30:50.443 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+2024-04-04 17:30:50.719 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 17:30:50.723 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:30:50.723 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 17:30:50.723 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 17:30:50.832 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 17:30:50.836 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 17:30:50.836 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 708 ms
+2024-04-04 17:30:51.381 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 17:30:51.733 [restartedMain]  INFO o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-04-04 17:30:51.745 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:30:51.753 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat started on port(s): 8089 (http) with context path ''
+2024-04-04 17:30:51.768 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Started ResaleNotiApplication in 1.871 seconds (JVM running for 2.266)
+2024-04-04 17:30:56.955 [http-nio-8089-exec-1]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-04-04 17:30:56.955 [http-nio-8089-exec-1]  INFO o.s.w.s.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-04-04 17:30:56.956 [http-nio-8089-exec-1]  INFO o.s.w.s.DispatcherServlet - Completed initialization in 1 ms
+2024-04-04 17:30:57.011 [http-nio-8089-exec-1]  INFO c.f.d.u.CommunicateUtil - response :: class reactor.core.publisher.MonoPeekTerminal
+2024-04-04 17:30:57.011 [http-nio-8089-exec-1]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 서비스
+2024-04-04 17:30:57.098 [http-nio-8089-exec-1]  INFO c.f.d.d.StandardResponseDTO - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 17:30:58.664 [reactor-http-nio-2]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 17:34:57.149 [background-preinit]  INFO o.h.v.i.u.Version - HV000001: Hibernate Validator 6.2.0.Final
+2024-04-04 17:34:57.152 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 6700 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 17:34:57.152 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 17:34:57.172 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-04-04 17:34:57.172 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-04-04 17:34:57.473 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 17:34:57.474 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 17:34:57.485 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+2024-04-04 17:34:57.769 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 17:34:57.775 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:34:57.775 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 17:34:57.775 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 17:34:57.891 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 17:34:57.896 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 17:34:57.897 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 725 ms
+2024-04-04 17:34:58.395 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 17:34:58.728 [restartedMain]  INFO o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-04-04 17:34:58.737 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:34:58.745 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat started on port(s): 8089 (http) with context path ''
+2024-04-04 17:34:58.757 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Started ResaleNotiApplication in 1.822 seconds (JVM running for 2.244)
+2024-04-04 17:35:06.161 [http-nio-8089-exec-1]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-04-04 17:35:06.162 [http-nio-8089-exec-1]  INFO o.s.w.s.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-04-04 17:35:06.162 [http-nio-8089-exec-1]  INFO o.s.w.s.DispatcherServlet - Completed initialization in 0 ms
+2024-04-04 17:35:06.311 [http-nio-8089-exec-1]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 서비스
+2024-04-04 17:35:06.311 [http-nio-8089-exec-1]  INFO c.f.d.d.StandardResponseDTO - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 17:35:07.521 [reactor-http-nio-2]  INFO c.f.d.u.CommunicateUtil - response : CommunicateDTO.Response(ok=true)
+2024-04-04 17:35:07.694 [reactor-http-nio-3]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 17:42:59.738 [background-preinit]  INFO o.h.v.i.u.Version - HV000001: Hibernate Validator 6.2.0.Final
+2024-04-04 17:42:59.740 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 22492 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 17:42:59.740 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 17:42:59.760 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-04-04 17:42:59.760 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-04-04 17:43:00.067 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 17:43:00.069 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 17:43:00.080 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+2024-04-04 17:43:00.370 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 17:43:00.377 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:43:00.377 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 17:43:00.377 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 17:43:00.478 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 17:43:00.482 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 17:43:00.483 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 722 ms
+2024-04-04 17:43:01.015 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 17:43:01.324 [restartedMain]  INFO o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-04-04 17:43:01.334 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 17:43:01.342 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat started on port(s): 8089 (http) with context path ''
+2024-04-04 17:43:01.354 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Started ResaleNotiApplication in 1.825 seconds (JVM running for 2.34)
+2024-04-04 17:43:08.705 [http-nio-8089-exec-1]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-04-04 17:43:08.705 [http-nio-8089-exec-1]  INFO o.s.w.s.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-04-04 17:43:08.706 [http-nio-8089-exec-1]  INFO o.s.w.s.DispatcherServlet - Completed initialization in 1 ms
+2024-04-04 17:43:08.852 [http-nio-8089-exec-1]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 서비스
+2024-04-04 17:43:08.853 [http-nio-8089-exec-1]  INFO c.f.d.d.StandardResponseDTO - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 17:43:10.108 [reactor-http-nio-2]  INFO c.f.d.u.CommunicateUtil - response : CommunicateDTO.Response(ok=true)
+2024-04-04 17:43:10.189 [reactor-http-nio-3]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 19:40:22.099 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 22492 (started by mirae in C:\git\resale_noti)
+2024-04-04 19:40:22.099 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 19:40:22.198 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 19:40:22.198 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 19:40:22.199 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 0 ms. Found 0 Redis repository interfaces.
+2024-04-04 19:40:22.245 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 19:40:22.245 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 19:40:22.246 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 19:40:22.246 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 19:40:22.287 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 19:40:22.288 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 19:40:22.288 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 188 ms
+2024-04-04 19:40:22.355 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 19:40:22.392 [restartedMain]  INFO o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-04-04 19:40:22.397 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 19:40:22.398 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat started on port(s): 8089 (http) with context path ''
+2024-04-04 19:40:22.403 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Started ResaleNotiApplication in 0.325 seconds (JVM running for 7043.389)
+2024-04-04 19:40:22.404 [restartedMain]  INFO o.s.b.d.a.ConditionEvaluationDeltaLoggingListener - Condition evaluation unchanged
+2024-04-04 19:40:23.896 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 22492 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 19:40:23.896 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 19:40:23.965 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 19:40:23.965 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 19:40:23.967 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 1 ms. Found 0 Redis repository interfaces.
+2024-04-04 19:40:24.003 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 19:40:24.004 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 19:40:24.004 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 19:40:24.004 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 19:40:24.033 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 19:40:24.034 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 19:40:24.034 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 137 ms
+2024-04-04 19:40:24.099 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 19:40:24.135 [restartedMain]  INFO o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-04-04 19:40:24.140 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 19:40:24.142 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat started on port(s): 8089 (http) with context path ''
+2024-04-04 19:40:24.147 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Started ResaleNotiApplication in 0.267 seconds (JVM running for 7045.133)
+2024-04-04 19:40:24.148 [restartedMain]  INFO o.s.b.d.a.ConditionEvaluationDeltaLoggingListener - Condition evaluation unchanged
+2024-04-04 19:40:25.861 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 22492 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 19:40:25.861 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 19:40:25.953 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 19:40:25.954 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 19:40:25.955 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 1 ms. Found 0 Redis repository interfaces.
+2024-04-04 19:40:25.992 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 19:40:25.992 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 19:40:25.992 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 19:40:25.992 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 19:40:26.023 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 19:40:26.023 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 19:40:26.023 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 161 ms
+2024-04-04 19:40:26.033 [restartedMain]  WARN o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'xrcpmasNotiController' defined in file [C:\git\resale_noti\target\classes\com\finger\damoa\biz\XrcpmasNotiController.class]: Unsatisfied dependency expressed through constructor parameter 0; nested exception is org.springframework.beans.factory.NoSuchBeanDefinitionException: No qualifying bean of type 'com.finger.damoa.biz.noti.service.XrcpmasNotiService' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+2024-04-04 19:40:26.033 [restartedMain]  INFO o.a.c.c.StandardService - Stopping service [Tomcat]
+2024-04-04 19:40:26.056 [restartedMain] ERROR o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Parameter 0 of constructor in com.finger.damoa.biz.XrcpmasNotiController required a bean of type 'com.finger.damoa.biz.noti.service.XrcpmasNotiService' that could not be found.
+
+
+Action:
+
+Consider defining a bean of type 'com.finger.damoa.biz.noti.service.XrcpmasNotiService' in your configuration.
+
+2024-04-04 19:40:27.842 [background-preinit]  INFO o.h.v.i.u.Version - HV000001: Hibernate Validator 6.2.0.Final
+2024-04-04 19:40:27.845 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 22540 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 19:40:27.845 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 19:40:27.864 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-04-04 19:40:27.864 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-04-04 19:40:27.905 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 22492 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 19:40:27.905 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 19:40:27.990 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 19:40:27.990 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 19:40:27.993 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 1 ms. Found 0 Redis repository interfaces.
+2024-04-04 19:40:28.031 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 19:40:28.031 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 19:40:28.031 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 19:40:28.031 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 19:40:28.061 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 19:40:28.062 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 19:40:28.062 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 156 ms
+2024-04-04 19:40:28.142 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 19:40:28.181 [restartedMain]  INFO o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-04-04 19:40:28.185 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 19:40:28.186 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat started on port(s): 8089 (http) with context path ''
+2024-04-04 19:40:28.190 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Started ResaleNotiApplication in 0.3 seconds (JVM running for 7049.176)
+2024-04-04 19:40:28.191 [restartedMain]  INFO o.s.b.d.a.ConditionEvaluationDeltaLoggingListener - Condition evaluation unchanged
+2024-04-04 19:40:28.191 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 19:40:28.192 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 19:40:28.203 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+2024-04-04 19:40:28.534 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 19:40:28.539 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 19:40:28.539 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 19:40:28.539 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 19:40:28.687 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 19:40:28.695 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 19:40:28.695 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 831 ms
+2024-04-04 19:40:29.425 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 19:40:29.832 [restartedMain]  WARN o.s.b.d.a.OptionalLiveReloadServer - Unable to start LiveReload server
+2024-04-04 19:40:29.844 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 19:40:29.846 [restartedMain]  WARN o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'; nested exception is org.springframework.boot.web.server.PortInUseException: Port 8089 is already in use
+2024-04-04 19:40:29.862 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Pausing ProtocolHandler ["http-nio-8089"]
+2024-04-04 19:40:29.862 [restartedMain]  INFO o.a.c.c.StandardService - Stopping service [Tomcat]
+2024-04-04 19:40:29.866 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Stopping ProtocolHandler ["http-nio-8089"]
+2024-04-04 19:40:29.867 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Destroying ProtocolHandler ["http-nio-8089"]
+2024-04-04 19:40:29.882 [restartedMain] ERROR o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8089 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8089 or configure this application to listen on another port.
+
+2024-04-04 19:40:36.433 [background-preinit]  INFO o.h.v.i.u.Version - HV000001: Hibernate Validator 6.2.0.Final
+2024-04-04 19:40:36.436 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 11248 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 19:40:36.437 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 19:40:36.456 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-04-04 19:40:36.456 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-04-04 19:40:36.766 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 22492 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 19:40:36.766 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 19:40:36.796 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 19:40:36.797 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 19:40:36.808 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+2024-04-04 19:40:36.839 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 19:40:36.839 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 19:40:36.841 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 1 ms. Found 0 Redis repository interfaces.
+2024-04-04 19:40:36.877 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 19:40:36.877 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 19:40:36.878 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 19:40:36.878 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 19:40:36.911 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 19:40:36.912 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 19:40:36.912 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 145 ms
+2024-04-04 19:40:36.976 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 19:40:37.006 [restartedMain]  INFO o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-04-04 19:40:37.010 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 19:40:37.011 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat started on port(s): 8089 (http) with context path ''
+2024-04-04 19:40:37.017 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Started ResaleNotiApplication in 0.264 seconds (JVM running for 7058.002)
+2024-04-04 19:40:37.017 [restartedMain]  INFO o.s.b.d.a.ConditionEvaluationDeltaLoggingListener - Condition evaluation unchanged
+2024-04-04 19:40:37.112 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 19:40:37.118 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 19:40:37.118 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 19:40:37.118 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 19:40:37.225 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 19:40:37.231 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 19:40:37.231 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 775 ms
+2024-04-04 19:40:37.822 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 19:40:38.169 [restartedMain]  WARN o.s.b.d.a.OptionalLiveReloadServer - Unable to start LiveReload server
+2024-04-04 19:40:38.179 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 19:40:38.180 [restartedMain]  WARN o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'; nested exception is org.springframework.boot.web.server.PortInUseException: Port 8089 is already in use
+2024-04-04 19:40:38.194 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Pausing ProtocolHandler ["http-nio-8089"]
+2024-04-04 19:40:38.194 [restartedMain]  INFO o.a.c.c.StandardService - Stopping service [Tomcat]
+2024-04-04 19:40:38.198 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Stopping ProtocolHandler ["http-nio-8089"]
+2024-04-04 19:40:38.199 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Destroying ProtocolHandler ["http-nio-8089"]
+2024-04-04 19:40:38.213 [restartedMain] ERROR o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8089 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8089 or configure this application to listen on another port.
+
+2024-04-04 19:41:20.728 [http-nio-8089-exec-1]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-04-04 19:41:20.729 [http-nio-8089-exec-1]  INFO o.s.w.s.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-04-04 19:41:20.730 [http-nio-8089-exec-1]  INFO o.s.w.s.DispatcherServlet - Completed initialization in 1 ms
+2024-04-04 19:41:20.744 [http-nio-8089-exec-1]  INFO c.f.d.d.StandardResponseDTO - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 19:41:21.903 [reactor-http-nio-2]  INFO c.f.d.u.CommunicateUtil - responseResult : CommunicateDTO.Response(ok=true)
+2024-04-04 19:41:22.092 [reactor-http-nio-3]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 19:44:46.570 [background-preinit]  INFO o.h.v.i.u.Version - HV000001: Hibernate Validator 6.2.0.Final
+2024-04-04 19:44:46.572 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 22968 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 19:44:46.572 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 19:44:46.592 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-04-04 19:44:46.592 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-04-04 19:44:46.896 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 19:44:46.897 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 19:44:46.906 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+2024-04-04 19:44:47.215 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 19:44:47.221 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 19:44:47.221 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 19:44:47.221 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 19:44:47.333 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 19:44:47.339 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 19:44:47.339 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 747 ms
+2024-04-04 19:44:47.842 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 19:44:48.166 [restartedMain]  INFO o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-04-04 19:44:48.175 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 19:44:48.183 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat started on port(s): 8089 (http) with context path ''
+2024-04-04 19:44:48.195 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Started ResaleNotiApplication in 1.848 seconds (JVM running for 2.241)
+2024-04-04 19:45:04.939 [http-nio-8089-exec-1]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-04-04 19:45:04.939 [http-nio-8089-exec-1]  INFO o.s.w.s.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-04-04 19:45:04.940 [http-nio-8089-exec-1]  INFO o.s.w.s.DispatcherServlet - Completed initialization in 1 ms
+2024-04-04 19:45:05.103 [http-nio-8089-exec-1]  INFO c.f.d.d.StandardResponseDTO - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 19:45:06.675 [reactor-http-nio-2]  INFO c.f.d.u.CommunicateUtil - responseResult : CommunicateDTO.Response(ok=true)
+2024-04-04 19:45:06.784 [reactor-http-nio-3]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 19:46:45.404 [http-nio-8089-exec-3]  INFO c.f.d.d.StandardResponseDTO - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 19:46:46.704 [reactor-http-nio-4]  INFO c.f.d.u.CommunicateUtil - responseResult : CommunicateDTO.Response(ok=true)
+2024-04-04 19:46:46.964 [reactor-http-nio-5]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 19:51:03.981 [http-nio-8089-exec-5]  INFO c.f.d.d.StandardResponseDTO - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 19:51:05.109 [reactor-http-nio-6]  INFO c.f.d.u.CommunicateUtil - responseResult : CommunicateDTO.Response(ok=true)
+2024-04-04 19:51:05.289 [reactor-http-nio-7]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 19:52:01.584 [http-nio-8089-exec-7]  INFO c.f.d.d.StandardResponseDTO - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 19:52:02.648 [reactor-http-nio-8]  INFO c.f.d.u.CommunicateUtil - responseResult : CommunicateDTO.Response(ok=true)
+2024-04-04 19:52:02.684 [reactor-http-nio-9]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 19:59:06.086 [http-nio-8089-exec-9]  INFO c.f.d.d.StandardResponseDTO - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 19:59:07.293 [reactor-http-nio-10]  INFO c.f.d.u.CommunicateUtil - responseResult : CommunicateDTO.Response(ok=true)
+2024-04-04 19:59:07.326 [reactor-http-nio-11]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 19:59:32.276 [http-nio-8089-exec-1]  INFO c.f.d.d.StandardResponseDTO - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 19:59:33.303 [reactor-http-nio-12]  INFO c.f.d.u.CommunicateUtil - responseResult : CommunicateDTO.Response(ok=true)
+2024-04-04 19:59:33.512 [reactor-http-nio-13]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 20:04:37.121 [http-nio-8089-exec-3]  INFO c.f.d.d.StandardResponseDTO - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 20:04:38.275 [reactor-http-nio-14]  INFO c.f.d.u.CommunicateUtil - responseResult : CommunicateDTO.Response(ok=true)
+2024-04-04 20:04:38.431 [reactor-http-nio-15]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 20:05:47.145 [background-preinit]  INFO o.h.v.i.u.Version - HV000001: Hibernate Validator 6.2.0.Final
+2024-04-04 20:05:47.147 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Starting ResaleNotiApplication using Java 11.0.15.1 on DESKTOP-TE1L8VH with PID 6620 (C:\git\resale_noti\target\classes started by mirae in C:\git\resale_noti)
+2024-04-04 20:05:47.148 [restartedMain]  INFO c.f.d.ResaleNotiApplication - The following profiles are active: local
+2024-04-04 20:05:47.169 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2024-04-04 20:05:47.169 [restartedMain]  INFO o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2024-04-04 20:05:47.455 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2024-04-04 20:05:47.456 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-04-04 20:05:47.468 [restartedMain]  INFO o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+2024-04-04 20:05:47.790 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port(s): 8089 (http)
+2024-04-04 20:05:47.794 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8089"]
+2024-04-04 20:05:47.794 [restartedMain]  INFO o.a.c.c.StandardService - Starting service [Tomcat]
+2024-04-04 20:05:47.794 [restartedMain]  INFO o.a.c.c.StandardEngine - Starting Servlet engine: [Apache Tomcat/9.0.55]
+2024-04-04 20:05:47.892 [restartedMain]  INFO o.a.j.s.TldScanner - At least one JAR was scanned for TLDs yet contained no TLDs. Enable debug logging for this logger for a complete list of JARs that were scanned but no TLDs were found in them. Skipping unneeded JARs during scanning can improve startup time and JSP compilation time.
+2024-04-04 20:05:47.896 [restartedMain]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring embedded WebApplicationContext
+2024-04-04 20:05:47.896 [restartedMain]  INFO o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 727 ms
+2024-04-04 20:05:48.415 [restartedMain]  WARN o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates or check your Thymeleaf configuration)
+2024-04-04 20:05:48.719 [restartedMain]  INFO o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2024-04-04 20:05:48.729 [restartedMain]  INFO o.a.c.h.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8089"]
+2024-04-04 20:05:48.738 [restartedMain]  INFO o.s.b.w.e.t.TomcatWebServer - Tomcat started on port(s): 8089 (http) with context path ''
+2024-04-04 20:05:48.750 [restartedMain]  INFO c.f.d.ResaleNotiApplication - Started ResaleNotiApplication in 1.824 seconds (JVM running for 2.31)
+2024-04-04 20:05:57.862 [http-nio-8089-exec-1]  INFO o.a.c.c.C.[.[.[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-04-04 20:05:57.862 [http-nio-8089-exec-1]  INFO o.s.w.s.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-04-04 20:05:57.863 [http-nio-8089-exec-1]  INFO o.s.w.s.DispatcherServlet - Completed initialization in 1 ms
+2024-04-04 20:05:58.012 [http-nio-8089-exec-1]  INFO c.f.d.d.StandardResponseDTO - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 20:05:59.286 [reactor-http-nio-3]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 20:05:59.374 [reactor-http-nio-2]  INFO c.f.d.u.CommunicateUtil - responseResult : CommunicateDTO.Response(ok=true)
+2024-04-04 20:13:04.003 [http-nio-8089-exec-3]  INFO c.f.d.d.StandardResponseDTO - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 20:13:05.259 [reactor-http-nio-4]  INFO c.f.d.u.CommunicateUtil - responseResult : CommunicateDTO.Response(ok=true)
+2024-04-04 20:13:05.283 [reactor-http-nio-5]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 20:13:55.436 [http-nio-8089-exec-5]  INFO c.f.d.d.StandardResponseDTO - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 20:13:56.467 [reactor-http-nio-7]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 20:13:56.712 [reactor-http-nio-6]  INFO c.f.d.u.CommunicateUtil - responseResult : CommunicateDTO.Response(ok=true)
+2024-04-04 20:18:15.580 [http-nio-8089-exec-7]  INFO c.f.d.d.StandardResponseDTO - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 20:18:16.823 [reactor-http-nio-9]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 20:18:16.861 [reactor-http-nio-8]  INFO c.f.d.u.CommunicateUtil - responseResult : CommunicateDTO.Response(ok=true)
+2024-04-04 20:20:03.707 [http-nio-8089-exec-9]  INFO c.f.d.d.StandardResponseDTO - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 20:20:04.744 [reactor-http-nio-11]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 입금 통지 중계 서버와 통신 성공 true
+2024-04-04 20:20:04.780 [reactor-http-nio-10]  INFO c.f.d.u.CommunicateUtil - responseResult : CommunicateDTO.Response(ok=true)
+2024-04-04 20:20:34.834 [http-nio-8089-exec-1]  INFO c.f.d.d.StandardResponseDTO - Api Server Success ResponseData:: MonoPeekTerminal
+2024-04-04 20:20:35.896 [reactor-http-nio-12]  INFO c.f.d.u.CommunicateUtil - responseResult : CommunicateDTO.Response(ok=true)
+2024-04-04 20:20:35.935 [reactor-http-nio-13]  INFO c.f.d.b.n.s.i.XrcpmasNotiServiceImpl - 입금 통지 중계 서버와 통신 성공 true

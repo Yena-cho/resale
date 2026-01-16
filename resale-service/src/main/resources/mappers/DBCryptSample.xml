@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="DBCryptSample">	
+
+	<resultMap type="SysCustDTO" id="CryptResultMap1">
+		<result column="NO" property="no" javaType="long" jdbcType="NUMERIC" />				
+		<result column="BBS" property="bbs" javaType="int" jdbcType="NUMERIC" />			<!-- //구분값 9 : 전화상담예약 -->	
+		<result column="day" property="day" javaType="String" jdbcType="VARCHAR" /> <!-- //신청일시 -->
+		<result column="userClass" property="userClass" javaType="String" jdbcType="VARCHAR" /> <!--//신청구분 0-전체 1-이용기관 2-납부자/신규 -->
+		<result column="ID" property="id" javaType="String" jdbcType="VARCHAR" />		  <!--기관코드//작성자 ID -->
+		<result column="WRITER" property="writer" javaType="encrypt" jdbcType="VARCHAR" />	  <!--작성자 // 기관명 // 신청자? -->
+		<result column="DATA1" property="data1" javaType="encrypt" jdbcType="VARCHAR" />	  <!--전화번호 //담당자 연락처  -->
+		<result column="DATA2" property="data2" javaType="String" jdbcType="VARCHAR" />	  <!--상담예약사유코드 -->
+		<result column="DATA3" property="data3" javaType="String" jdbcType="VARCHAR" />	  <!--상담예약사유 -->
+		<result column="DATA4" property="data4" javaType="String" jdbcType="VARCHAR" />      <!--//상태 0-전체 1-대기 2-진행중 3-완료 4-대기/진행 5-대기/완료 6-진행/완료 -->
+		<result column="day1" property="day1" javaType="String" jdbcType="VARCHAR" />      <!--//상담일시 -->
+		<result column="DATA5" property="data5" javaType="String" jdbcType="VARCHAR" />     <!--//상담직원 -->
+		<result column="CONTENTS" property="contents" javaType="String" jdbcType="VARCHAR" />  <!--//답변내용 -->
+	</resultMap>
+	
+
+	<resultMap type="NoticeDTO" id="CryptResultMap2">
+		<result	column="NO"	property="no"	javaType="long"	jdbcType="NUMERIC" />
+		<result	column="BBS"	property="bbs"	javaType="int"	jdbcType="NUMERIC" />
+		<result	column="NUM"	property="num"	javaType="int"	jdbcType="NUMERIC" />
+		<result	column="FROMNO"	property="fromno"	javaType="long"	jdbcType="NUMERIC" />
+		<result	column="STEP"	property="step"	javaType="String"	jdbcType="VARCHAR" />
+		<result	column="ID"	property="id"	javaType="String"	jdbcType="VARCHAR" />
+		<result	column="PASSWORD"	property="password"	javaType="encrypt"	jdbcType="VARCHAR" />
+		<result	column="WRITER"	property="writer"	javaType="String"	jdbcType="VARCHAR" />
+		<result	column="EMAIL"	property="email"	javaType="encrypt"	jdbcType="VARCHAR" />
+		<result	column="TITLE"	property="title"	javaType="String"	jdbcType="VARCHAR" />
+		<result	column="CONTENTS"	property="contents"	javaType="encrypt"	jdbcType="VARCHAR" />
+		<result	column="IP"	property="ip"	javaType="String"	jdbcType="VARCHAR" />
+		<result	column="ISHTML"	property="ishtml"	javaType="int"	jdbcType="NUMERIC" />
+		<result	column="ISFIX"	property="isfix"	javaType="int"	jdbcType="NUMERIC" />
+		<result	column="COUNT"	property="count"	javaType="int"	jdbcType="NUMERIC" />
+		<result	column="DAY"	property="day"	javaType="String"	jdbcType="VARCHAR" />
+		<result	column="SENDEMAIL"	property="sendemail"	javaType="String"	jdbcType="VARCHAR" />
+		<result	column="ISSEND"	property="issend"	javaType="int"	jdbcType="NUMERIC" />
+		<result	column="CODE"	property="code"	javaType="String"	jdbcType="VARCHAR" />
+		<result	column="DAY1"	property="day1"	javaType="java.sql.Date"	jdbcType="DATE" />
+		<result	column="DATA1"	property="data1"	javaType="String"	jdbcType="VARCHAR" />
+		<result	column="DATA2"	property="data2"	javaType="String"	jdbcType="VARCHAR" />
+		<result	column="DATA3"	property="data3"	javaType="String"	jdbcType="VARCHAR" />
+		<result	column="DATA4"	property="data4"	javaType="String"	jdbcType="VARCHAR" />
+		<result	column="DATA5"	property="data5"	javaType="String"	jdbcType="VARCHAR" />
+		<result	column="DATA6"	property="data6"	javaType="String"	jdbcType="VARCHAR" />
+		<result	column="DATA7"	property="data7"	javaType="String"	jdbcType="VARCHAR" />
+		<result	column="DATA8"	property="data8"	javaType="String"	jdbcType="VARCHAR" />
+		<result	column="FILEID"	property="fileid"	javaType="String"	jdbcType="VARCHAR" />
+		<result	column="FILEEXT"	property="fileext"	javaType="String"	jdbcType="VARCHAR" />
+		<result	column="FILENAME"	property="filename"	javaType="String"	jdbcType="VARCHAR" />
+		<result	column="FILESIZE"	property="filesize"	javaType="int"	jdbcType="NUMERIC" />
+	</resultMap>
+
+	<parameterMap type="NoticeDTO" id="CryptResultMap3">
+		<parameter property="bbs" javaType="int" jdbcType="NUMERIC" />
+		<parameter property="writer" javaType="String" jdbcType="VARCHAR" />
+		<parameter property="email" javaType="encrypt" jdbcType="VARCHAR" />
+	</parameterMap>
+		
+	
+	<select id="custCatalistAll" resultMap="CryptResultMap1">
+		SELECT	NO
+			,	BBS
+			,	TO_CHAR(DAY, 'yyyy-mm-dd') as day
+			,	CODE as userClass
+			,	ID
+			,	WRITER
+			,	DATA1
+			,	DATA2
+			,	DATA3
+			,	DATA4
+			,	TO_CHAR(DAY1, 'yyyy-mm-dd') as day1
+			,	DATA5
+			,	CONTENTS
+		FROM 	BOARD 
+		WHERE 	bbs 	= 9
+		AND 	TO_CHAR(DAY, 'YYYYMMDD') BETWEEN #{startday} AND #{endday}
+	</select>
+
+	
+	<!-- 공지사항  상세 보기 -->
+	<select id="noticeDataDetail" resultMap="CryptResultMap2">
+		SELECT NO
+			, BBS
+			, NUM
+			, FROMNO
+			, STEP
+			, ID
+			, PASSWORD
+			, WRITER
+			, EMAIL
+			, TITLE
+			, CONTENTS
+			, IP
+			, ISHTML
+			, ISFIX
+			, COUNT
+			, DAY
+			, SENDEMAIL
+			, ISSEND
+			, CODE
+			, DAY1
+			, DATA1
+			, DATA2
+			, DATA3
+			, DATA4
+			, DATA5
+			, DATA6
+			, DATA7
+			, DATA8
+			, FILE_ID AS FILEID
+			, FILE_EXT AS FILEEXT
+			, FILENAME
+			, FILESIZE
+		FROM BOARD
+		WHERE NO = #{no}
+	</select>
+
+	
+	<!-- QnA글 Insert -->
+	<insert id="qnaDataInsert">
+		INSERT INTO BOARD (NO, BBS, NUM, FROMNO, STEP, ID, WRITER, EMAIL, TITLE, CONTENTS, FILENAME, FILESIZE, IP, ISHTML, ISFIX, CODE, DATA1, DATA7, FILE_ID, FILE_EXT)
+		VALUES (NEXTVAL('board_seq'),
+				10,
+				COALESCE((SELECT MAX(num)
+                	FROM board
+                    WHERE bbs = 10), 0)+1,
+                NULL,
+                '0',
+                #{id},
+                #{writer},
+                #{email},
+                #{title},
+                #{contents},
+                #{fileName},
+                #{filesize},
+                #{ip},
+                0,
+                0,
+                #{code},
+                #{data1},
+                #{data7},
+                #{fileid},
+                #{fileext}
+				)
+	</insert>
+	
+	<update id="update" parameterMap="CryptResultMap3">
+        <![CDATA[
+        UPDATE TB_USER
+        SET EMAIL = #{email},
+            BBS = #{bbs}
+        WHERE 1=1
+        ]]>
+	</update>
+			
+</mapper>

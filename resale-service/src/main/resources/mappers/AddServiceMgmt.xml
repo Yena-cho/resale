@@ -1,0 +1,852 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="AddServiceMgmt">	
+<!--
+	<resultMap type="AddServiceMgmtDTO" id="selChrHp">
+		<result	column="CHRHP" property="chrHp" javaType="encrypt"	jdbcType="CLOB"/>
+	</resultMap>
+	
+	<parameterMap type="java.util.HashMap" id="saveSendtel">
+		<parameter  property="smsSendTel" javaType="encrypt" jdbcType="CLOB" />
+	</parameterMap>
+	
+	<resultMap type="AddServiceMgmtDTO" id="selectSendtel">
+		<result column="SMS_SEND_TEL" property="smsSendTel" javaType="encrypt" jdbcType="CLOB" />
+	</resultMap>-->
+
+	<!-- 페이징을 위한 header -->
+	<sql id="paging_header">
+		select *
+		from (
+		    select (ROW_NUMBER() OVER()) as rn, Z.*
+		    from (
+	</sql>
+	<!-- 페이징을 위한 footer -->
+	<sql id="paging_footer">
+		    ) Z
+		) X where rn between #{start} and #{end}
+	</sql>
+	
+	<!-- 엑셀다운로드시 footer -->
+	<sql id="excel_footer">
+		    ) Z) X
+	</sql>
+
+	<!-- 사이 날짜 조회 -->
+	<sql id="payday_dt_between">
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(fMonth) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(tMonth)">
+			AND C.PAYDAY BETWEEN #{fMonth} AND #{tMonth}
+		</if>
+	</sql>
+
+	<!-- TO_TIMESTAMP(#{tMonth}, 'YYYYMMDD')+1 의 +1 에 대해 파악 필요 -->
+	<sql id="day_dt_between">
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(fMonth) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(tMonth)">
+			AND		DAY BETWEEN TO_TIMESTAMP(#{fMonth}, 'YYYYMMDD') AND TO_TIMESTAMP(#{tMonth}, 'YYYYMMDD')+interval '1 day'
+		</if>
+	</sql>
+	
+	<sql id="orderBy">
+		<choose>
+			<when test="search_orderBy == 'chaCd'">
+				ORDER BY CHACD
+			</when>
+			<otherwise>
+				ORDER BY DAY DESC
+			</otherwise>
+		</choose>
+	</sql>
+	
+	<!-- 문자서비스 신청내역 갯수 -->
+	<select id="smsRegListCount" resultType="hashMap">
+		SELECT COUNT(*) AS "CNT"
+        FROM
+        (
+			SELECT  NO, 
+					NUM, 
+					DAY,
+					CHA.CHACD,
+					CHANAME, 
+					CHASTATUS, 
+					CHRNAME, 
+					CHRTELNO, 
+					FILENAME, 
+					CONTENTS,
+					USESMSYN,
+					SMS_SEND_TEL,
+					OWNER,
+					CHAOFFNO,
+					WEB.LOGINID
+			FROM 	BOARD BRD, XCHALIST CHA, WEBUSER WEB
+			WHERE 	BRD.ID = CHA.CHACD
+			AND 	CHA.CHACD = WEB.CHACD
+			AND 	BBS=10
+			AND 	TITLE ='통신서비스 이용증명원 신청'
+
+		<include refid="day_dt_between"/>
+
+			<if test="no != null and no != ''">
+			AND		NO = #{no}::numeric
+			</if>
+			<if test="chaCd != null and chaCd != ''">
+			AND		CHA.CHACD LIKE '%'||#{chaCd}||'%'
+			</if>
+			<if test="chaName != null and chaName != ''">
+			AND		CHANAME LIKE '%'||#{chaName}||'%'
+			</if>
+			<if test="searchValue != null and searchValue != ''">
+				<if test='searchGb == "loginId"'>
+					AND		WEB.LOGINID	LIKE '%'||#{searchValue}||'%'
+				</if>
+				<if test='searchGb == "owner"'>
+					AND		OWNER	LIKE '%'||#{searchValue}||'%'
+				</if>
+				<if test='searchGb == "chaOffNo"'>
+					AND		CHAOFFNO	LIKE '%'||#{searchValue}||'%'
+				</if>
+				<if test='searchGb == "chrName"'>
+				AND		CHRNAME	LIKE '%'||#{searchValue}||'%'
+				</if>
+				<if test='searchGb == "chrTelNo"'>
+				AND		CHRTELNO LIKE '%'||#{searchValue}||'%'
+				</if>
+			</if>
+			<if test="statusCheck != null and statusCheck != ''">
+				<if test='statusCheck == "Y"'>
+				AND		USESMSYN = 'Y'
+				</if>
+				<if test='statusCheck == "W"'>
+				AND		USESMSYN = 'W'
+				</if>
+				<if test='statusCheck == "ALL"'>
+				AND		USESMSYN IN ('Y', 'W')
+				</if>
+			</if>
+		) X
+	</select>
+	
+	<!-- 문자서비스 신청내역 대기건수 -->
+	<select id="smsRegListWaitCount" resultType="hashMap">
+		SELECT COUNT(*) AS "WAITCNT"
+        FROM
+        (
+			SELECT  NO, 
+					NUM, 
+					TO_CHAR(DAY, 'YYYY.MM.DD') as DAY,
+					CHA.CHACD,
+					CHANAME, 
+					CHASTATUS, 
+					CHRNAME, 
+					CHRTELNO, 
+					FILENAME, 
+					CONTENTS,
+					USESMSYN,
+					SMS_SEND_TEL,
+					OWNER,
+					CHAOFFNO,
+					WEB.LOGINID
+			FROM 	BOARD BRD, XCHALIST CHA, WEBUSER WEB
+			WHERE 	BRD.ID = CHA.CHACD
+			AND 	CHA.CHACD = WEB.CHACD
+			AND 	BBS=10
+			AND 	TITLE ='통신서비스 이용증명원 신청'
+			AND		CHA.USESMSYN = 'W'
+
+		<include refid="day_dt_between"/>
+			<if test="chaCd != null and chaCd != ''">
+			AND		CHA.CHACD LIKE '%'||#{chaCd}||'%'
+			</if>
+			<if test="chaName != null and chaName != ''">
+			AND		CHANAME LIKE '%'||#{chaName}||'%'
+			</if>
+			<if test="searchValue != null and searchValue != ''">
+				<if test='searchGb == "loginId"'>
+					AND		WEB.LOGINID	LIKE '%'||#{searchValue}||'%'
+				</if>
+				<if test='searchGb == "owner"'>
+					AND		OWNER	LIKE '%'||#{searchValue}||'%'
+				</if>
+				<if test='searchGb == "chaOffNo"'>
+					AND		CHAOFFNO	LIKE '%'||#{searchValue}||'%'
+				</if>
+				<if test='searchGb == "chrName"'>
+				AND		CHRNAME	LIKE '%'||#{searchValue}||'%'
+				</if>
+				<if test='searchGb == "chrTelNo"'>
+				AND		CHRTELNO LIKE '%'||#{searchValue}||'%'
+				</if>
+			</if>
+			<if test="statusCheck != null and statusCheck != ''">
+				<if test='statusCheck == "Y"'>
+				AND		USESMSYN = 'Y'
+				</if>
+				<if test='statusCheck == "W"'>
+				AND		USESMSYN = 'W'
+				</if>
+				<if test='statusCheck == "ALL"'>
+				AND		USESMSYN IN ('Y', 'W')
+				</if>
+			</if>
+		) X
+	</select>
+	
+	<!-- 문자서비스 신청내역 -->
+	<select id="smsRegList" resultType="AddServiceMgmtDTO">
+		<include refid="paging_header"/>
+				SELECT  NO,
+						NUM, 
+						TO_CHAR(DAY, 'YYYY.MM.DD') as DAY,
+						CHA.CHACD,
+						CHANAME, 
+						CHASTATUS, 
+						CHRNAME, 
+						CHRHP, 
+						FILENAME, 
+						CONTENTS,
+						USESMSYN as useSmsYn,
+						SMS_SEND_TEL,
+						TO_CHAR(DAY1, 'YYYY.MM.DD') as day1,
+						FILE_ID as fileid,
+						FILE_EXT as fileext,
+						OWNER,
+						CHAOFFNO,
+						WEB.LOGINID
+				FROM 	BOARD BRD, XCHALIST CHA, WEBUSER WEB
+				WHERE 	BRD.ID = CHA.CHACD
+				AND 	CHA.CHACD = WEB.CHACD
+				AND 	BBS=10
+				AND 	TITLE ='통신서비스 이용증명원 신청'
+
+		<include refid="day_dt_between"/>
+
+				<if test="chaCd != null and chaCd != ''">
+				AND		CHA.CHACD LIKE '%'||#{chaCd}||'%'
+				</if>
+				<if test="chaName != null and chaName != ''">
+				AND		CHANAME LIKE '%'||#{chaName}||'%'
+				</if>
+				<if test="searchValue != null and searchValue != ''">
+					<if test='searchGb == "loginId"'>
+						AND		WEB.LOGINID	LIKE '%'||#{searchValue}||'%'
+					</if>
+					<if test='searchGb == "owner"'>
+						AND		OWNER	LIKE '%'||#{searchValue}||'%'
+					</if>
+					<if test='searchGb == "chaOffNo"'>
+						AND		CHAOFFNO	LIKE '%'||#{searchValue}||'%'
+					</if>
+					<if test='searchGb == "chrName"'>
+					AND		CHRNAME	LIKE '%'||#{searchValue}||'%'
+					</if>
+					<if test='searchGb == "chrTelNo"'>
+					AND		CHRTELNO LIKE '%'||#{searchValue}||'%'
+					</if>
+				</if>
+				<if test="statusCheck != null and statusCheck != ''">
+					<if test='statusCheck == "Y"'>
+					AND		USESMSYN = 'Y'
+					</if>
+					<if test='statusCheck == "W"'>
+					AND		USESMSYN = 'W'
+					</if>
+					<if test='statusCheck == "ALL"'>
+					AND		USESMSYN IN ('Y', 'W')
+					</if>
+				</if>
+				<include refid="orderBy"/>
+			<choose>
+				<when test="pageGubn == 'Excel'">
+					<include refid="excel_footer" />
+				</when>
+				<otherwise>
+					<include refid="paging_footer" />
+				</otherwise>
+			</choose>
+	</select>
+	
+	<!-- 문자서비스 신청서 정보 -->
+	<select id="smsRegFileInfo" resultType="AddServiceMgmtDTO">
+				SELECT  NO, 
+						FILENAME,
+						FILE_ID as fileid,
+						FILE_EXT as fileext
+				FROM 	BOARD
+				WHERE BBS=10
+				AND TITLE ='통신서비스 이용증명원 신청'
+				AND CODE = #{chaCd}
+				AND NO	= #{no}::numeric
+	</select>
+	
+	<!-- 문자서비스 신청서 정보 수정 -->
+	<update id="updateSmsRegInfo" parameterType="java.util.HashMap">
+			UPDATE  BOARD
+			SET	
+			<choose>
+				<when test="filename != '' and filename != null">
+					 FILENAME = #{filename}
+					,FILE_ID = #{fileid}
+					,FILE_EXT = #{fileext}
+					,FILESIZE = ''
+				</when>
+				<otherwise>
+					 FILENAME = ''
+					,FILE_ID = ''
+					,FILE_EXT = ''
+					,FILESIZE = ''
+					,DAY1 = ''
+				</otherwise>
+			</choose>
+			WHERE BBS=10
+			AND TITLE ='통신서비스 이용증명원 신청'
+			AND NO= #{no}::numeric
+			AND CODE = #{chaCd}
+	</update>
+	
+	<!-- sms 사용유무 수정 -->
+	<update id="updateSmsRegSt">
+		UPDATE	XCHALIST
+		SET	USESMSYN = 'W'
+			,MAKER = #{chaCd}
+			,MAKEDT = NOW()
+		WHERE	CHACD = #{chaCd}
+	</update>
+	
+		<!-- sms서비스 사용해지 -->
+	<update id="deleteUseSmsYn">
+		UPDATE	XCHALIST
+		SET	USESMSYN = 'N'
+			,MAKER = #{chaCd}
+			,MAKEDT = NOW()
+		WHERE	CHACD = #{chaCd}
+	</update>
+	
+	<!-- 발신번호 조회 -->
+	<select id="getCallerNum" resultType="AddServiceMgmtDTO">
+			SELECT  NO, 
+					NUM, 
+					DAY, 
+					CHACD, 
+					CHANAME, 
+					CHASTATUS, 
+					CHRNAME, 
+					CHRTELNO, 
+					FILENAME, 
+					CONTENTS,
+					USESMSYN,
+					SMS_SEND_TEL AS smsSendTel
+			FROM 	BOARD BRD, XCHALIST CHA
+			WHERE 	BRD.ID = CHA.CHACD
+			AND 	BBS=10
+			AND 	TITLE ='통신서비스 이용증명원 신청'
+			AND		NO= #{no}::numeric
+	</select>
+	
+	<!-- 발신번호 수정 -->
+	<update id="updateContents" parameterType="java.util.HashMap">
+			UPDATE  BOARD
+			SET		CONTENTS = #{contents}
+			WHERE 	BBS=10
+			AND 	TITLE ='통신서비스 이용증명원 신청'
+			AND		NO= #{no}::numeric
+	</update>
+	
+	<!-- 발신번호 수정 -->
+	<update id="updateSmsSendTel" parameterType="java.util.HashMap">
+			UPDATE	XCHALIST
+			SET		SMS_SEND_TEL = #{smsSendTel}
+			WHERE	CHACD = #{chaCd}
+	</update>
+	
+	<!-- 온라인카드 이용내역 건수 -->
+	<select id="cardPayHistoryCount" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+			SELECT COUNT(*) AS "CNT"
+			FROM
+				(SELECT NOTIMASCD,
+						CHACD,
+						CHANAME,
+						CUSNAME,
+						TO_CHAR(TO_TIMESTAMP(MAX(PAYDAY)||MAX(PAYTIME), 'YYYYMMDDHH24MISS'), 'YYYY.MM.DD HH24:MI:SS') PAYDAY2,
+						MAX(PAYDAY) AS PAYDAY,
+						MAX(PAYTIME) AS PAYTIME,
+						SUM(RCPAMT) AS RCPAMT,
+						RCPMASST,
+						COALESCE(PAYITEMAMT,0) AS PAYITEMAMT
+				FROM
+				(
+					SELECT A.NOTIMASCD,
+						A.CHACD, 
+				       	D.CHANAME, 
+				       	A.CUSNAME, 
+				       	C.PAYDAY, 
+				       	C.PAYTIME,
+				       	B.PAYITEMAMT, 
+				       	C.RCPAMT, 
+				       	C.RCPMASST
+					FROM XNOTIMAS A
+					LEFT OUTER JOIN (	SELECT NOTIMASCD, SUM(COALESCE(PAYITEMAMT, 0)) AS PAYITEMAMT
+										FROM   XNOTIDET
+										WHERE NOTIDETST != 'PA00'
+										AND NOTI_CAN_YN = 'N'
+										GROUP BY NOTIMASCD
+					    ) B ON A.NOTIMASCD = B.NOTIMASCD
+	            	LEFT OUTER JOIN (SELECT * FROM XRCPMAS
+	            						WHERE RCPMASST IN ('PA03','PA09')
+	            	    ) C ON A.NOTIMASCD = C.NOTIMASCD AND A.CHACD = C.CHACD
+					LEFT OUTER JOIN XCHALIST D ON A.CHACD = D.CHACD
+					WHERE A.NOTIMASST IN('PA02','PA03','PA04','PA05','PA06')
+					AND A.NOTI_CAN_YN = 'N'   
+					AND C.SVECD = 'OCD'
+					<include refid="payday_dt_between"/>
+					<if test="chaCd != null and chaCd != ''">
+					AND A.CHACD = #{chaCd}
+					</if>
+					<if test="chaName != null and chaName != ''">
+					AND		D.CHANAME LIKE '%'||#{chaName}||'%'
+					</if>
+					<if test="searchValue != null and searchValue != ''">
+						AND		A.CUSNAME LIKE '%'||#{searchValue}||'%'
+					</if>
+					<if test="statusCheck != null and statusCheck != ''">
+						<if test='statusCheck == "PA03"'>
+						AND		C.RCPMASST = 'PA03'
+						</if>
+						<if test='statusCheck == "PA09"'>
+						AND		C.RCPMASST = 'PA09'
+						</if>
+						<if test='statusCheck == "ALL"'>
+						AND		C.RCPMASST IN ('PA03', 'PA09')
+						</if>
+					</if>
+				) SUB GROUP BY NOTIMASCD, CHACD, CHANAME, CUSNAME, PAYITEMAMT, RCPMASST
+			) AB
+	</select>
+	
+	<!-- 온라인카드 이용내역 조회 -->
+	<select id="cardPayHistoryList" resultType="AddServiceMgmtDTO">
+			<include refid="paging_header" />
+			SELECT	NOTIMASCD,
+					CHACD,
+					CHANAME,
+					CUSNAME,
+					TO_CHAR(TO_DATE(MAX(PAYDAY)||MAX(PAYTIME), 'YYYYMMDDHH24MISS'), 'YYYY.MM.DD HH24:MI:SS') PAYDAY2,
+					MAX(PAYDAY) AS PAYDAY,
+					MAX(PAYTIME) AS PAYTIME,
+					SUM(RCPAMT) AS RCPAMT,
+					RCPMASST,
+					COALESCE(PAYITEMAMT,0) AS PAYITEMAMT,
+					RCPMASCD
+			FROM
+			(
+				SELECT A.NOTIMASCD,
+						A.CHACD, 
+				       	D.CHANAME, 
+				       	A.CUSNAME, 
+				       	C.PAYDAY, 
+				       	C.PAYTIME,
+				       	B.PAYITEMAMT, 
+				       	C.RCPAMT, 
+				       	C.RCPMASST,
+				       	C.RCPMASCD
+					FROM XNOTIMAS A
+					LEFT OUTER JOIN (	SELECT NOTIMASCD, SUM(COALESCE(PAYITEMAMT, 0)) AS PAYITEMAMT
+										FROM   XNOTIDET
+										WHERE NOTIDETST != 'PA00'
+										AND NOTI_CAN_YN = 'N'
+										GROUP BY NOTIMASCD
+	            		) B ON A.NOTIMASCD = B.NOTIMASCD
+					LEFT OUTER JOIN XRCPMAS C ON A.NOTIMASCD = C.NOTIMASCD AND A.CHACD = C.CHACD
+					LEFT OUTER JOIN XCHALIST D ON A.CHACD = D.CHACD
+					WHERE A.NOTIMASST IN('PA02','PA03','PA04','PA05','PA06')
+					AND A.NOTI_CAN_YN = 'N'   
+					AND C.SVECD = 'OCD'
+				<include refid="payday_dt_between"/>
+				<if test="chaCd != null and chaCd != ''">
+				AND		A.CHACD = #{chaCd}
+				</if>
+				<if test="chaName != null and chaName != ''">
+				AND		D.CHANAME LIKE '%'||#{chaName}||'%'
+				</if>
+				<if test="searchValue != null and searchValue != ''">
+					AND		A.CUSNAME LIKE '%'||#{searchValue}||'%'
+				</if>
+				<if test="statusCheck != null and statusCheck != ''">
+					<if test='statusCheck == "PA03"'>
+					AND		C.RCPMASST = 'PA03'
+					</if>
+					<if test='statusCheck == "PA09"'>
+					AND		C.RCPMASST = 'PA09'
+					</if>
+					<if test='statusCheck == "ALL"'>
+					AND		C.RCPMASST IN ('PA03', 'PA09')
+					</if>
+				</if>
+			) X GROUP BY NOTIMASCD, CHACD, CHANAME, CUSNAME, PAYITEMAMT, RCPMASST, RCPMASCD
+			<choose>
+				<when test="search_orderBy == 'status'">
+					ORDER BY RCPMASST
+				</when>
+				<otherwise>
+					--ORDER BY PAYDAY DESC, PAYTIME DESC
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="pageGubn == 'Excel'">
+					<include refid="excel_footer" />
+				</when>
+				<otherwise>
+					<include refid="paging_footer" />
+				</otherwise>
+			</choose>
+	</select>
+	
+	<!-- 발신상태 수정 -->
+	<update id="updateUseSmsYn" parameterType="java.util.HashMap">
+			UPDATE  XCHALIST
+			SET		USESMSYN 	= 'Y'
+				,	SMS_APL_DT 	= TO_CHAR(NOW(), 'YYYYMMDD')
+				,	SMS_SEND_TEL = #{smsSendTel}
+			WHERE 	CHACD = #{chaCd}
+	</update>
+	
+	<update id="updateDay1" parameterType="java.util.HashMap">
+			UPDATE  BOARD
+			SET		DAY1 = NOW()
+			WHERE 	ID = #{chaCd}
+			AND BBS = 10
+			AND TITLE = '통신서비스 이용증명원 신청' 
+			AND NO = #{no}::numeric
+	</update>
+
+	<!-- 알림톡 신청내역 -->
+	<select id="atRegList" resultType="AddServiceMgmtDTO">
+		<include refid="paging_header"/>
+		SELECT C.ATREGDT
+				, A.CHACD
+				, A.CHANAME
+				, COALESCE(C.ATCHANAME, A.CHANAME) AS ATCHANAME
+				, A.CHASTATUS
+				, B.LOGINID
+				, A.OWNER
+				, A.CHAOFFNO
+				, A.CHRNAME
+				, A.CHRTELNO
+				, C.ATYN
+				, C.ATACPTDT
+				, C.ATCNCLDT
+				, C.NO
+		  FROM XCHALIST A LEFT OUTER JOIN ATHIS C ON A.CHACD = C.CHACD, WEBUSER B
+		 WHERE A.CHACD = B.CHACD
+		   AND A.ATREGDT IS NOT NULL
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(fDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(tDate)">
+			AND TO_CHAR(C.ATREGDT, 'YYYYMMDD') BETWEEN #{fDate} AND #{tDate}
+		</if>
+		<if test="chaCd != null and chaCd != ''">
+			AND	A.CHACD LIKE '%'||#{chaCd}||'%'
+		</if>
+		<if test="chaName != null and chaName != ''">
+			AND	A.CHANAME LIKE '%'||#{chaName}||'%'
+		</if>
+
+		<if test="searchValue != null and searchValue != ''">
+			<if test='searchGb == "loginId"'>
+				AND	B.LOGINID	LIKE '%'||#{searchValue}||'%'
+			</if>
+			<if test='searchGb == "owner"'>
+				AND	A.OWNER	LIKE '%'||#{searchValue}||'%'
+			</if>
+			<if test='searchGb == "chaOffNo"'>
+				AND	A.CHAOFFNO	LIKE '%'||#{searchValue}||'%'
+			</if>
+			<if test='searchGb == "chrName"'>
+				AND	A.CHRNAME	LIKE '%'||#{searchValue}||'%'
+			</if>
+			<if test='searchGb == "chrTelNo"'>
+				AND	A.CHRTELNO LIKE '%'||#{searchValue}||'%'
+			</if>
+		</if>
+
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(statusCheck) and statusCheck != 'all'">
+			AND C.ATYN = #{statusCheck}
+		</if>
+
+		<choose>
+			<when test="search_orderBy == 'chaCd'">
+				ORDER BY A.CHACD, C.ATREGDT DESC
+			</when>
+			<otherwise>
+				ORDER BY C.ATREGDT DESC, A.CHACD
+			</otherwise>
+		</choose>
+
+		<choose>
+			<when test="pageGubn == 'Excel'">
+				<include refid="excel_footer" />
+			</when>
+			<otherwise>
+				<include refid="paging_footer" />
+			</otherwise>
+		</choose>
+	</select>
+
+	<!-- 알림톡 신청내역 갯수 -->
+	<select id="atRegListCount" resultType="hashMap">
+		SELECT	COUNT(*) AS "CNT"
+		  FROM XCHALIST A LEFT OUTER JOIN ATHIS C ON A.CHACD = C.CHACD, WEBUSER B
+		 WHERE A.CHACD = B.CHACD
+		   AND A.ATREGDT IS NOT NULL
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(fDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(tDate)">
+			AND TO_CHAR(C.ATREGDT, 'YYYYMMDD') BETWEEN #{fDate} AND #{tDate}
+		</if>
+		<if test="chaCd != null and chaCd != ''">
+			AND	A.CHACD LIKE '%'||#{chaCd}||'%'
+		</if>
+		<if test="chaName != null and chaName != ''">
+			AND	A.CHANAME LIKE '%'||#{chaName}||'%'
+		</if>
+
+		<if test="searchValue != null and searchValue != ''">
+			<if test='searchGb == "loginId"'>
+				AND	B.LOGINID	LIKE '%'||#{searchValue}||'%'
+			</if>
+			<if test='searchGb == "owner"'>
+				AND	A.OWNER	LIKE '%'||#{searchValue}||'%'
+			</if>
+			<if test='searchGb == "chaOffNo"'>
+				AND	A.CHAOFFNO	LIKE '%'||#{searchValue}||'%'
+			</if>
+			<if test='searchGb == "chrName"'>
+				AND	A.CHRNAME	LIKE '%'||#{searchValue}||'%'
+			</if>
+			<if test='searchGb == "chrTelNo"'>
+				AND	A.CHRTELNO LIKE '%'||#{searchValue}||'%'
+			</if>
+		</if>
+
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(statusCheck) and statusCheck != 'all'">
+			AND C.ATYN = #{statusCheck}
+		</if>
+	</select>
+
+	<!-- 알림톡 신청내역 대기건수 -->
+	<select id="atRegListWaitCount" resultType="hashMap">
+		SELECT	COUNT(*) AS "WAITCNT"
+		  FROM XCHALIST A LEFT OUTER JOIN ATHIS C ON A.CHACD = C.CHACD, WEBUSER B
+		 WHERE A.CHACD = B.CHACD
+		   AND A.ATREGDT IS NOT NULL
+		   AND C.ATYN = 'W'
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(fDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(tDate)">
+			AND TO_CHAR(C.ATREGDT, 'YYYYMMDD') BETWEEN #{fDate} AND #{tDate}
+		</if>
+		<if test="chaCd != null and chaCd != ''">
+			AND	A.CHACD LIKE '%'||#{chaCd}||'%'
+		</if>
+		<if test="chaName != null and chaName != ''">
+			AND	A.CHANAME LIKE '%'||#{chaName}||'%'
+		</if>
+
+		<if test="searchValue != null and searchValue != ''">
+			<if test='searchGb == "loginId"'>
+				AND	B.LOGINID	LIKE '%'||#{searchValue}||'%'
+			</if>
+			<if test='searchGb == "owner"'>
+				AND	A.OWNER	LIKE '%'||#{searchValue}||'%'
+			</if>
+			<if test='searchGb == "chaOffNo"'>
+				AND	A.CHAOFFNO	LIKE '%'||#{searchValue}||'%'
+			</if>
+			<if test='searchGb == "chrName"'>
+				AND	A.CHRNAME	LIKE '%'||#{searchValue}||'%'
+			</if>
+			<if test='searchGb == "chrTelNo"'>
+				AND	A.CHRTELNO LIKE '%'||#{searchValue}||'%'
+			</if>
+		</if>
+	</select>
+
+	<!-- 알림톡 발송기관명 수정 -->
+	<update id="updateAtChaName" parameterType="java.util.HashMap">
+		UPDATE XCHALIST
+			SET ATCHANAME = #{atChaName}
+		WHERE CHACD = #{chaCd}
+	</update>
+
+	<!-- 알림톡 발송기관명 수정 히스토리 -->
+	<update id="updateAtChaNameHis" parameterType="java.util.HashMap">
+		UPDATE ATHIS
+			SET ATCHANAME = #{atChaName}
+		WHERE CHACD = #{chaCd} AND NO = #{atHisNo}
+	</update>
+
+	<!-- 알림톡 신청 승인 or 거절 -->
+	<update id="updateAtAcptDt" parameterType="java.util.HashMap">
+		UPDATE XCHALIST
+		SET ATACPTDT = NOW()
+		  , ATYN = #{statusCheck}
+		  , ATCHANAME = null
+		WHERE CHACD = #{chaCd}
+	</update>
+
+	<!-- 알림톡 승인 or 거절 히스토리 -->
+	<update id="updateAtAcptHis" parameterType="java.util.HashMap">
+		UPDATE ATHIS
+		   SET ATACPTDT = NOW()
+		       , ATYN = #{statusCheck}
+		 WHERE CHACD = #{chaCd} AND NO = #{atHisNo}
+	</update>
+
+	<!-- 알림톡 해지 -->
+	<update id="deleteAtYn" parameterType="java.util.HashMap">
+		UPDATE XCHALIST
+		SET ATCNCLDT = NOW()
+		  , ATYN = 'D'
+		  , ATCHANAME = null
+		WHERE CHACD = #{chaCd}
+	</update>
+
+	<!-- 알림톡 해지 히스토리 -->
+	<update id="deleteAtYnHis" parameterType="java.util.HashMap">
+		UPDATE ATHIS
+		   SET ATCNCLDT = NOW()
+		       , ATYN = 'D'
+		 WHERE CHACD = #{chaCd} AND NO = #{atHisNo}
+	</update>
+
+	<!-- 알림톡 이용내역 -->
+	<select id="atUseList" resultType="AddServiceMgmtDTO">
+		<include refid="paging_header"/>
+		SELECT SENDDATE
+		, A.CHACD
+		, E.LOGINID
+		, C.CHANAME
+		, C.ATCHANAME
+		, CASE A.MSGTYPE  WHEN '0' THEN  '청구'  WHEN '1' THEN  '미납'  WHEN '2' THEN  '입금' END AS MSGTYPE
+		, B.CUSNAME
+		, A.CUSTELNO
+		, CASE A.SENDSTATUSCD  WHEN '0' THEN  '발송대기'  WHEN '1' THEN  '발송성공'  WHEN '2' THEN  '발송실패' END AS SENDSTATUSCD
+		, COALESCE(A.SENDRESULTCD, ' ')   AS SENDRESULTCD
+		, COALESCE(D.DESCRIPTION, ' ')   AS DESCRIPTION
+		FROM ATREQ A
+		LEFT OUTER JOIN XNOTIMAS B ON A.NOTIMASCD = B.NOTIMASCD
+		LEFT OUTER JOIN XCHALIST C ON A.CHACD = C.CHACD
+		LEFT OUTER JOIN ATREQCODE D ON A.SENDRESULTCD = D.CODE
+		LEFT OUTER JOIN WEBUSER E ON A.CHACD = E.CHACD
+		<where>
+			--AND A.PAYMASCD IS NULL
+			<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(fDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(tDate)">
+				AND TO_CHAR(SENDDATE, 'YYYYMMDD') BETWEEN #{fDate} AND #{tDate}
+			</if>
+			<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaCd)">
+				AND	A.CHACD LIKE '%'||#{chaCd}||'%'
+			</if>
+			<if test="chaName != null and chaName != ''">
+				AND	C.CHANAME LIKE '%'||#{chaName}||'%'
+			</if>
+
+			<if test="searchValue != null and searchValue != ''">
+				<if test='searchGb == "cusName"'>
+					AND	B.CUSNAME	LIKE '%'||#{searchValue}||'%'
+				</if>
+				<if test='searchGb == "chaTelNo"'>
+					AND	A.CHATELNO	LIKE '%'||#{searchValue}||'%'
+				</if>
+				<if test='searchGb == "cusTelNo"'>
+					AND	A.CUSTELNO	LIKE '%'||#{searchValue}||'%'
+				</if>
+			</if>
+
+			<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(statusCheck) and statusCheck != 'all'">
+				AND A.SENDSTATUSCD = #{statusCheck}
+			</if>
+
+			<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(msgType) and msgType != 'all'">
+				AND A.MSGTYPE = #{msgType}
+			</if>
+		</where>
+
+		<choose>
+			<when test="search_orderBy == 'chaName'">
+				ORDER BY C.CHANAME ASC, A.SENDDATE DESC, A.MSGTYPE ASC, A.SENDSTATUSCD ASC
+			</when>
+			<when test="search_orderBy == 'msgType'">
+				ORDER BY A.MSGTYPE ASC, A.SENDDATE DESC, C.CHANAME ASC, A.SENDSTATUSCD ASC
+			</when>
+			<when test="search_orderBy == 'sendStatusCd'">
+				ORDER BY A.SENDSTATUSCD ASC, SENDDATE DESC, C.CHANAME ASC, A.MSGTYPE ASC
+			</when>
+			<otherwise>
+				ORDER BY A.SENDDATE DESC, C.CHANAME ASC, A.MSGTYPE ASC, A.SENDSTATUSCD ASC
+			</otherwise>
+		</choose>
+
+		<choose>
+			<when test="pageGubn == 'Excel'">
+				<include refid="excel_footer" />
+			</when>
+			<otherwise>
+				<include refid="paging_footer" />
+			</otherwise>
+		</choose>
+	</select>
+
+	<!-- 알림톡 이용내역 전체건수 -->
+	<select id="atUseListCount" resultType="hashMap">
+		SELECT COUNT(*) AS "TOTALCNT"
+		<include refid="atCntFromWhere" />
+	</select>
+
+	<!-- 알림톡 이용내역 성공건수 -->
+	<select id="atUseListSuccessCount" resultType="hashMap">
+		SELECT COUNT(*) AS "SUCCESSCNT"
+		<include refid="atCntFromWhere" />
+		AND SENDSTATUSCD = '1'
+	</select>
+
+	<!-- 알림톡 이용내역 실패건수 -->
+	<select id="atUseListFailCount" resultType="hashMap">
+		SELECT COUNT(*) AS "FAILCNT"
+		<include refid="atCntFromWhere" />
+		AND SENDSTATUSCD = '2'
+	</select>
+
+	<!-- 알림톡 이용내역 건수 FROM WHERE절 -->
+	<sql id="atCntFromWhere">
+		FROM ATREQ A
+			LEFT OUTER JOIN XNOTIMAS B ON A.NOTIMASCD = B.NOTIMASCD
+			LEFT OUTER JOIN ATREQCODE D ON A.SENDRESULTCD = D.CODE
+			, XCHALIST C
+			, WEBUSER E
+		WHERE A.CHACD = C.CHACD
+		AND A.CHACD = E.CHACD
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(fDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(tDate)">
+			AND TO_CHAR(A.SENDDATE, 'YYYYMMDD') BETWEEN #{fDate} AND #{tDate}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaCd)">
+			AND	A.CHACD LIKE '%'||#{chaCd}||'%'
+		</if>
+		<if test="chaName != null and chaName != ''">
+			AND	C.CHANAME LIKE '%'||#{chaName}||'%'
+		</if>
+
+		<if test="searchValue != null and searchValue != ''">
+			<if test='searchGb == "cusName"'>
+				AND	B.CUSNAME	LIKE '%'||#{searchValue}||'%'
+			</if>
+			<if test='searchGb == "chaTelNo"'>
+				AND	A.CHATELNO	LIKE '%'||#{searchValue}||'%'
+			</if>
+			<if test='searchGb == "cusTelNo"'>
+				AND	A.CUSTELNO	LIKE '%'||#{searchValue}||'%'
+			</if>
+		</if>
+
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(statusCheck) and statusCheck != 'all'">
+			AND A.SENDSTATUSCD = #{statusCheck}
+		</if>
+
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(msgType) and msgType != 'all'">
+			AND A.MSGTYPE = #{msgType}
+		</if>
+	</sql>
+</mapper>

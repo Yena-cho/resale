@@ -1,0 +1,598 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="AdminClosing">	
+
+	<!-- 페이징을 위한 header -->
+	<sql id="paging_header">
+		select *
+		from (
+		    select (ROW_NUMBER() OVER()) as rn, Z.*
+		    from (	
+	</sql>
+	<!-- 페이징을 위한 footer -->
+	<sql id="paging_footer">
+		    ) Z
+		) X where rn between #{start} and #{end}
+	</sql>
+	
+	<!-- 일마감 전수 -->
+	<select id="getDayCloseCount" resultType="int">
+		SELECT COUNT(*) as cnt 
+		  FROM (
+		         SELECT CLOSEDT 
+                      , CHACD   
+                      , NOTIAMT
+                      , NOTICNT
+                      , RCPAMT
+                      , RCPCNT
+                      , OCDAMT
+                      , OCDCNT
+                      , CMSAMT
+                      , CMSCNT
+                      , DVAAMT
+                      , DVACNT
+                      , SMSCNT
+                      , LMSCNT
+		           FROM (
+                          SELECT NOTIDAY      CLOSEDT
+                               , CHACD        CHACD
+                               , SUM(NOTIAMT) NOTIAMT
+                               , SUM(NOTICNT) NOTICNT
+                               , SUM(RCPAMT)  RCPAMT
+                               , SUM(RCPCNT)  RCPCNT
+                               , SUM(OCDAMT)  OCDAMT
+                               , SUM(OCDCNT)  OCDCNT
+                               , SUM(CMSAMT)  CMSAMT
+                               , SUM(CMSCNT)  CMSCNT
+                               , SUM(DVAAMT)  DVAAMT
+                               , SUM(DVACNT)  DVACNT
+                               , SUM(SMSCNT)  SMSCNT
+                               , SUM(LMSCNT)  LMSCNT
+                            FROM (
+                                   /* 청구금액 */
+                                   SELECT NOTIDAY
+                                        , CHACD
+                                        , NOTIAMT
+                                        , NOTICNT
+                                        , 0 RCPAMT
+                                        , 0 RCPCNT
+                                        , 0 OCDAMT
+                                        , 0 OCDCNT
+                                        , 0 CMSAMT
+                                        , 0 CMSCNT
+                                        , 0 DVAAMT
+                                        , 0 DVACNT
+                                        , 0 SMSCNT
+                                        , 0 LMSCNT
+                                     FROM XDAYSUMNOTI
+                                    WHERE NOTIDAY BETWEEN #{startDt} AND #{endDt}
+                                   UNION ALL
+                                   /* 가상계좌수납 */
+                                   SELECT RCPDAY
+                                        , CHACD
+                                        , 0
+                                        , 0
+                                        , RCPAMT
+                                        , RCPCNT
+                                        , 0
+                                        , 0
+                                        , 0
+                                        , 0
+                                        , 0
+                                        , 0
+                                        , 0
+                                        , 0
+                                     FROM XDAYSUMRCP
+                                    WHERE RCPDAY BETWEEN #{startDt} AND #{endDt}
+                                  UNION ALL
+                                  /* 온라인카드, 현금, 오프라인 카드 */
+                                  SELECT RCPDAY
+                                       , CHACD
+                                       , 0
+                                       , 0
+                                       , 0
+                                       , 0
+                                       , OCDAMT
+                                       , OCDCNT
+                                       , CMSAMT
+                                       , CMSCNT
+                                       , DVAAMT
+                                       , DVACNT
+                                       , 0
+                                       , 0
+                                    FROM XDAYSUMRCPETC
+                                   WHERE RCPDAY BETWEEN #{startDt} AND #{endDt}
+                                UNION ALL
+                                /* 문자메세지 */
+                                SELECT SMSDAY
+                                     , CHACD
+                                     , 0
+                                     , 0
+                                     , 0
+                                     , 0
+                                     , 0
+                                     , 0
+                                     , 0
+                                     , 0
+                                     , 0
+                                     , 0
+                                     , SMSCNT
+                                     , LMSCNT
+                                  FROM XDAYSUMSMS
+                                 WHERE SMSDAY BETWEEN #{startDt} AND #{endDt}
+                                 ) T1
+                          GROUP BY NOTIDAY
+                                 , CHACD
+		                ) T2
+		       ) T3
+	</select>
+	<!-- 일마감 내역 -->
+	<select id="getDayCloseList" resultType="SysAdminClosingDTO">
+		<include refid="paging_header"/>
+		SELECT A.CLOSEDT as closeDt
+		     , A.CHACD   as chaCd
+             , B.CHANAME as chaName
+             , A.NOTIAMT as notiAmt
+             , A.NOTICNT as notiCnt
+             , A.RCPAMT  as rcpAmt
+             , A.RCPCNT  as rcpCnt
+             , A.OCDAMT  as ocdAmt
+             , A.OCDCNT  as ocdCnt
+             , A.CMSAMT  as cmsAmt
+             , A.CMSCNT  as cmsCnt
+             , A.DVAAMT  as dvaAmt
+             , A.DVACNT  as dvaCnt
+             , A.SMSCNT  as smsCnt
+             , A.LMSCNT  as lmsCnt
+          FROM (
+                 SELECT CLOSEDT 
+                      , CHACD   
+                      , NOTIAMT
+                      , NOTICNT
+                      , RCPAMT
+                      , RCPCNT
+                      , OCDAMT
+                      , OCDCNT
+                      , CMSAMT
+                      , CMSCNT
+                      , DVAAMT
+                      , DVACNT
+                      , SMSCNT
+                      , LMSCNT
+		           FROM (
+                          SELECT NOTIDAY      CLOSEDT
+                               , CHACD        CHACD
+                               , SUM(NOTIAMT) NOTIAMT
+                               , SUM(NOTICNT) NOTICNT
+                               , SUM(RCPAMT)  RCPAMT
+                               , SUM(RCPCNT)  RCPCNT
+                               , SUM(OCDAMT)  OCDAMT
+                               , SUM(OCDCNT)  OCDCNT
+                               , SUM(CMSAMT)  CMSAMT
+                               , SUM(CMSCNT)  CMSCNT
+                               , SUM(DVAAMT)  DVAAMT
+                               , SUM(DVACNT)  DVACNT
+                               , SUM(SMSCNT)  SMSCNT
+                               , SUM(LMSCNT)  LMSCNT
+                            FROM (
+                                   /* 청구금액 */
+                                   SELECT NOTIDAY
+                                        , CHACD
+                                        , NOTIAMT
+                                        , NOTICNT
+                                        , 0 RCPAMT
+                                        , 0 RCPCNT
+                                        , 0 OCDAMT
+                                        , 0 OCDCNT
+                                        , 0 CMSAMT
+                                        , 0 CMSCNT
+                                        , 0 DVAAMT
+                                        , 0 DVACNT
+                                        , 0 SMSCNT
+                                        , 0 LMSCNT
+                                     FROM XDAYSUMNOTI
+                                    WHERE NOTIDAY BETWEEN #{startDt} AND #{endDt}
+                                   UNION ALL
+                                   /* 가상계좌수납 */
+                                   SELECT RCPDAY
+                                        , CHACD
+                                        , 0
+                                        , 0
+                                        , RCPAMT
+                                        , RCPCNT
+                                        , 0
+                                        , 0
+                                        , 0
+                                        , 0
+                                        , 0
+                                        , 0
+                                        , 0
+                                        , 0
+                                     FROM XDAYSUMRCP
+                                    WHERE RCPDAY BETWEEN #{startDt} AND #{endDt}
+                                  UNION ALL
+                                  /* 온라인카드, 현금, 오프라인 카드 */
+                                  SELECT RCPDAY
+                                       , CHACD
+                                       , 0
+                                       , 0
+                                       , 0
+                                       , 0
+                                       , OCDAMT
+                                       , OCDCNT
+                                       , CMSAMT
+                                       , CMSCNT
+                                       , DVAAMT
+                                       , DVACNT
+                                       , 0
+                                       , 0
+                                   FROM XDAYSUMRCPETC
+                                  WHERE RCPDAY BETWEEN #{startDt} AND #{endDt}
+                                UNION ALL
+                                /* 문자메세지 */
+                                SELECT SMSDAY
+                                     , CHACD
+                                     , 0
+                                     , 0
+                                     , 0
+                                     , 0
+                                     , 0
+                                     , 0
+                                     , 0
+                                     , 0
+                                     , 0
+                                     , 0
+                                     , SMSCNT
+                                     , LMSCNT
+                                  FROM XDAYSUMSMS
+                                 WHERE SMSDAY BETWEEN #{startDt} AND #{endDt}
+                                 ) T1
+                          GROUP BY NOTIDAY
+                                 , CHACD
+  		                ) T2
+               ) A, XCHALIST B
+           WHERE A.CHACD = B.CHACD
+        <include refid="chaInfoSearch" /> 
+		<include refid="orderBy" />
+		<include refid="paging_footer"/>
+	</select>
+	
+	
+	<!-- 월마감 전수 -->
+	<select id="getMonthCloseCount" resultType="int">
+		SELECT COUNT(*) as cnt
+          FROM XMONTHSUM
+         WHERE MONTH BETWEEN #{fmasMonth} AND #{tmasMonth}
+	</select>
+	
+	<!-- 월마감  내역 -->
+	<select id="getMonthCloseList" resultType="SysAdminClosingDTO">
+		<include refid="paging_header"/>
+		SELECT A.MONTH                 as closeMonth
+             , A.CHACD                 as chaCd
+             , B.CHANAME               as chaName
+             , COALESCE(A.NOTIAMT, 0)               as notiAmt
+             , COALESCE(A.NOTICNT, 0)               as notiCnt
+             , CASE WHEN COALESCE(B.NOTMINLIMIT,0) >= COALESCE(A.NOTICNT, 0) THEN B.NOTMINFEE
+                    ELSE COALESCE(A.NOTICNT, 0) * COALESCE(B.NOTCNTFEE, 0)
+               END                    as notiFee
+             , COALESCE(A.RCPAMT, 0)                as rcpAmt
+             , COALESCE(A.RCPCNT, 0)                as rcpCnt
+             , COALESCE(A.RCPFEE, 0)                as rcpFee
+             , COALESCE(A.RCPBNKFEE, 0)             as rcpBnkFee
+             , COALESCE(A.SMSCNT, 0)        as smsCnt
+             , COALESCE(A.SMSCNT, 0) * 20   as smsAmt
+             , COALESCE(A.LMSCNT, 0)        as lmsCnt
+             , COALESCE(A.LMSCNT, 0) * 40   as lmsAmt
+             , A.FINISH_DT             as finishDt
+          FROM XMONTHSUM A   /* 월별 청구/수납집계 */
+             , XCHALIST B    /* 기관정보           */
+         WHERE A.CHACD = B.CHACD
+           AND A.MONTH BETWEEN #{fmasMonth} AND #{tmasMonth}
+        <include refid="chaInfoSearch" />
+        <include refid="orderBy" />
+		<include refid="paging_footer"/> 
+	</select>
+	
+	<!-- 일마감 실행 -->
+	<select id="dayCloseGo" statementType="CALLABLE" >
+		 {
+            CALL dayClose(
+                #{startDt},
+                #{endDt}
+            )
+        }
+	</select>
+	
+	<!-- 월마감 실행 -->
+	<select id="monthCloseGo" statementType="CALLABLE" >
+		{
+            CALL monthClose(
+                #{fmasMonth},
+                #{tmasMonth}
+            )
+        }
+	</select>
+	
+	<sql id="chaInfoSearch">
+		<if test="chaCd != null and chaCd != ''">
+		AND A.CHACD = #{chaCd}
+		</if>
+	</sql>
+	
+	<sql id="orderBy">
+		<if test="orderBy != null and orderBy == 'closeDt'">
+			ORDER BY A.CLOSEDT
+		</if>
+		<if test="orderBy != null and orderBy == 'chaName'">
+			ORDER BY B.CHANAME
+		</if>
+		<if test="orderBy != null and orderBy == 'closeMonth'">
+			ORDER BY A.MONTH
+		</if>
+	</sql>
+    
+    <select id="countMonthlySettle" parameterType="map" resultType="int">
+        SELECT COUNT(1)
+        FROM XMONTHSUM A
+          INNER JOIN XCHALIST B ON B.CHACD = A.CHACD
+        <where>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(month)">
+                AND A.MONTH = #{month}
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(chaCd)">
+                AND B.CHACD LIKE '%' || #{chaCd} || '%'
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(chaName)">
+                AND B.CHANAME LIKE '%' || #{chaName} || '%'
+            </if>
+        </where>
+    </select>
+    
+    <select id="selectMonthlySettle" parameterType="map" resultType="map">
+        SELECT A.MONTH,
+                B.CHANAME,
+                A.CHACD,
+                COALESCE(A.NOTIAMT, 0)               AS NOTIAMT,
+                COALESCE(A.NOTICNT, 0)               AS NOTICNT,
+                COALESCE(A.NOTIFEE, 0)               AS NOTIFEE,
+                COALESCE(A.RCPAMT, 0)                AS RCPAMT,
+                COALESCE(A.RCPCNT, 0)                AS RCPCNT,
+                COALESCE(A.RCPFEE, 0)                AS RCPFEE,
+                COALESCE(A.RCPBNKFEE, 0)             AS RCPBNKFEE,
+                COALESCE(A.RCPFEE - A.RCPBNKFEE, 0)  AS RCPFINGERFEE,
+                COALESCE(A.SMSFEE, 0)                AS SMSFEE,
+                COALESCE(A.SMSCNT, 0)                AS SMSCNT,
+                COALESCE(A.LMSFEE, 0)                AS LMSFEE,
+                COALESCE(A.LMSCNT, 0)                AS LMSCNT,
+                COALESCE(A.ATFEE, 0)                 AS ATFEE,
+                COALESCE(A.ATCNT, 0)                 AS ATCNT,
+                COALESCE(A.PRNCNT, 0)                AS PRNCNT,
+                COALESCE(A.PRNFEE, 0)                AS PRNFEE,
+                B.CHAOFFNO,
+                B.FGCD                               AS FGCD
+        FROM XMONTHSUM A
+          INNER JOIN XCHALIST B ON B.CHACD=A.CHACD
+        <where>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(month)">
+                AND A.MONTH = #{month}
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(chaCd)">
+                AND B.CHACD LIKE '%' || #{chaCd} || '%'
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(chaName)">
+                AND B.CHANAME LIKE '%' || #{chaName} || '%'
+            </if>
+        </where>
+        <choose>
+            <when test="@org.apache.commons.lang3.StringUtils@isNotBlank(orderBy)">
+                ORDER BY ${orderBy}
+            </when>
+            <otherwise>
+                ORDER BY A.MONTH DESC, B.CHACD ASC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="getVirtualAccountCalculateCount" resultType="com.finger.shinhandamoa.sys.rcpMgmt.dto.SysAdminClosingDTO">
+        SELECT COUNT(*) AS totalcnt
+        FROM VA_SETTLE_MAS MAS INNER JOIN XCHALIST CHA
+        ON MAS.CHACD = CHA.CHACD
+        WHERE TO_CHAR(MAS.RCP_DATE, 'YYYYMMDD') BETWEEN #{startday} AND #{endday}
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chacd)">
+            AND MAS.CHACD = #{chacd}
+        </if>
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaname)">
+            AND MAS.CHANAME = #{chaname}
+        </if>
+        <if test="stList.size > 0">
+            AND MAS.SETTLE_STATUS  IN
+            <foreach collection="stList" item="list" index="index" open="(" close=")" separator=",">
+                #{list}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="getVirtualAccountCalculateList" resultType="com.finger.shinhandamoa.sys.rcpMgmt.dto.SysAdminClosingDTO">
+        <include refid="paging_header" />
+        SELECT MAS.SETTLE_SEQ AS settleseq
+            , MAS.RCP_DATE AS rcpdate
+            , MAS.FGCD AS fgcd
+            , MAS.CHACD AS chaCd
+            , MAS.CHANAME AS chaName
+            , MAS.SETTLE_DATE AS settledate
+            , MAS.SETTLE_STATUS AS settlestatus
+            , MAS.SETTLE_AMOUNT AS settleamount
+            , MAS.SETTLE_ACCNO AS settleaccno
+            , MAS.ADJFIREGKEY AS adjfiregkey
+            , MAS.FINGER_FEE_PAYTY AS fingerfeepayty
+            , MAS.REG_DATE AS regdate
+            , MAS.REG_NAME AS regname
+            , MAS.MOD_DATE AS moddate
+            , MAS.MOD_NAME AS modname
+            , MAS.SETTLE_BANKCD AS settlebankcd
+            , CHA.CHAST AS chast
+        FROM VA_SETTLE_MAS MAS INNER JOIN XCHALIST CHA
+        ON MAS.CHACD = CHA.CHACD
+        WHERE TO_CHAR(MAS.RCP_DATE, 'YYYYMMDD') BETWEEN #{startday} AND #{endday}
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chacd)">
+            AND MAS.CHACD = #{chacd}
+        </if>
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaname)">
+            AND MAS.CHANAME = #{chaname}
+        </if>
+        <if test="stList.size > 0">
+            AND MAS.SETTLE_STATUS  IN
+            <foreach collection="stList" item="list" index="index" open="(" close=")" separator=",">
+                #{list}
+            </foreach>
+        </if>
+        <include refid="getVirtualAccountCalculateOrderBy" />
+        <include refid="paging_footer" />
+    </select>
+
+    <select id="getVirtualAccountCalculateListExcel" resultType="com.finger.shinhandamoa.sys.rcpMgmt.dto.SysAdminClosingDTO">
+        SELECT MAS.SETTLE_SEQ AS settleseq
+        , MAS.RCP_DATE AS rcpdate
+        , MAS.FGCD AS fgcd
+        , MAS.CHACD AS chaCd
+        , MAS.CHANAME AS chaName
+        , MAS.SETTLE_DATE AS settledate
+        , MAS.SETTLE_STATUS AS settlestatus
+        , MAS.SETTLE_AMOUNT AS settleamount
+        , MAS.SETTLE_ACCNO AS settleaccno
+        , MAS.ADJFIREGKEY AS adjfiregkey
+        , MAS.FINGER_FEE_PAYTY AS fingerfeepayty
+        , MAS.REG_DATE AS regdate
+        , MAS.REG_NAME AS regname
+        , MAS.MOD_DATE AS moddate
+        , MAS.MOD_NAME AS modname
+        , MAS.SETTLE_BANKCD AS settlebankcd
+        , CHA.CHAST AS chast
+        FROM VA_SETTLE_MAS MAS INNER JOIN XCHALIST CHA
+        ON MAS.CHACD = CHA.CHACD
+        WHERE TO_CHAR(MAS.RCP_DATE, 'YYYYMMDD') BETWEEN #{startday} AND #{endday}
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chacd)">
+            AND MAS.CHACD = #{chacd}
+        </if>
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaname)">
+            AND MAS.CHANAME = #{chaname}
+        </if>
+        <if test="stList.size > 0">
+            AND MAS.SETTLE_STATUS  IN
+            <foreach collection="stList" item="list" index="index" open="(" close=")" separator=",">
+                #{list}
+            </foreach>
+        </if>
+        <include refid="getVirtualAccountCalculateOrderBy" />
+    </select>
+
+    <select id="getVirtualAccountSettleDetCount" resultType="com.finger.shinhandamoa.sys.rcpMgmt.dto.SysAdminClosingDTO">
+        SELECT COUNT(*) AS totalcnt
+        FROM VA_SETTLE_DET
+        WHERE SETTLE_SEQ = #{settleseq}
+    </select>
+
+    <select id="getVirtualAccountSettleDetList" resultType="com.finger.shinhandamoa.sys.rcpMgmt.dto.SysAdminClosingDTO">
+        SELECT RCP_DATE AS rcpdate
+             , FGCD AS fgcd
+             , CHACD AS chacd
+             , CHANAME AS chaname
+             , SETTLE_DATE AS settledate
+             , SETTLE_STATUS AS settlestatus
+             , SETTLE_AMOUNT AS settleamount
+             , SETTLE_ACCNO AS settleaccno
+             , ADJFIREGKEY AS adjfiregkey
+             , FINGER_FEE_PAYTY AS fingerfeepayty
+             , REG_DATE AS regdate
+             , REG_NAME AS regname
+             , RESULT_MSG AS resultmsg
+             , SETTLE_BANKCD AS settlebankcd
+             , SETTLE_SEQ AS settleseq
+        FROM VA_SETTLE_DET
+        WHERE SETTLE_SEQ = #{settleseq}
+        ORDER BY REG_DATE
+    </select>
+
+    <update id="updateVirtualAccountSettleMas">
+        UPDATE	VA_SETTLE_MAS
+		SET		SETTLE_STATUS 	 = #{settlestatus}
+			,   MOD_DATE = NOW()
+        <if test='settlestatus == "S"'>
+            ,   SETTLE_DATE = NOW()
+        </if>
+		WHERE	SETTLE_SEQ	 	 = #{settleseq}
+    </update>
+
+    <select id="getVirtualAccountSettleMas" resultType="com.finger.shinhandamoa.sys.rcpMgmt.dto.SysAdminClosingDTO">
+        SELECT SETTLE_SEQ AS settleseq
+        , RCP_DATE AS rcpdate
+        , FGCD AS fgcd
+        , CHACD AS chaCd
+        , CHANAME AS chaName
+        , SETTLE_DATE AS settledate
+        , SETTLE_STATUS AS settlestatus
+        , SETTLE_AMOUNT AS settleamount
+        , SETTLE_ACCNO AS settleaccno
+        , ADJFIREGKEY AS adjfiregkey
+        , FINGER_FEE_PAYTY AS fingerfeepayty
+        , REG_DATE AS regdate
+        , REG_NAME AS regname
+        , MOD_DATE AS moddate
+        , MOD_NAME AS modname
+        , SETTLE_BANKCD AS settlebankcd
+        FROM VA_SETTLE_MAS
+        WHERE SETTLE_SEQ = #{settleseq}
+    </select>
+
+    <insert id="insertVirtualAccountSettleDet">
+        INSERT INTO VA_SETTLE_DET
+                ( RCP_DATE
+                , FGCD
+                , CHACD
+                , CHANAME
+                , SETTLE_DATE
+                , SETTLE_STATUS
+                , SETTLE_AMOUNT
+                , SETTLE_ACCNO
+                , ADJFIREGKEY
+                , FINGER_FEE_PAYTY
+                , REG_DATE
+                , REG_NAME
+                , RESULT_MSG
+                , SETTLE_BANKCD
+                , SETTLE_SEQ )
+		VALUES (	#{rcpdate}::timestamp
+				, 	#{fgcd}
+				, 	#{chacd}
+				, 	#{chaname}
+				,	#{settledate}::timestamp
+				, 	#{settlestatus}
+				, 	#{settleamount}::numeric
+				, 	#{settleaccno}
+				, 	#{adjfiregkey}
+				, 	#{fingerfeepayty}
+				, 	NOW()
+				,   #{regname}
+				,   #{resultmsg}
+				,   #{settlebankcd}
+				,   #{settleseq} )
+    </insert>
+
+    <sql id="getVirtualAccountCalculateOrderBy">
+        <choose>
+            <when test='searchOrderBy == "rcpdate" '>
+                ORDER BY RCP_DATE DESC, SETTLE_STATUS, CHANAME
+            </when>
+            <when test='searchOrderBy == "chaname" '>
+                ORDER BY CHANAME, RCP_DATE DESC, SETTLE_STATUS
+            </when>
+            <when test='searchOrderBy == "settlestatus" '>
+                ORDER BY SETTLE_STATUS, RCP_DATE DESC, CHANAME
+            </when>
+        </choose>
+    </sql>
+
+</mapper>

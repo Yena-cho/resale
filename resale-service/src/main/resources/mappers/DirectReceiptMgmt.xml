@@ -1,0 +1,676 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="DirectReceiptMgmt">
+
+	<sql id="criteriaByLikeClause">
+		 
+		<!-- 검색구분 -->
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(srchValues)'>
+		   	<if test='searchGb == "cusname"'>
+				AND 
+				<foreach item="value" collection="srchValues" index="index" open="(" close=")" separator=" OR ">
+					mas.cusname LIKE '%' || #{value} || '%'
+				</foreach>
+			</if>
+			<if test='searchGb == "vano"'>
+				AND	
+				<foreach item="value" collection="srchValues" index="index" open="(" close=")" separator=" OR ">
+					(SUBSTR(mas.vano, 11, 4) LIKE '%' || #{value} || '%' OR mas.vano LIKE '%' || #{value} || '%')
+				</foreach>
+			</if>
+		</if>
+		
+		<!-- 고객구분 -->
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(srchGubnValues)'>
+			<if test='cusGubn == "all"'>
+				AND 
+				<foreach item="value" collection="srchGubnValues" index="index" open="(" close=")" separator=" OR ">
+					(mas.cusgubn1 LIKE '%' || #{value} || '%'
+					OR mas.cusgubn2 LIKE '%' || #{value} || '%'
+					OR mas.cusgubn3 LIKE '%' || #{value} || '%'
+					OR mas.cusgubn4 LIKE '%' || #{value} || '%')
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn1"'>
+				AND 
+				<foreach item="value" collection="srchGubnValues" index="index" open="(" close=")" separator=" OR ">
+					mas.cusgubn1 LIKE '%' || #{value} || '%'
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn2"'>
+				AND 
+				<foreach item="value" collection="srchGubnValues" index="index" open="(" close=")" separator=" OR ">
+					mas.cusgubn2 LIKE '%' || #{value} || '%'
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn3"'>
+				AND 
+				<foreach item="value" collection="srchGubnValues" index="index" open="(" close=")" separator=" OR ">
+					mas.cusgubn3 LIKE '%' || #{value} || '%'
+				</foreach>
+			</if>
+			<if test='cusGubn == "cusGubn4"'>
+				AND 
+				<foreach item="value" collection="srchGubnValues" index="index" open="(" close=")" separator=" OR ">
+					mas.cusgubn4 LIKE '%' || #{value} || '%'
+				</foreach>
+			</if>
+		</if>
+	</sql>
+	
+	<sql id="orderByClause">
+		ORDER BY 
+			<if test='orderBy == "payday"'>
+				payday DESC, paytime DESC, det.payitemcd,
+			</if>
+			<if test='orderBy == "month"'>
+				mas.masmonth, det.payitemcd,
+			</if>
+			<if test='orderBy == "cusname"'>
+				mas.cusname, det.payitemcd,
+			</if>
+			<if test='orderBy == "cusgubun"'>
+				mas.cusgubn1, mas.cusgubn2, mas.cusgubn3, mas.cusgubn4, det.payitemcd,
+			</if>
+			<if test='orderBy == "items"'>
+				det.payitemcd, det.payitemname,
+			</if>
+			mas.notimascd DESC
+	</sql>
+	
+	<select id="selectNoticeMasMaxMonth" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT 	
+			MAX(masmonth) AS maxmonth,
+			MIN(masmonth) AS minmonth
+		FROM 	xnotimas 
+		WHERE 	chacd = #{chaCd} 
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(svecds)'>
+			AND notimasst IN
+			<foreach item="item" collection="status" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+	
+
+	<!-- 직접수납관리 > 수납등록 대상목록조회 -->
+	<select id="selectDirectNoticeList" resultType="ReceiptMgmtDTO" parameterType="java.util.HashMap">
+		SELECT
+		    *
+		FROM
+		    (
+		        SELECT
+					(ROW_NUMBER() OVER()) AS rn,
+		            noti.*
+		        FROM
+		            (
+		                SELECT
+		                    mas.notimascd,
+		                    det.notidetcd,
+		                    mas.masmonth,
+		                    mas.vano,
+		                    mas.cusname,
+		                    mas.cusgubn1,
+		                    mas.cusgubn2,
+		                    mas.cusgubn3,
+		                    mas.cusgubn4,
+		                    mas.startdate,
+		                    mas.enddate,
+		                    mas.amtchkty,
+		                    mas.printdate,
+		                    mas.remark,
+		                    det.payitemcd,
+		                    det.payitemname,
+		                    det.payitemamt,
+		                    '' svecd, 
+		                    COALESCE(rcp.payitemamt,0) rcppayitemamt,
+		                    det.ptritemremark
+		                FROM
+		                    xnotimas mas
+		                    INNER JOIN xnotidet det ON mas.notimascd = det.notimascd AND det.noti_can_yn = 'N'
+		                    LEFT OUTER JOIN 
+		                    (	
+		                    	SELECT d.notidetcd, COALESCE(SUM(rd.payitemamt),0) payitemamt
+		                    	FROM xnotidet d
+								LEFT OUTER JOIN xrcpdet rd ON d.notidetcd = rd.notidetcd AND rd.rcpdetst = 'PA03' 
+								LEFT OUTER JOIN xrcpmas rm ON rm.rcpmascd = rd.rcpmascd AND rm.svecd != 'VAS' AND rm.rcpmasst = 'PA03'
+								WHERE d.noti_can_yn = 'N' AND d.notidetst IN ( 'PA02', 'PA04' )
+								group by d.notidetcd
+							) rcp ON det.notidetcd = rcp.notidetcd
+		                WHERE
+		                    1 = 1
+		                    AND mas.noti_can_yn = 'N'
+		                    AND det.notidetst IN ( 'PA02', 'PA04' )
+		                    AND mas.chacd = #{chacd}
+		                    
+		                    <!-- 청구월 -->
+		                    <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(masmonth)'>
+		                    	AND mas.masmonth = #{masmonth}
+		                    </if>
+		                    
+		                    <!-- 청구항목 -->
+		                    <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(payitemcd)'>
+		                    	AND det.payitemcd = #{payitemcd}
+		                    </if>
+		                    
+		                    <include refid="criteriaByLikeClause" />
+
+		                <include refid="orderByClause" />
+
+		            ) noti
+		    ) a
+		WHERE 1=1
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(start) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(end)'>
+		    AND rn BETWEEN #{start} AND #{end}
+		</if>
+	</select>
+	
+	<!-- 직접수납관리 > 수납등록 대상목록 건수조회 -->
+	<select id="selectDirectNoticeListCount" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+			SELECT
+                 COUNT(1) CNT,
+                 COALESCE(SUM(det.payitemamt), 0) SUMAMT
+             FROM
+                 xnotimas mas
+                 INNER JOIN xnotidet det ON mas.notimascd = det.notimascd AND det.noti_can_yn = 'N'
+             WHERE
+                 1 = 1
+                 AND mas.noti_can_yn = 'N'
+                 AND det.notidetst IN ( 'PA02', 'PA04' )
+                 AND mas.chacd = #{chacd}
+                 
+                 <!-- 청구월 -->
+                 <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(masmonth)'>
+                 	AND mas.masmonth = #{masmonth}
+                 </if>
+                 
+                 <!-- 청구항목 -->
+                 <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(payitemcd)'>
+                 	AND det.payitemcd = #{payitemcd}
+                 </if>
+                 
+                 <include refid="criteriaByLikeClause" />
+
+	</select>
+
+	<!-- 직접수납관리 > 수납완료 목록조회 -->
+	<select id="selectCompleteNoticeList" resultType="ReceiptMgmtDTO" parameterType="java.util.HashMap">
+		SELECT
+		    *
+		FROM
+		    (
+		        SELECT
+					(ROW_NUMBER() OVER()) AS rn,
+		            rcp.*
+		        FROM
+		            (
+		                SELECT
+		                    mas.notimascd,
+		                    det.notidetcd,
+		                    mas.masmonth,
+		                    mas.vano,
+		                    mas.cusname,
+		                    mas.cusgubn1,
+		                    mas.cusgubn2,
+		                    mas.cusgubn3,
+		                    mas.cusgubn4,
+		                    mas.startdate,
+		                    mas.enddate,
+		                    mas.amtchkty,
+		                    mas.printdate,
+		                    mas.remark,
+		                    det.payitemcd,
+		                    det.payitemname,
+		                    det.payitemamt,
+		                    det.ptritemremark,
+		                    rm.rcpmascd,
+		                    rd.rcpdetcd, 
+		                    rm.rcpmasst,
+		                    rm.svecd,
+		                    rm.payday,
+		                    rm.paytime,
+		                    rm.rcpamt,
+		                    COALESCE(rd.payitemamt, 0) as rcppayitemamt
+		                FROM
+		                    xnotimas mas
+		                    INNER JOIN xnotidet det ON mas.notimascd = det.notimascd AND det.noti_can_yn = 'N'
+		                    INNER JOIN xrcpmas rm ON mas.notimascd = rm.notimascd
+		                    INNER JOIN xrcpdet rd ON rm.rcpmascd = rd.rcpmascd AND det.notidetcd = rd.notidetcd AND rd.rcpdetst = 'PA03'
+		                WHERE
+		                    1 = 1
+		                    AND mas.noti_can_yn = 'N'
+		                    AND det.notidetst IN ('PA03', 'PA04', 'PA05')
+		                    AND rm.svecd != 'VAS'
+		                    AND mas.chacd = #{chacd}
+		                    
+		                    <!-- 입금일자 -->
+		                    <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDate)'>
+							    AND rm.payday BETWEEN #{startDate} AND #{endDate}
+							</if>
+		                    
+		                    <!-- 청구월 -->
+		                    <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(masmonth)'>
+		                    	AND mas.masmonth = #{masmonth}
+		                    </if>
+		                    
+		                    <!-- 청구항목 -->
+		                    <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(payitemcd)'>
+		                    	AND det.payitemcd = #{payitemcd}
+		                    </if>
+		                    
+							<!-- SVE(입금수단) 코드 -->
+							<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(svecds)'>
+								AND rm.svecd IN
+								<foreach item="item" collection="svecds" index="index" open="(" close=")" separator=",">
+									#{item}
+								</foreach>
+							</if>
+							
+							<include refid="criteriaByLikeClause" />
+							
+		                <include refid="orderByClause" />
+
+		            ) rcp
+		    ) a
+		WHERE 1=1
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(start) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(end)'>
+		    AND rn BETWEEN #{start} AND #{end}
+		</if>
+	</select>
+		
+	<!-- 직접수납관리 > 수납완료 건수조회 -->
+	<select id="selectCompleteNoticeListCount"  resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT
+			COUNT(1) CNT,
+			COALESCE(SUM(det.payitemamt),0) SUMAMT,
+    		COALESCE(SUM(rd.payitemamt),0) SUMRCPAMT
+		FROM
+             xnotimas mas
+             INNER JOIN xnotidet det ON mas.notimascd = det.notimascd AND det.noti_can_yn = 'N'
+             INNER JOIN xrcpmas rm ON mas.notimascd = rm.notimascd
+             INNER JOIN xrcpdet rd ON rm.rcpmascd = rd.rcpmascd AND det.notidetcd = rd.notidetcd AND rd.rcpdetst = 'PA03'
+		WHERE
+            1 = 1
+            AND mas.noti_can_yn = 'N'
+			AND det.notidetst IN ('PA03', 'PA04', 'PA05')
+			AND rm.svecd != 'VAS'
+            AND mas.chacd = #{chacd}
+
+            <!-- 입금일자 -->
+			<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDate)'>
+			    AND rm.payday BETWEEN #{startDate} AND #{endDate}
+			</if>
+			
+			<!-- 청구월 -->
+            <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(masmonth)'>
+            	AND mas.masmonth = #{masmonth}
+            </if>
+            
+            <!-- 청구항목 -->
+            <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(payitemcd)'>
+            	AND det.payitemcd = #{payitemcd}
+            </if>
+
+			<!-- SVE(입금수단) 코드 -->
+			<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(svecds)'>
+				AND rm.svecd IN
+				<foreach item="item" collection="svecds" index="index" open="(" close=")" separator=",">
+					#{item}
+				</foreach>
+			</if>
+		
+			<include refid="criteriaByLikeClause" />
+
+	</select>	
+	
+	<!-- 수기수납 취소 : 청구마스터 -->
+	<update id="updateXnotiMasSt" parameterType="java.util.HashMap">
+		UPDATE XNOTIMAS
+		SET NOTIMASST = #{notiStatus},
+		    MAKEDT = #{makedt},
+		    MAKER  = #{chacd}
+		WHERE NOTIMASCD IN 
+		<foreach item="item" collection="notimascdList" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>		
+	</update>
+	
+	<!-- 수기수납 취소 : 청구상세 -->
+	<update id="updateXnotiDetSt" parameterType="java.util.HashMap">
+		UPDATE XNOTIDET
+		SET NOTIDETST = #{notiStatus},
+		    MAKEDT = #{makedt},
+		    MAKER  = #{chacd}
+		WHERE NOTIDETCD IN 
+		<foreach item="item" collection="notidetcdList" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</update>
+	
+	<!-- 수기수납 취소 : 수납마스터 -->
+	<update id="updateXrcpMasSt" parameterType="java.util.HashMap">
+		UPDATE XRCPMAS
+		SET RCPMASST = #{rcpStatus},
+		    MAKEDT = #{makedt},
+		    MAKER  = #{chacd}
+		WHERE RCPMASCD IN 
+		<foreach item="item" collection="rcpmascdList" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>	
+	</update>
+	
+	<!-- 수기수납 취소 : 수납상세 -->
+	<update id="updateXrcpDetSt" parameterType="java.util.HashMap">
+		UPDATE XRCPDET
+		SET RCPDETST = #{rcpStatus},
+		    MAKEDT = #{makedt},
+		    MAKER  = #{chacd}
+		WHERE RCPDETCD IN 
+		<foreach item="item" collection="rcpdetcdList" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>		
+	</update>
+	
+	<!-- 수기수납 취소 : 현금영수증 -->
+	<update id="updateXcashMasDisabled" parameterType="java.util.HashMap">
+		UPDATE XCASHMAS
+		SET DISABLED = 'Y',
+			JOB = null,
+		    MAKEDT = #{makedt},
+		    MAKER  = #{chacd}
+		WHERE RCPMASCD IN 
+		<foreach item="item" collection="rcpmascdList" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>		
+	</update>
+	
+	<!-- 수기환불 등록용 목록조회 -->
+	<select id="selectRcpCatalog" resultType="com.finger.shinhandamoa.org.receiptmgmt.dto.RefundRcpDTO" parameterType="java.util.HashMap">
+		SELECT
+		    *
+		FROM
+		    (
+		        SELECT
+					(ROW_NUMBER() OVER()) AS rn,
+		            rcp.*
+		        FROM
+		            (	
+		                SELECT
+		                    mas.rcpmascd,
+		                    mas.notimascd,
+		                    mas.svecd,
+		                    mas.chacd,
+		                    mas.vano,
+		                    mas.maskey,
+		                    mas.masmonth,
+		                    mas.masday,
+		                    mas.cuskey,
+		                    mas.cusgubn1,
+		                    mas.cusgubn2,
+		                    mas.cusgubn3,
+		                    mas.cusgubn4,
+		                    mas.cusname,
+		                    mas.cushp,
+		                    mas.cusmail,
+		                    mas.cusoffno,
+		                    mas.payday,
+		                    mas.paytime,
+		                    mas.rcpusrname,
+		                    mas.rcpamt,
+		                    det.rcpdetcd,
+		                    det.notidetcd,
+		                    det.payitemcd,
+		                    det.payitemname,
+		                    det.payitemamt AS rcppayitemamt,
+		                    noti.payitemamt,
+		                    noti.notidetst AS notimasst,
+		                    mas.regdt,
+		                    mas.chatrty,
+		                    mas.cashday,
+		                    mas.makedt,
+		                    mas.rcpmasst
+		                FROM
+		                    xrcpmas mas
+		                    INNER JOIN xrcpdet det 
+		                    	ON mas.rcpmascd = det.rcpmascd AND det.rcpdetst = 'PA03'
+		                    INNER JOIN xnotidet noti 
+		                    	ON mas.notimascd = noti.notimascd AND det.notidetcd = noti.notidetcd AND noti.notidetst IN ('PA03', 'PA04', 'PA05')
+		                    		AND noti.noti_can_yn = 'N'
+		                    		<!-- 수납상태 코드 -->
+									<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(status)'>
+										AND noti.notidetst IN
+										<foreach item="item" collection="status" index="index" open="(" close=")" separator=",">
+											#{item}
+										</foreach>
+									</if>
+						WHERE
+						    1 = 1
+						    AND mas.rcpmasst = 'PA03'
+						    AND mas.chacd = #{chacd}
+				
+				            <!-- 청구월 -->
+				            <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(masmonth)'>
+				             	AND mas.masmonth = #{masmonth}
+				            </if>
+				            
+				            <!-- 입금일자 -->
+							<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDate)'>
+							    AND mas.payday BETWEEN #{startDate} AND #{endDate}
+							</if>
+				            
+							<!-- SVE(입금수단) 코드 -->
+							<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(svecds)'>
+								AND mas.svecd IN
+								<foreach item="item" collection="svecds" index="index" open="(" close=")" separator=",">
+									#{item}
+								</foreach>
+							</if>
+							
+							<include refid="criteriaByLikeClause" />
+							
+						ORDER BY 
+							<if test='orderBy == "payday"'>
+								mas.payday DESC, mas.paytime DESC, mas.regdt DESC,
+							</if>
+							<if test='orderBy == "month"'>
+								mas.masmonth, mas.regdt DESC,
+							</if>
+							<if test='orderBy == "cusname"'>
+								mas.cusname, mas.regdt DESC,
+							</if>
+							<if test='orderBy == "cusgubun"'>
+								mas.cusgubn1, mas.cusgubn2, mas.cusgubn3, mas.cusgubn4, mas.regdt DESC,
+							</if>
+							mas.notimascd DESC
+		            ) rcp
+		    ) a
+		WHERE 1=1
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(start) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(end)'>
+		    AND rn BETWEEN #{start} AND #{end}
+		</if>							
+	</select>
+	
+	<!-- 수기환불 등록용 건수조회 -->
+	<select id="selectRcpCatalogCount" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT
+		    COUNT(1) AS listCount,
+		    COALESCE(SUM(noti.payitemamt),0) AS sumPayitemAmt,
+		    COALESCE(SUM(det.payitemamt),0) AS sumRcpPayitemAmt,
+		    COALESCE(SUM(mas.rcpamt),0) AS sumRcpAmt,
+		    0 AS sumRefundAmt
+		FROM 
+			xrcpmas mas
+			INNER JOIN xrcpdet det 
+				ON mas.rcpmascd = det.rcpmascd AND det.rcpdetst = 'PA03'
+			INNER JOIN xnotidet noti 
+				ON mas.notimascd = noti.notimascd AND det.notidetcd = noti.notidetcd AND noti.notidetst IN ('PA03', 'PA04', 'PA05')
+					AND noti.noti_can_yn = 'N' 
+					<!-- 수납상태 코드 -->
+					<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(status)'>
+						AND noti.notidetst IN
+						<foreach item="item" collection="status" index="index" open="(" close=")" separator=",">
+							#{item}
+						</foreach>
+					</if>
+		WHERE
+		    1 = 1
+		    AND mas.rcpmasst = 'PA03'
+			AND mas.chacd = #{chacd}
+				
+			<!-- 청구월 -->
+			<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(masmonth)'>
+			 	AND mas.masmonth = #{masmonth}
+			</if>
+			
+			<!-- 입금일자 -->
+			<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDate)'>
+			    AND mas.payday BETWEEN #{startDate} AND #{endDate}
+			</if>
+
+			<!-- SVE(입금수단) 코드 -->
+			<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(svecds)'>
+				AND mas.svecd IN
+				<foreach item="item" collection="svecds" index="index" open="(" close=")" separator=",">
+					#{item}
+				</foreach>
+			</if>
+			
+			<include refid="criteriaByLikeClause" />
+			
+	</select>
+	
+	<!-- 수기환불 환불완료 조회 -->
+	<select id="selectRefundRcpCatalog" resultType="com.finger.shinhandamoa.org.receiptmgmt.dto.RefundRcpDTO" parameterType="java.util.HashMap">
+		SELECT
+		    *
+		FROM
+		    (
+		        SELECT
+					(ROW_NUMBER() OVER()) AS rn,
+		            rcp.*
+		        FROM
+		            (	
+						SELECT
+						    mas.rcpmascd,
+						    mas.notimascd,
+						    det.rcpdetcd,
+						    det.notidetcd,
+						    mas.svecd,
+						    mas.chacd,
+						    mas.vano,
+						    mas.maskey,
+						    mas.masmonth,
+						    mas.masday,
+						    mas.cuskey,
+						    mas.cusgubn1,
+						    mas.cusgubn2,
+						    mas.cusgubn3,
+						    mas.cusgubn4,
+						    mas.cusname,
+						    mas.cushp,
+						    mas.cusmail,
+						    mas.cusoffno,
+						    mas.payday,
+						    mas.paytime,
+						    mas.rcpusrname,
+						    mas.rcpamt,
+						    det.payitemcd,
+						    det.payitemname,
+						    COALESCE(det.payitemamt, 0) AS rcppayitemamt,
+						    COALESCE(noti.payitemamt, 0) AS payitemamt,
+						    mas.regdt,
+						    mas.chatrty,
+						    mas.cashday,
+						    mas.makedt,
+						    mas.rcpmasst,
+						    re.repaymascd,
+						    re.repayday,
+						    COALESCE(re.repayamt, 0) AS refundamt
+						FROM
+						    xrcpmas mas
+						    INNER JOIN xrcpdet det ON mas.rcpmascd = det.rcpmascd
+						    INNER JOIN xnotidet noti ON mas.notimascd = noti.notimascd AND det.notidetcd = noti.notidetcd
+		    					AND noti.notidetst = 'PA06'
+						    INNER JOIN xrepaymas re on det.rcpdetcd = re.rcpdetcd AND det.rcpmascd = re.rcpmascd
+						WHERE
+						    1 = 1
+						    AND mas.chacd = #{chacd}
+				            <!-- 청구월 -->
+				            <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(masmonth)'>
+				             	AND mas.masmonth = #{masmonth}
+				            </if>
+				            
+				            <!-- 환불일자 -->
+							<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDate)'>
+							    AND re.repayday BETWEEN #{startDate} AND #{endDate}
+							</if>
+				            
+							<!-- SVE(입금수단) 코드 -->
+							<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(svecds)'>
+								AND mas.svecd IN
+								<foreach item="item" collection="svecds" index="index" open="(" close=")" separator=",">
+									#{item}
+								</foreach>
+							</if>
+							
+							<include refid="criteriaByLikeClause" />
+							
+						<include refid="orderByClause" />
+		            ) rcp
+		    ) a
+		WHERE 1=1
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(start) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(end)'>
+		    AND rn BETWEEN #{start} AND #{end}
+		</if>							
+	</select>
+	
+	<!-- 수기환불 환불완료 조회 -->
+	<select id="selectRefundRcpCatalogCount" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT
+		    COUNT(1) AS listCount,
+		    COALESCE(SUM(mas.rcpamt), 0) AS sumRcpAmt,
+		    COALESCE(SUM(det.payitemamt), 0) AS sumRcpPayitemAmt,
+		    COALESCE(SUM(noti.payitemamt), 0) AS sumPayitemAmt,
+		    COALESCE(SUM(re.repayamt), 0) AS sumRefundAmt
+		FROM
+		    xrcpmas mas
+		    INNER JOIN xrcpdet det ON mas.rcpmascd = det.rcpmascd
+		    INNER JOIN xnotidet noti ON mas.notimascd = noti.notimascd AND det.notidetcd = noti.notidetcd
+		    	AND noti.notidetst = 'PA06'
+		    INNER JOIN xrepaymas re on det.rcpmascd = re.rcpmascd
+		WHERE
+		    1 = 1
+		    AND mas.chacd = #{chacd}
+
+            <!-- 청구월 -->
+            <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(masmonth)'>
+             	AND mas.masmonth = #{masmonth}
+            </if>
+            
+            <!-- 환불일자 -->
+			<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDate)'>
+			    AND re.repayday BETWEEN #{startDate} AND #{endDate}
+			</if>
+            
+			<!-- SVE(입금수단) 코드 -->
+			<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(svecds)'>
+				AND mas.svecd IN
+				<foreach item="item" collection="svecds" index="index" open="(" close=")" separator=",">
+					#{item}
+				</foreach>
+			</if>
+			
+			<include refid="criteriaByLikeClause" />
+	</select>
+	
+	<delete id="deleteXrepaymasByPK" parameterType="java.util.HashMap">
+		DELETE FROM
+		    xrepaymas
+		WHERE 
+		    repaymascd = #{repaymascd}
+		    AND rcpmascd = #{rcpmascd}
+		    <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(rcpdetcd)'>
+		    	AND rcpdetcd = #{rcpdetcd}
+		    </if>
+	</delete>
+</mapper>

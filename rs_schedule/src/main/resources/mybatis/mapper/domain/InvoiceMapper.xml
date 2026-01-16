@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.finger.shinhandamoa.data.domain.mapper.InvoiceMapper">
+    <resultMap id="InvoiceApply" type="kr.co.finger.shinhandamoa.data.InvoiceVO">
+        <association property="xnotimasreqdet" resultMap="kr.co.finger.shinhandamoa.data.table.mapper.XnotimasreqdetMapper.BaseResultMap" />
+    </resultMap>
+
+    <sql id="select">
+        SELECT
+        <include refid="kr.co.finger.shinhandamoa.data.table.mapper.XnotimasreqdetMapper.Base_Column_List" />
+    </sql>
+
+    <sql id="from">
+        FROM XNOTIMASREQDET XNOTIMASREQDET
+    </sql>
+
+    <sql id="where">
+        <where>
+            <if test="filter.masterId != null">
+                AND XNOTIMASREQDET.NOTIMASREQCD=#{filter.masterId}
+            </if>
+        </where>
+    </sql>
+
+    <sql id="orderBy">
+        <choose>
+            <otherwise>
+                ORDER BY XNOTIMASREQDET.SEQ_NO ASC
+            </otherwise>
+        </choose>
+    </sql>
+
+    <select id="select" resultMap="InvoiceApply">
+        <include refid="select" />
+        <include refid="from" />
+        <include refid="where" />
+        <include refid="orderBy" />
+    </select>
+
+    <select id="selectForUpdate" resultMap="InvoiceApply">
+        <include refid="select" />
+        <include refid="from" />
+        <include refid="where" />
+        <include refid="orderBy" />
+        FOR UPDATE
+    </select>
+
+    <select id="count" resultMap="InvoiceApply">
+        SELECT COUNT(1)
+        <include refid="from" />
+        <include refid="where" />
+    </select>
+
+    <select id="get" resultMap="InvoiceApply">
+        <include refid="select" />
+        <include refid="from" />
+        WHERE XNOTIMASREQDET.NOTIMASREQCD=#{notimasreqcd}
+    </select>
+</mapper>

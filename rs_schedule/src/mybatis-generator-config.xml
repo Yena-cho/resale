@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE generatorConfiguration PUBLIC
+        "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd" >
+<generatorConfiguration>
+    <classPathEntry location="./lib/postgresql-42.2.5.jar"/>
+
+    <context id="context" targetRuntime="MyBatis3">
+        <plugin type="org.mybatis.generator.plugins.RowBoundsPlugin"/>
+        <plugin type="org.mybatis.generator.plugins.CaseInsensitiveLikePlugin"/>
+        <plugin type="org.mybatis.generator.plugins.EqualsHashCodePlugin"/>
+        <plugin type="org.mybatis.generator.plugins.MapperAnnotationPlugin"/>
+        <plugin type="org.mybatis.generator.plugins.ToStringPlugin"/>
+        <plugin type="org.mybatis.generator.plugins.SerializablePlugin"/>
+        <plugin type="org.mybatis.generator.plugins.VirtualPrimaryKeyPlugin"/>
+
+        <commentGenerator>
+            <property name="suppressAllComments" value="false"/>
+            <property name="suppressDate" value="true"/>
+        </commentGenerator>
+
+        <jdbcConnection userId="damoarsdb" password="damoarsdb2021@" driverClass="org.postgresql.Driver" connectionURL="jdbc:postgresql://20.20.20.205:5432/damoarsdb"/>
+
+        <javaTypeResolver>
+            <property name="forceBigDecimals" value="false"/>
+        </javaTypeResolver>
+
+        <javaModelGenerator targetPackage="kr.co.finger.shinhandamoa.data.table.model" targetProject="src/main/java">
+            <property name="enableSubPackages" value="false"/>
+            <property name="trimStrings" value="true"/>
+        </javaModelGenerator>
+
+        <sqlMapGenerator targetPackage="mybatis.mapper.table" targetProject="src/main/resources">
+            <property name="enableSubPackages" value="false"/>
+        </sqlMapGenerator>
+
+        <javaClientGenerator targetPackage="kr.co.finger.shinhandamoa.data.table.mapper" targetProject="src/main/java" type="XMLMAPPER">
+            <property name="enableSubPackages" value="false"/>
+        </javaClientGenerator>
+
+        <table tableName="XMONTHSUM" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+            <property name="virtualKeyColumns" value="CHACD, MONTH" />
+        </table>
+        
+        <table tableName="XNOTIMAS" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+            <generatedKey column="NOTIMASCD" sqlStatement="SELECT nextval('seqxnotimascd')"/>
+        </table>
+        
+        <table tableName="XNOTIDET" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+            <generatedKey column="NOTIDETCD" sqlStatement="SELECT nextval('seqxnotidetcd')"/>
+        </table>
+        
+        <table tableName="XRCPMAS" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+            <generatedKey column="RCPMASCD" sqlStatement="SELECT nextval('seqxrcpmascd')"/>
+        </table>
+        
+        <table tableName="XRCPDET" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+            <generatedKey column="RCPDETCD" sqlStatement="SELECT nextval('seqxrcpdetcd')"/>
+        </table>
+        
+        <table tableName="XCASHMAS" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+            <generatedKey column="CASHMASCD" sqlStatement="SELECT nextval('seqcashmascd')"/>
+        </table>
+        
+        <table tableName="XPAYITEM" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+        </table>
+        
+        <table tableName="XCUSMAS" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+        </table>
+        
+        <table tableName="SMSREQ" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+        </table>
+
+        <table tableName="ATREQ" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+        </table>
+        
+        <table tableName="XCHALIST" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+        </table>
+
+        <table tableName="XADJGROUP" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+        </table>
+
+        <table tableName="DAMOA_CLIENT_INFO_PULL_HIST" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+        </table>
+
+        <table tableName="XDAYSUMNOTI" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+        </table>
+
+        <table tableName="XDAYSUMRCP" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+        </table>
+
+        <table tableName="XDAYSUMRCPETC" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+        </table>
+
+        <table tableName="XDAYSUMSMS" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+        </table>
+
+        <table tableName="XDAYSUM" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+        </table>
+
+        <table tableName="CASH_FILE_TRAN_HIST" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+        </table>
+        
+        <table tableName="CASHREQ" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+        </table>
+        
+        <table tableName="FW_CASH_RECEIPT_MASTER" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+            <generatedKey column="ID" sqlStatement="SELECT nextval('fw_cash_receipt_master_id')"/>
+        </table>
+
+        <table tableName="XCASHHST" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+            <generatedKey column="CASHHST_ID" sqlStatement="SELECT nextval('xcashhst_id_seq')"/>
+        </table>
+
+        <table tableName="XNOTIMASREQ" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true" alias="XNOTIMASREQ">
+            <generatedKey column="NOTIMASREQ" sqlStatement="SELECT nextval('seqnotimasreqcd')"/>
+        </table>
+
+        <table tableName="XNOTIMASREQDET" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true" alias="XNOTIMASREQDET">
+        </table>
+
+        <table tableName="WEBUSER" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+        </table>
+
+        <table tableName="KFTC_CODE" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+        </table>
+
+        <table tableName="va_settle_mas" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+        </table>
+
+        <table tableName="va_settle_det" enableCountByExample="true" enableDeleteByExample="true" enableSelectByExample="true" enableUpdateByExample="true">
+        </table>
+    </context>
+</generatorConfiguration>

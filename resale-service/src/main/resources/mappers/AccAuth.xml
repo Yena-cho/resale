@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="AccAuth">	
+<!--
+	&lt;!&ndash; 계정/권한관리 목록 &ndash;&gt;
+	<resultMap type="AdminInfoDTO" id="adminSelResult">
+		<result	column="admId"		property="admId"		javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="admPw"		property="admPw"		javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="admName"	property="admName"		javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="admHp"		property="admHp"		javaType="encrypt"	jdbcType="CLOB"/>
+		<result	column="admEmail"	property="admEmail"		javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="admRank"	property="admRank"		javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="admDept"	property="admDept"		javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="admStatus"	property="admStatus"	javaType="String"	jdbcType="VARCHAR"/>
+	</resultMap>
+	
+	&lt;!&ndash; 계정/권한관리 상세보기 &ndash;&gt;
+	<resultMap type="AdminInfoDTO" id="adminInfoResult">
+		<result	column="admId"		property="admId"		javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="admPw"		property="admPw"		javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="admName"	property="admName"		javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="admHp"		property="admHp"		javaType="encrypt"	jdbcType="CLOB"/>
+		<result	column="admEmail"	property="admEmail"		javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="mailId"		property="mailId"		javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="mailDomain"	property="mailDomain"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="admRank"	property="admRank"		javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="admDept"	property="admDept"		javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="admStatus"	property="admStatus"	javaType="String"	jdbcType="VARCHAR"/>
+	</resultMap>-->
+	
+	<!-- 페이징을 위한 header -->
+	<sql id="paging_header">
+		select *
+		from (
+		    select (ROW_NUMBER() OVER()) as rn, C.*
+		    from (	
+	</sql>
+	<!-- 페이징을 위한 footer -->
+	<sql id="paging_footer">
+		    ) C
+		) X where rn between #{start} and #{end}
+	</sql>
+	
+	<!-- 계정/권한관리 목록 -->
+	<select id="selAccAuthList" parameterType="AdminInfoDTO">
+		<include refid="paging_header" />
+		SELECT 	ADM_ID				AS admId
+			, 	ADM_PW 				AS admPw
+			, 	ADM_NAME 			AS admName
+			, 	COALESCE(ADM_HP, ' ') 	AS admHp	-- 연락처
+			,	COALESCE(ADM_EMAIL, ' ') AS admEmail --이메일
+			,	COALESCE(ADM_RANK, ' ') 	AS admRank 	-- 직급
+			,	COALESCE(ADM_DEPT, ' ') 	AS admDept 	-- 소속부서
+			,	ADM_STATUS  		AS admStatus
+		FROM 	ADMIN_INFO
+		WHERE 	ADM_GROUP = #{admGroup}
+		ORDER 	BY ADM_ID
+		<include refid="paging_footer" />
+	</select>
+	
+	<!-- 계정/권한관리 total count -->
+	<select id="selAccAuthCnt" resultType="int">
+		SELECT 	COUNT(*) 	AS cnt
+		FROM 	ADMIN_INFO
+		WHERE 	ADM_GROUP = #{admGroup}
+	</select>
+	
+	<!-- 계정/권한관리 상세보기 -->
+	<select id="selAccDetail" parameterType="AdminInfoDTO">
+		SELECT	ADM_ID		AS admId
+			, 	ADM_PW 		AS admPw
+			, 	ADM_NAME 	AS admName
+			, 	ADM_HP 		AS admHp	-- 연락처
+			,	ADM_EMAIL 	AS admEmail --이메일
+			,   SUBSTR(ADM_EMAIL, 0, POSITION('@' in ADM_EMAIL) - 1) AS mailId
+            ,   SUBSTR(ADM_EMAIL, POSITION('@' in ADM_EMAIL) + 1, LENGTH(ADM_EMAIL)) AS mailDomain
+			,	ADM_RANK 	AS admRank 	-- 직급
+			,	ADM_DEPT 	AS admDept 	-- 소속부서
+			,	ADM_STATUS  AS admStatus
+		FROM	ADMIN_INFO
+		WHERE	ADM_ID		= #{admId}
+	</select>
+	
+	<!-- 계정/권한관리 등록 및 수정 -->
+	<update id="accAuthModify">
+		WITH T AS (
+			UPDATE ADMIN_INFO
+			SET ADM_NAME 	= #{admName}
+			,	ADM_HP 		= #{admHp}
+			,	ADM_EMAIL 	= #{admEmail}
+			,	ADM_RANK 	= #{admRank}
+			,	ADM_DEPT 	= #{admDept}
+			,	ADM_GROUP 	= #{admGroup}
+			,	ADM_STATUS  = #{admStatus}
+			,	MAKEDT 		= NOW()
+			,	MAKER 		= #{maker}
+		<if test="admPw != null and admPw != ''">
+			,	ADM_PW 		= #{admPw}
+		</if>
+			WHERE ADM_ID = #{admId} RETURNING*
+		)
+		INSERT INTO ADMIN_INFO (ADM_ID
+							,	ADM_PW
+							,	ADM_NAME
+							,	ADM_HP
+							,	ADM_EMAIL
+							,	ADM_RANK
+							,	ADM_DEPT
+							,	ADM_GROUP
+							,	ADM_STATUS
+							,	MAKEDT
+							,	MAKER
+							, 	REGDT)
+		SELECT	#{admId}
+			,	#{admPw}
+			,	#{admName}
+			,	#{admHp}
+			,	#{admEmail}
+			,	#{admRank}
+			,	#{admDept}
+			,	#{admGroup}
+			,	#{admStatus}
+			,	NOW()
+			,	#{maker}
+			, 	NOW()
+		WHERE NOT EXISTS (SELECT * FROM T)
+	</update>
+	
+	<!-- 계정/권한관리 삭제 -->
+	<delete id="accAuthDel">
+		DELETE	
+		FROM	ADMIN_INFO
+		WHERE	ADM_ID = #{admId}
+	</delete>
+	
+	<!-- 계정/권한관리 아이디 확인 -->
+	<select id="selAdmId" resultType="int">
+		SELECT 	COUNT(*) AS cnt
+		FROM 	ADMIN_INFO
+		WHERE 	ADM_ID 	= #{admId}
+	</select>
+	
+</mapper>

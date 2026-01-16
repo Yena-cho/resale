@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Appenders>
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d %5p [%c] %m%n" />
+        </Console>
+		<RollingFile name="RollingDaily" fileName="../logs/fingerhway.out"
+				filePattern="../logs/fingerhway-%d{yyyy-MM-dd}-%i.log">
+			<PatternLayout pattern="%d %5p [%c] %m%n" />
+			<Policies>
+				<TimeBasedTriggeringPolicy/>
+				<SizeBasedTriggeringPolicy size="250 MB"/>
+			</Policies>
+		</RollingFile>
+    </Appenders>
+    <Loggers>
+        <Logger name="java.sql" level="DEBUG" additivity="false">
+            <AppenderRef ref="console" />
+            <AppenderRef ref="RollingDaily" />
+        </Logger>
+        <Logger name="com.ghvirtualaccount" level="DEBUG" additivity="false">
+            <AppenderRef ref="console" />
+            <AppenderRef ref="RollingDaily" />
+        </Logger>
+        <Logger name="java.sqlonly" level="DEBUG" additivity="false"></Logger>
+        <!--<Logger name="org.quartz" level="INFO" additivity="false">-->
+            <!--<AppenderRef ref="console" />-->
+            <!--<AppenderRef ref="RollingDaily" />-->
+        <!--</Logger>-->
+          <!-- log SQL with timing information, post execution -->
+        <!--<Logger name="jdbc.sqltiming" level="DEBUG" additivity="false">-->
+            <!--<AppenderRef ref="console" />-->
+            <!--<AppenderRef ref="RollingDaily" />-->
+        <!--</Logger>-->
+        <Logger name="org.springframework" level="DEBUG" additivity="false">
+        	<AppenderRef ref="console" />
+            <AppenderRef ref="RollingDaily" />
+        </Logger>
+        <Root level="DEBUG">
+            <AppenderRef ref="console" />
+            <AppenderRef ref="RollingDaily" />
+        </Root>
+    </Loggers>
+</Configuration>

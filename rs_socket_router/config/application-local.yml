@@ -1,0 +1,42 @@
+#다모아
+damoa-origin:
+  local:
+    port: 19060
+  remote:
+    host: 127.0.0.1
+    port: 19050
+    wait-time-to-poll: 30000
+    partner-code: 20007481
+#재판매
+damoa-resell:
+  local:
+    port: 19080
+  # 재판매 전문서버
+  remote:
+    host: 127.0.0.1
+    port: 19070
+    wait-time-to-poll: 30000
+    partner-code: 20007481
+#remote = client에서 사용하는 외부연결
+#local = server에서 사용하는 내부연결
+#finger-va:
+#  local:
+#    port: 19030
+#  remote:
+#    host: 127.0.0.1
+#    port: 19040
+#    wait-time-to-poll: 30000
+
+# 시뮬레이터 주소 정보
+finger-va:
+  # 시뮬레이터로 부터 요청을 수신할 수신대기 포트 정보
+  local:
+    port: 31375
+
+  # 시뮬레이터 또는 신한은행의 아이피, 포트 정보
+  remote:
+#    host: 211.202.165.140
+#    port: 31375
+    host: 127.0.0.1
+    port: 31376
+    wait-time-to-poll: 30000

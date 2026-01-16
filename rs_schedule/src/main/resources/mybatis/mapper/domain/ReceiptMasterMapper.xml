@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.finger.shinhandamoa.data.domain.mapper.ReceiptMasterMapper">
+    <select id="aggregate" resultType="kr.co.finger.shinhandamoa.data.domain.model.Statistics">
+        SELECT COUNT(DISTINCT RCPMASCD) AS "COUNT",
+        COALESCE(SUM(COALESCE(RCPAMT, 0)), 0) AS "AMOUNT"
+        FROM XRCPMAS A
+        WHERE A.CHACD=#{chaCd}
+          AND A.PAYDAY BETWEEN #{fromDate} AND #{toDate}
+        <if test="svecdList != null and !svecdList.isEmpty()">
+            AND A.SVECD IN <foreach collection="svecdList" item="each" open="(" close=")" separator=", ">#{each}</foreach>
+        </if>
+        <if test="rcpmasstList != null and !rcpmasstList.isEmpty()">
+            AND A.RCPMASST IN <foreach collection="rcpmasstList" item="each" open="(" close=")" separator=", ">#{each}</foreach>
+        </if>
+    </select>
+
+    <select id="getDistinctAdjfiregkey" resultType="kr.co.finger.shinhandamoa.data.domain.model.XrcpdetVO">
+        SELECT DISTINCT ADJFIREGKEY AS adjfiregkey
+        FROM XRCPDET A
+        <where>
+        <if test="rcpmascdList != null and !rcpmascdList.isEmpty()">
+            AND A.RCPMASCD IN <foreach collection="rcpmascdList" item="each" open="(" close=")" separator=", ">#{each}</foreach>
+        </if>
+        </where>
+    </select>
+
+    <select id="getRcpmasWithoutDet" resultType="kr.co.finger.shinhandamoa.data.domain.model.XrcpmasVO">
+        select a.* from xrcpmas a
+        left outer join xrcpdet b on a.rcpmascd = b.rcpmascd
+        <where>
+            <if test="rcpmascdList != null and !rcpmascdList.isEmpty()">
+                AND A.RCPMASCD IN <foreach collection="rcpmascdList" item="each" open="(" close=")" separator=", ">#{each}</foreach>
+            </if>
+            and b.rcpmascd is null
+        </where>
+    </select>
+
+</mapper>

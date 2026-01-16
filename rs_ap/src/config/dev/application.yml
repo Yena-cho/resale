@@ -1,0 +1,115 @@
+# 전문xml 위치 정보. resources 밑에 둔다.
+message:
+  format:
+    fileName: message.xml
+
+# springboot 관리화면...
+management:
+  security:
+    enabled: false
+
+# 전문서버기본정보.
+info:
+  name: 가상계좌 재판매 프로젝트
+  version: 0.1
+  profiles: 개발
+
+netty:
+#전문수신서버 정보
+  server:
+    transferHost: 20.20.20.203
+    transferPort: 19070
+#    transferHost: 20.20.20.101
+#    transferPort: 31375
+    threadCountBoss: 10
+    threadCountWorker: 10
+    logLevelPipeline: DEBUG
+    readerIdleTimeSeconds: 3000
+
+#전문송신클라이언트 정보
+  client:
+    transferHost: 20.20.20.101
+    transferPort: 19080
+#    transferHost: 172.19.254.91
+#    transferPort: 31375
+    threadCountWorker: 10
+    connectionTimeoutMills: 10000
+    logLevelPipeline: DEBUG
+    writerIdleTimeSeconds: 3000
+    period: 1000
+# 전문송신클라이언트풀 정보
+    pool:
+      maxTotal: 1
+      maxIdle: 1
+      minIdle: 1
+      timeBetweenEvictionRunsMillis: 10000
+# 비동기처리시 타임아웃
+  req-res:
+    timeout: 5000  # 요청,응답 timeout
+  message:
+    charset: KSC5601
+
+#HTTP 서버 정보
+server:
+  port: 19061
+  tomcat:
+    min-spare-threads: 3
+    max-threads: 9
+  address: 0.0.0.0
+#dataSource 정보
+spring:
+  datasource:
+#    tomcat:
+#      max-active: 3
+#      initialSize: 2
+#      minIdle: 1
+#      maxIdle: 2
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://20.20.20.205:5432/damoarsdb
+    username: damoarsdb
+    password: damoarsdb2021@
+  devtools:
+    livereload:
+      enabled: false
+mybatis:
+  configuration:
+    aggressive-lazy-loading: true
+    cache-enabled: false
+    jdbc-type-for-null: varchar
+    call-setters-on-nulls: true
+    default-executor-type: batch
+    database-id: postgresql
+  mapper-locations:
+    - classpath:kr/co/finger/damoa/shinhan/agent/mapper/DamoaMapper.xml
+    - classpath:mybatis/mapper/table/*.xml
+
+
+okhttp:
+  readTimeout: 1000
+  connectTimeout: 1000
+  maxIdleConnections: 3
+  keepAliveDuration: 60000
+
+damoa:
+  queue:
+    size: 1
+    timeout: 1000
+  shinhanCode: '021'
+  rangeMessage:
+    mode: REAL
+  corpCode: 20007481
+#  threaPool: 5
+#  maximumPoolSize: 10
+#  keepAliveTime: 60000
+
+sms:
+  server:
+    host: 10.10.20.102
+    port: 80
+  accessToken: DTpF1yuI2hMg8AuUGeU5HxiPYZtxY6gN
+
+at:
+  server:
+    host: http://211.111.214.91/fat
+    serviceKey: vLVpVAtEK8AHiyN+z86oCfkXI6OdGeuTBBnN4NMTfpg=
+

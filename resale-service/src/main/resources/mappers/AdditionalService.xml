@@ -1,0 +1,394 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="AdditionalService">
+<!--
+	<resultMap type="XNotimasreqDTO" id="selReqHp">
+		<result	column="reqhp" property="reqhp" javaType="encrypt"	jdbcType="CLOB"/>
+	</resultMap>
+
+    <resultMap type="CashReceiptHistoryDTO" id="CUSOFFNO2map">
+        <result column="CUSOFFNO" property="clientIdentityNo" javaType="encrypt" jdbcType="CLOB" />
+        <result column="CUSOFFNO2" property="clientIdentityNo2" javaType="encrypt" jdbcType="CLOB" />
+    </resultMap>-->
+
+	<!-- 사이 날짜 조회 -->
+	<sql id="app_dt_between">
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDate)">
+			AND 	A.APPDAY BETWEEN #{startDate} AND #{endDate}
+		</if>
+	</sql>
+	
+	<!-- 고지출력 의뢰 내역 조회 -->
+	<select id="notiPrintListAll" resultType="XNotimasreqDTO">
+		<include refid="paging_header"/>
+		SELECT A.NOTIMASREQCD                                                                                        AS notimasreqcd,
+				TO_CHAR(A.REGDT, 'yyyy.mm.dd hh24:MI:ss')                                                             AS regdt,
+				A.CHACD                                                                                               AS chacd,
+				B.CHANAME                                                                                             AS chaname,
+				A.REQNAME                                                                                             AS reqname,
+				A.REQHP                                                                                               AS reqhp,
+				A.SENDCNT                                                                                             AS sendcnt,
+				TO_CHAR(A.SENDDT, 'yyyy.mm.dd hh24:MI:ss')                                                            AS senddt,
+				CASE A.REQST	WHEN 'BR01' THEN  '요청'  WHEN 'BR02' THEN  '처리완료'  WHEN 'BR03' THEN  '처리중'
+				    			WHEN 'BR04' THEN  '취소'  WHEN 'BR09' THEN  '실패' END 								  AS REQST,
+				CASE WHEN A.MAKER = 'damoaadm' THEN '관리자'
+				WHEN A.MAKER IS NULL     THEN ' '
+				ELSE '사용자' END                                                                            		  AS MAKER,
+				CASE	WHEN A.DLVR_TYPE_CD = 'N20001' THEN  '택배'
+				    	WHEN A.DLVR_TYPE_CD = 'N20002' THEN  '퀵'  WHEN A.DLVR_TYPE_CD IS NULL THEN  ' ' END		  AS dlvrTypeCd,
+				A.RES_STS_CD
+		 FROM XNOTIMASREQ A, XCHALIST B
+		WHERE A.CHACD = B.CHACD
+		<include refid="reg_dt_between"/>
+		<include refid="search"/>
+		<include refid="chacdSearch"/>
+		<include refid="chanameSearch"/>
+		<include refid="reqstSearch"/>
+		<include refid="dlvrTypeCdSearch"/>
+		ORDER 	BY ${opder_option} DESC
+		<include refid="paging_footer"/>
+	</select>
+	
+	<!-- 고지출력 의뢰 내역 카운트 -->
+	<select id="notiPrintCount"  resultType="int">
+		SELECT COUNT(*) AS CNT
+          FROM XNOTIMASREQ A, XCHALIST B
+		 WHERE A.CHACD = B.CHACD
+        <include refid="reg_dt_between"/>
+		<include refid="search"/>
+		<include refid="chacdSearch"/>
+		<include refid="chanameSearch"/>
+		<include refid="reqstSearch"/>
+		<include refid="dlvrTypeCdSearch"/>
+	</select>
+	
+	<!-- 고지출력 의뢰 실패건수 카운트 -->
+	<select id="failNotiPrintCount" resultType="int">
+		SELECT COUNT(*) AS CNT
+		  FROM XNOTIMASREQ A, XCHALIST B
+		 WHERE A.CHACD = B.CHACD
+		   AND A.REQST = 'BR09'
+        <include refid="reg_dt_between"/>
+		<include refid="search"/>
+		<include refid="chacdSearch"/>
+		<include refid="chanameSearch"/>
+		<include refid="reqstSearch"/>
+		<include refid="dlvrTypeCdSearch"/>
+	</select>
+
+	<!-- 고지 출력 의뢰 건수 카운트 -->
+	<select id="notiReqPrintCount" resultType="int">
+		SELECT COUNT(*) TOTCNT
+		  FROM XNOTIMASREQ A, XCHALIST B
+		 WHERE A.CHACD = B.CHACD
+		<include refid="reg_dt_between"/>
+		<include refid="search"/>
+		<include refid="chacdSearch"/>
+		<include refid="chanameSearch"/>
+		<include refid="reqstSearch"/>
+		<include refid="dlvrTypeCdSearch"/>
+	</select>
+	
+	<!-- 고지출력 취소 상태로 변경 -->
+	<update id="notiPrintUpdate">
+		UPDATE XNOTIMASREQ
+		   SET REQST = 'BR04'
+		   	    , MAKER = #{maker}
+		   	    , MAKEDT = NOW()
+		 WHERE NOTIMASREQCD = #{notimasreqcd}
+	</update>
+
+	<!-- 긴급출력의뢰 -->
+	<update id="quickPrint">
+		UPDATE XNOTIMASREQ
+		SET REQST = 'BR03'
+			, RES_STS_CD = 'N10000'
+			, MAKER = #{maker}
+			, MAKEDT = NOW()
+		WHERE NOTIMASREQCD = #{notimasreqcd}
+	</update>
+
+	<!-- 재전송 -->
+	<update id="rePrint">
+		UPDATE XNOTIMASREQ
+		SET RES_STS_CD = 'N11000'
+			, MAKER = #{maker}
+			, MAKEDT = NOW()
+		WHERE NOTIMASREQCD = #{notimasreqcd}
+	</update>
+
+	<!-- 현금영수증 이용내역 카운트-->
+	<select id="getCashHistoryCount" resultType="int">
+		SELECT COUNT(A.APPDAY) AS CNT
+		  FROM XCASHMAS A, XCHALIST B, XRCPMAS C
+		 WHERE A.CHACD = B.CHACD
+		   AND B.CHACD = C.CHACD
+		   AND A.RCPMASCD = C.RCPMASCD
+		   AND A.DISABLED = 'N'
+		<include refid="app_dt_between"/>
+		<include refid="cashSearch"/>
+	</select>
+	
+	<!-- 현금영수증 이용내역-->
+	<select id="getCashHistory" resultType="XCashmasDTO">
+		SELECT 	* 
+		FROM	(SELECT TTA.*
+					, 	(ROW_NUMBER() OVER()) AS RN
+				 FROM (SELECT	A.APPDAY 								/*신청일자(승인일자)*/
+		                	,	A.RCPMASCD
+		                    ,	A.CASHMASCD
+		                    ,	A.SENDDT 								/*전송일자*/
+		                    ,	A.MAKEDT 								/*조작일시*/
+							,	TO_CHAR(A.REGDT,'YYYY-MM-DD') AS REGDT 	/*등록일시*/
+							,	B.CHACD 								/*기관코드*/
+							,	B.CHANAME								/*기관명*/
+							,	C.CUSNAME								/*신청자명*/
+							,	C.SVECD
+							,	CASE C.SVECD  WHEN 'VAS' THEN  '가상계좌'  WHEN 'DCS' THEN  '현금'  WHEN 'DVA' THEN  '현금'  WHEN 'DCD' THEN  '오프라인신용카드'  WHEN 'OCD' THEN  '온라인신용카드'
+							    ELSE (CASE WHEN C.SVECD IS NULL THEN '기타' END) END AS SVECDNM
+							,	A.CUSTYPE								/*발급용도(1:소득공제 2:지출증빙)*/
+							,	CASE A.CUSTYPE WHEN '1' THEN '소득공제'  WHEN '2' THEN  '지출증빙' END AS CUSTYPENM
+							,	A.GUBN
+							,	A.CONFIRM								/*발급방법(11: 휴대폰번호, 12현금영수증카드번호, 13:주민번호, 21:사업자번호)*/
+							,	CASE A.CONFIRM  WHEN '11' THEN  '휴대폰번호'  WHEN '12' THEN  '현금영수증카드번호'  WHEN '13' THEN  '주민번호'  WHEN '21' THEN  '사업자번호' END AS CONFIRMNM
+							,	A.CUSOFFNO								/*발급정보*/
+							,	A.APPCD									/*(완료,거부 )*/
+							,	A.CASHMASST
+							,	CASE A.CASHMASST WHEN 'ST02' THEN '미발행' WHEN 'ST03' THEN '발행' WHEN 'ST04' THEN '발행중' ELSE '' END AS CASHMASNM
+							,	CASE WHEN A.APPCD != '0000' THEN A.APPMSG ELSE '' END AS APPMSG  /*사유(신청실패사유)*/
+							,	A.JOB
+			            FROM 	XCASHMAS 	A
+			            	, 	XCHALIST 	B
+			            	, 	XRCPMAS 	C
+			            WHERE 	A.CHACD 	= B.CHACD
+			            AND 	B.CHACD 	= C.CHACD
+			            AND 	A.RCPMASCD 	= C.RCPMASCD
+			            AND     A.DISABLED = 'N'
+						<include refid="app_dt_between"/>
+			            <include refid="cashSearch"/>
+	    <if test='pageGubn == "E"'>
+			<include refid="excel_footer" />
+		</if>
+		<if test='pageGubn == "D"'>
+			<include refid="cash_paging_footer" />
+		</if>        
+	</select>
+
+	<select id="getCashReceiptHistory" resultType="CashReceiptHistoryDTO">
+		SELECT	A.CHACD AS chaCd
+				, (SELECT CHANAME FROM XCHALIST WHERE CHACD = A.CHACD) AS chaName
+				, (SELECT NOTAXYN FROM XCHALIST WHERE CHACD = A.CHACD) AS noTaxYn
+				, D.PAYDAY AS payDay
+				, C.TX_DATE AS txDate
+				, C.TX_NO AS txNo
+				, C.TX_TYPE_CODE AS txTypeCode
+				, C.CANCEL_TX_DATE AS cancelTxDate
+				, C.CANCEL_TX_NO AS cancelTxNo
+				, B.CHAOFFNO AS hostIdentityNo
+				, B.CUSOFFNO AS clientIdentityNo
+				, B.CUSOFFNO2 AS clientIdentityNo2
+				, D.CUSNAME AS cusName
+				, D.RCPUSRNAME AS rcpusrName
+				, COALESCE(C.TX_AMOUNT, B.RCPAMT) AS txAmount
+				, COALESCE(C.TAX, B.TAX) AS tax
+				, D.SVECD AS svecd
+				, CASE WHEN D.SVECD IS NOT NULL THEN '기타' ELSE (CASE D.SVECD  WHEN 'VAS' THEN  '가상계좌'  WHEN 'DCS' THEN  '현금'  WHEN 'DVA' THEN  '현금'  WHEN 'DCD' THEN  '오프라인신용카드'  WHEN 'OCD' THEN  '온라인신용카드' END) END AS svecdNm
+				, A.REQUEST_TYPE_CD AS requestTypeCd
+				, COALESCE(A.RESULT_CD, '3') AS resultCd
+				, A.REQUEST_DATE AS requestDate
+				, A.REQUEST_USER AS requestUser
+				, COALESCE(C.RESPONSE_CODE, '' ) AS responseCode
+				, B.CASHMASCD AS cashMasCd
+		FROM XCASHHST A
+		JOIN XCASHMAS B ON B.CASHMASCD = A.CASHMASCD
+		LEFT OUTER JOIN FW_CASH_RECEIPT_MASTER C ON C.ID = A.FW_CASH_RECEIPT_MASTER_ID
+		JOIN XRCPMAS D ON D.RCPMASCD = B.RCPMASCD
+		<include refid="cashHstSearch"/>
+		<choose>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(orderBy) and orderBy == 'payDay'">
+				ORDER BY D.PAYDAY DESC, B.CASHMASCD DESC, A.CHACD ASC, A.CASHHST_ID DESC
+			</when>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(orderBy) and orderBy == 'appDay'">
+				ORDER BY C.TX_DATE DESC NULLS LAST, B.CASHMASCD DESC, A.CHACD ASC, A.CASHHST_ID DESC
+			</when>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(orderBy) and orderBy == 'reqDay'">
+				ORDER BY A.REQUEST_DATE DESC, B.CASHMASCD DESC, A.CHACD ASC, A.CASHHST_ID DESC
+			</when>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(orderBy) and orderBy == 'chaCd'">
+				ORDER BY A.CHACD ASC, B.CASHMASCD DESC, A.CASHHST_ID DESC
+			</when>
+			<otherwise>
+				ORDER BY A.CASHHST_ID DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="countCashReceiptHistory" resultType="java.util.HashMap">
+		SELECT	COUNT(*) AS CNT
+				, SUM(COALESCE(C.TX_AMOUNT, B.RCPAMT)) AS TOTAMT
+		FROM XCASHHST A
+		JOIN XCASHMAS B ON B.CASHMASCD = A.CASHMASCD
+		LEFT OUTER JOIN FW_CASH_RECEIPT_MASTER C ON C.ID = A.FW_CASH_RECEIPT_MASTER_ID
+		JOIN XRCPMAS D ON D.RCPMASCD = B.RCPMASCD
+		<include refid="cashHstSearch"/>
+	</select>
+	
+	<!-- 페이징을 위한 header -->
+	<sql id="paging_header">
+		SELECT *
+		  FROM ( SELECT (ROW_NUMBER() OVER()) AS rn, Z.*
+		  		    FROM (
+	</sql>
+	
+	<!-- 페이징을 위한 footer -->
+	<sql id="paging_footer">
+		    ) Z
+		) X WHERE rn BETWEEN #{start} AND #{end}
+	</sql>
+	
+	<!-- 사이 날짜 조회 -->
+	<sql id="reg_dt_between">
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startday) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endday)">
+			AND A.REQDATE BETWEEN TO_TIMESTAMP(#{startday}, 'YYYYMMDD') AND TO_TIMESTAMP(#{endday}, 'YYYYMMDD')
+		</if>
+	</sql>
+	
+	<!-- 검색어 조건 -->
+	<sql id="search">
+		<if test="search_option == 'reqname' and keyword != null and keyword != ''">
+		AND	 A.REQNAME LIKE '%' || #{keyword} || '%'
+		</if>
+		<if test="search_option == 'reqhp' and keyword != null and keyword != ''">
+		AND	 A.REQHP LIKE '%' || #{keyword} || '%'
+		</if>
+	</sql>
+	<!-- 기관 코드 조회 -->
+	<sql id="chacdSearch">
+		<if test="chacd != null and chacd != ''">
+		AND A.CHACD LIKE '%' || #{chacd} || '%'
+		</if>
+	</sql>
+	<!-- 기관 명 조회 -->
+	<sql id="chanameSearch">
+		<if test="chaname != null and chaname != ''">
+		AND B.CHANAME LIKE '%' || #{chaname} || '%'
+		</if>
+	</sql>
+	<!-- 고지출력의뢰 상태별 조회 -->
+	<sql id="reqstSearch">
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(reqstList)">
+			AND A.REQST IN
+			<foreach collection="reqstList" item="list" index="index" open="(" close=")" separator=",">
+				#{list}
+			</foreach>
+		</if>
+	</sql>
+	<!-- 퀵/택배 이용별 조회 -->
+	<sql id="dlvrTypeCdSearch">
+		<if test="dlvrTypeCd != 'all'">
+			AND A.DLVR_TYPE_CD = #{dlvrTypeCd}
+		</if>
+	</sql>
+	
+	<!-- 현금영수증 이용내역 조건 -->
+	<sql id="cashSearch">
+		<if test='chaCd != null and chaCd != ""'>
+			AND A.CHACD = #{chaCd}
+		</if>
+		<if test='searchValue != "" and searchValue != null'>
+			<if test='searchGb == "cusname"'>
+				AND  C.CUSNAME LIKE '%'||#{searchValue}||'%'
+			</if>
+			<if test='searchGb == "cusoffno"'>
+				AND  A.CUSOFFNO LIKE '%'||#{searchValue}||'%'
+			</if>
+		</if>
+		<if test='checkAll != "ALL"'>
+			<if test='cashMasStList != null and !cashMasStList.equals("")'> 
+				AND A.CASHMASST IN
+				<foreach item="item" collection="cashMasStList" index="index" open="(" close=")" separator=",">
+					'${item}'
+				</foreach>
+			</if>
+			<if test='cashMasStList == null'> 
+				AND A.CASHMASST IN('ST02','ST03','ST04')
+			</if>
+		</if>
+		<if test='checkAll == "ALL"'>
+			AND A.CASHMASST IN('ST02','ST03','ST04')
+		</if>
+		<if test='orderBy == "date"'>
+			ORDER BY A.APPDAY DESC
+		</if>
+		<if test='orderBy == "code"'>
+			ORDER BY A.CASHMASST
+		</if>
+		<if test='orderBy == "public"'>
+			ORDER BY A.CUSTYPE
+		</if>
+	</sql>
+	
+	<!-- 현금영수증 엑셀다운로드시 footer -->
+	<sql id="excel_footer">
+		) TTA) X
+	</sql>
+
+	<!-- 현금영수증 footer -->
+    <sql id="cash_paging_footer">
+		)TTA) X WHERE RN BETWEEN #{start} AND #{end}
+	</sql>
+
+	<sql id="cashHstSearch">
+		<where>
+			<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDate)">
+				<if test="dateTy == 'payDay'">
+					AND D.PAYDAY BETWEEN #{startDate} AND #{endDate}
+				</if>
+				<if test="dateTy == 'appDay'">
+					AND C.TX_DATE BETWEEN #{startDate} AND #{endDate}
+				</if>
+				<if test="dateTy == 'reqDay'">
+					AND TO_CHAR(A.REQUEST_DATE, 'YYYYMMDD') BETWEEN #{startDate} AND #{endDate}
+				</if>
+			</if>
+			<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaCd)">
+				AND A.CHACD LIKE #{chaCd}
+			</if>
+			<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaName)">
+				AND A.CHACD IN ((SELECT CHACD FROM XCHALIST WHERE CHANAME LIKE '%' || #{chaName} || '%'))
+			</if>
+			<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchGb)">
+				<choose>
+					<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchValue) and searchGb == 'cusName'">
+						AND D.CUSNAME LIKE '%' || #{searchValue} || '%'
+					</when>
+					<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchValue) and searchGb == 'rcpUsrName'">
+						AND D.RCPUSRNAME LIKE '%' || #{searchValue} || '%'
+					</when>
+					<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchValue) and searchGb == 'cusOffNo'">
+						AND AND POSITION(#{searchValue} in B.CUSOFFNO) > 0
+					</when>
+					<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchValue) and searchGb == 'maker'">
+						AND UPPER(A.REQUEST_USER) LIKE '%' || UPPER(#{searchValue}) || '%'
+					</when>
+				</choose>
+			</if>
+			<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(resultTy)">
+				<choose>
+					<when test="resultTy == 'issued'">
+						AND (A.REQUEST_TYPE_CD ,A.RESULT_CD) IN (('I','0'), ('U','0'), ('U','1'), ('D','1'))
+					</when>
+					<when test="resultTy == 'notissued'">
+						AND (A.REQUEST_TYPE_CD ,A.RESULT_CD) IN (('I','1'), ('D','0'))
+					</when>
+					<when test="resultTy == 'request'">
+						AND A.RESULT_CD IN ('2','3', NULL)
+					</when>
+				</choose>
+			</if>
+		</where>
+	</sql>
+
+</mapper>

@@ -1,0 +1,219 @@
+package com.damoa.comm;
+
+/**
+ * <p>Title: AegisAtmClient  </p>
+ * <p>Description: Aegis Cash Management System</p>
+ * <p>Copyright: Copyright (c) 2007</p>
+ * <p>Company: AegisHyosung </p>
+ * @author KSS
+ * @version 1.0
+ */
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.Socket;
+
+import com.damoa.log.MyLogger;
+import com.sf.xc3.Xc3Api;
+
+
+
+// Referenced classes of package sdsi10.client.comm:
+//            UserException
+
+public class Xc3SocketApi implements Xc3Socket {
+
+    public Xc3SocketApi() {
+
+        sock = 0;
+        hCtx = 0;
+        id = new byte[64];
+        XC = new Xc3Api();
+    }
+
+    public void xc3Close() throws Exception {
+        if(sock != 0)
+            XC.JCLOSESOCK(sock);
+    }
+
+    public void xc3Connect(int i) throws Exception {
+
+        int k = i;
+        byte byte0 = 20;
+        XC.JCLNTSOCK_INIT();
+        Logger.println("SDSI_SERVER_IP : " + ClientInfo.SERVER_IP + ":intPort : " + k + ":timeout : " + byte0);
+        int j = XC.JCONNECT(ClientInfo.SERVER_IP, k, byte0);
+        if(j < 0) {
+            String s = "▶FAIL CONNECT SDSI-SERVER !!";
+            UserException userexception = new UserException(s);
+            throw userexception;
+        } else {
+            sock = j;
+            return;
+        }
+    }
+
+    public boolean xc3Init() throws Exception {
+
+        xc3LibInit();
+
+        int i = xc3KeyMsgProc();
+        return i != 300;
+    }
+
+    public int xc3KeyMsgProc() throws Exception {
+
+        byte abyte0[] = new byte[4096];
+        byte abyte1[] = new byte[4096];
+
+        hCtx = XC.JNEW();
+
+        int k = XC.JENCODE(hCtx, abyte1, abyte0, 0, id, 0, 10);
+
+        if(k < 0) {
+            XC.JERROR("");
+            String s = "▶KeyInit메시지 생성에 실패하였습니다.(ret=" + k + ")";
+            UserException userexception = new UserException(s);
+            throw userexception;
+        }
+
+        int j = k;
+        k = xc3Write(abyte1, j, 3);
+        if(k < 0) {
+            String s1 = "▶KeyInit메시지 쓰기에 실패하였습니다.(ret=" + k + ")";
+            UserException userexception1 = new UserException(s1);
+            throw userexception1;
+        }
+        k = xc3Read(abyte0);
+
+        if(k < 0) {
+            String s2 = "▶KeyFinal메시지 읽기에 실패하였습니다.(ret=" + k + ")";
+            UserException userexception2 = new UserException(s2);
+            throw userexception2;
+        }
+        int i = k;
+        k = XC.JDECODE(hCtx, abyte1, abyte0, i, id, 0);
+
+        if(k < 0) {
+            XC.JERROR("");
+            String s3 = "▶KeyFinal메시지 생성에 실패하였습니다.(ret=" + k + ":" + hCtx + ")";
+            UserException userexception3 = new UserException(s3);
+            throw userexception3;
+        } else {
+            return k;
+        }
+    }
+
+    public void xc3LibInit() throws Exception {
+
+        if(XC.JINIT("", ClientInfo.XC_CONF_PATH + "xc_conf.txt", 1) < 0) {
+            XC.JERROR("");
+            String s = "▶라이브러리 초기화에 실패하였습니다.";
+            UserException userexception = new UserException(s);
+            throw userexception;
+        } else {
+            return;
+        }
+    }
+
+    public int xc3NhReceive(byte abyte0[]) throws Exception {
+
+        byte abyte1[] = new byte[4096];
+        int j = xc3Read(abyte1);
+        if(j < 1) {
+            XC.JERROR("");
+            String s = "▶암호화 전문 수신에 실패하였습니다.(ret=" + j + ")";
+            UserException userexception = new UserException(s);
+            throw userexception;
+        }
+        int i = j;
+        j = XC.JDECODE(hCtx, abyte0, abyte1, i, id, 0);
+        if(j < 1) {
+            XC.JERROR("");
+            String s1 = "▶메시지 복호화에 실패하였습니다.(ret=" + j + ")";
+            UserException userexception1 = new UserException(s1);
+            throw userexception1;
+        } else {
+            return j;
+        }
+    }
+
+    public int xc3NhSend(byte abyte0[], int i) throws Exception {
+
+        byte abyte1[] = new byte[4096];
+        if(i < 1) {
+            XC.JERROR("");
+            String s = "▶전송메시지의 바이트길이가 [0]입니다.";
+            UserException userexception = new UserException(s);
+            throw userexception;
+        }
+        int k = XC.JENCODE(hCtx, abyte1, abyte0, i, id, 0, 20);
+        if(k < 1) {
+            XC.JERROR("");
+            String s1 = "▶메시지 암호화에 실패하였습니다.(ret=" + k + ")";
+            UserException userexception1 = new UserException(s1);
+            throw userexception1;
+        }
+        int j = k;
+        k = xc3Write(abyte1, j, 4);
+        if(k < 1) {
+            XC.JERROR("");
+            String s2 = "▶암호화 전문 전송에 실패하였습니다.(ret=" + k + ")";
+            UserException userexception2 = new UserException(s2);
+            throw userexception2;
+        } else {
+            return k;
+        }
+    }
+
+    public int xc3Read(byte abyte0[]) {
+
+        byte abyte1[] = new byte[3];
+        int i = XC.JRECV(sock, abyte1, 3);
+        Logger.println("xc3Read"+abyte1[0]+abyte1[1]+abyte1[2]);
+        if(i < 0)
+            return -3;
+        int j = abyte1[1] < 0 ? (abyte1[1] + 256) * 256 : abyte1[1] * 256;
+        j += abyte1[2] < 0 ? abyte1[2] + 256 : ((int) (abyte1[2]));
+        if(abyte1[0] == -16 || abyte1[0] == -1)
+            return abyte1[0];
+        i = XC.JRECV(sock, abyte0, j);
+        if(i < 0 || i != j)
+            return -4;
+        else
+            return j;
+    }
+
+    public int xc3Write(byte abyte0[], int i, int j) {
+
+        byte abyte1[] = new byte[3];
+        abyte1[0] = (byte)j;
+        abyte1[1] = (byte)(i / 256);
+        abyte1[2] = (byte)(i % 256);
+
+        Logger.println("▷xc3Write"+abyte1[0]+abyte1[1]+abyte1[2]);
+
+        int k = XC.JSEND(sock, abyte1, 3);
+        if(k < 0)
+            return -1;
+        k = XC.JSEND(sock, abyte0, i);
+        return k >= 0 ? 1 : -2;
+    }
+
+    private int sock;
+    private int hCtx;
+    private byte id[];
+    Xc3Api XC;
+
+    public byte[] xc3Read(Socket sockClient, DataInputStream dis)
+            throws Exception {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public int xc3Write(Socket sockClient, DataOutputStream dos, byte[] buf,
+                        int type) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+}

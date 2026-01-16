@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.finger.shinhandamoa.data.table.mapper.HolidaysMapper">
+    <!-- 공휴일 목록 조회 -->
+    <select id="getHolidaysByYear" parameterType="int" resultType="kr.co.finger.shinhandamoa.data.table.model.Holidays">
+        SELECT id, holidaydate, holidayname, year
+        FROM holidays
+        WHERE year = #{year}
+        ORDER BY holidaydate;
+    </select>
+
+    <!-- 공휴일 삽입 -->
+    <insert id="insertHoliday" parameterType="kr.co.finger.shinhandamoa.data.table.model.Holidays">
+        INSERT INTO holidays (holidaydate, holidayname, year)
+        VALUES (#{holidayDate}, #{holidayName}, #{year});
+    </insert>
+
+    <!-- 공휴일 삭제 -->
+    <delete id="deleteHolidayById" parameterType="int">
+        DELETE FROM holidays
+        WHERE id = #{id};
+    </delete>
+
+
+</mapper>

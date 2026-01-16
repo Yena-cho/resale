@@ -1,0 +1,41 @@
+/* align */
+.table-text-center td, .table-text-center th {
+    text-align : center !important;
+}
+
+.table-text-right td {
+    text-align : right !important;
+}
+
+.input-text-right input {
+    text-align: right !important;
+}
+
+/* padding, margin, border */
+.p-0 {
+    padding: 0 !important;
+}
+
+.p-x-2 {
+     padding-left: 2px;
+     padding-right: 2px;
+ }
+
+.p-x-10 {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.border-n {
+    border-color: transparent !important;
+}
+
+/* overwrite */
+.postTxt-input {
+    float: left;
+    width: 35%;
+}
+
+.input-group-addon {
+    font-size: 13px;
+}

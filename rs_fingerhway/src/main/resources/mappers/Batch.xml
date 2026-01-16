@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="batchDao">	
+
+	<update id="updateTbVirtualAcntUseYn1">
+	<![CDATA[
+		UPDATE TB_VIRTUAL_ACNT
+		SET
+				USE_YN = 'N'
+			,	PAY_DUE_DT = '99991231'
+		WHERE
+		    PAY_DUE_DT < TO_CHAR(SYSDATE-60,'YYYYMMDD')
+			AND	USE_YN = 'Y'
+	]]>
+	</update>
+
+	<update id="updateTbVirtualAcntUseYn2">
+	<![CDATA[
+		UPDATE TB_VIRTUAL_ACNT
+		SET
+		    USE_YN = 'N'
+		  , PAY_DUE_DT = '99991231'
+		WHERE
+		    VIRTUAL_ACNT_NUM IN (
+		    			SELECT 
+		    					VANO 
+		    			FROM 
+		    					AEGISTRANSMSG
+						WHERE 
+								TRANST = '03' 
+							AND PAYDAY BETWEEN TO_CHAR(SYSDATE-1,'YYYYMMDD')||'000000' AND TO_CHAR(SYSDATE-1,'YYYYMMDD')||'235959'
+						)
+	]]>
+	</update>
+	
+	<select id="selectMsgSendHistNotProcessList" resultType="TbMsgSendHistVO" >
+		SELECT
+				A.MSG_SEND_HIST_ID
+			,	A.MSG_ID
+			,	A.SUCCESS_YN
+		FROM
+				TB_MSG_SEND_HIST	A
+		WHERE
+				A.SUCCESS_YN = '0'
+	</select>
+	
+	<update id="updateTbMsgSendHistSuccessYn">
+	UPDATE TB_MSG_SEND_HIST
+	SET
+		SUCCESS_YN = #{successYn}
+	WHERE
+		MSG_SEND_HIST_ID = #{msgSendHistId}
+	</update>
+	
+</mapper>

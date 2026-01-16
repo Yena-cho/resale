@@ -1,0 +1,1108 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="s" uri="http://www.springframework.org/security/tags" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+
+<s:authentication property="principal.username" var="userId"/>
+<s:authentication property="principal.name" var="userName"/>
+
+<jsp:include page="/WEB-INF/views/include/org/header.jsp" flush="false"/>
+
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script>
+    var firstDepth = "nav-link-34";
+    var secondDepth = "sub-06";
+</script>
+
+<script type="text/javascript">
+    var cuPage = 1;
+    var toDay = getFormatCurrentDate();
+    var cusGubn;
+
+    function cusName(vano) {
+        fnDetail(vano);
+    }
+
+    function cashRcpHist(cid, vano) {
+        fnHistDetail(cid, vano);
+    }
+
+    // 고객구분 selectBox
+    function cusGubnBox(obj) {
+        var str = '<option value="all">전체</option>';
+
+        if ('${orgSess.cusGubn1}' != null && '${orgSess.cusGubn1}' != '') {
+            str += "<option value='cusGubn1'>${orgSess.cusGubn1}</option>";
+        }
+        if ('${orgSess.cusGubn2}' != null && '${orgSess.cusGubn2}' != '') {
+            str += "<option value='cusGubn2'>${orgSess.cusGubn2}</option>";
+        }
+        if ('${orgSess.cusGubn3}' != null && '${orgSess.cusGubn3}' != '') {
+            str += "<option value='cusGubn3'>${orgSess.cusGubn3}</option>";
+        }
+        if ('${orgSess.cusGubn4}' != null && '${orgSess.cusGubn4}' != '') {
+            str += "<option value='cusGubn4'>${orgSess.cusGubn4}</option>";
+        }
+        $('#' + obj).html(str);
+    }
+
+    function onSearchGb() {
+        if ($('#searchGb option:selected').val() == "cusOffNo") {
+            $('#searchvalue').val("");
+        }
+    }
+
+    function pageChange() {
+        cuPage = 1;
+        fnSearch(cuPage);
+    }
+
+    function fnCusGubn(str) {
+        cusGubn = str.value;
+        if (str.value == 'all') {
+
+        } else {
+            $('#cusGubnValue').attr('placeholder', '콤마(,) 구분자로 다중검색이 가능합니다.');
+        }
+    }
+
+    function prevDate(num) {
+        toDay = $.datepicker.formatDate("yy.mm.dd", new Date());
+        var vdm = dateValidity($('#fDate').val(), toDay);
+
+        $('#tDate').val(toDay);
+        $('#fDate').val(getPrevDate(toDay, num));
+        $('.btn-preset-month').removeClass('active');
+        $('#pMonth' + num + '').addClass('active');
+    }
+
+    // 페이징 버튼
+    function list(page) {
+        $('#pageNo').val(page);
+        fnSearch(page);
+    }
+
+    // 검색
+    function fnSearch(page) {
+        var svecdArr = [];
+        var masmonth = null;
+        var startDate = null;
+        var endDate = null;
+        var selectedDate = $('input[name=selectDate]:checked').val();
+
+        if (page == null || page == 'undefined') {
+            cuPage = "";
+            cuPage = 1;
+        } else {
+            cuPage = page;
+        }
+
+        if ($('#searchGb option:selected').val() == "vano" && $("#searchValue").val()) {
+            var str = $("#searchValue").val();
+            var s = str.split(",");
+            for (var i = 0; i < s.length; i++) {
+                if (($.isNumeric(s[i]) && (s[i].length < 2 || s[i].length > 4)) && s[i].length != 14) {
+                    swal({
+                        type: 'info',
+                        html: "가상계좌번호 14자리 모두 입력 또는 <p>가상계좌 끝 4자리 중 최소 2자리 이상, 4자리 이하로 입력해 주세요.",
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: '확인'
+                    });
+                    return;
+                }
+
+                if (!$.isNumeric(s[i])) {
+                    swal({
+                        type: 'info',
+                        text: "가상계좌는 숫자형식으로만 입력가능합니다.",
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: '확인'
+                    }).then(function () {
+                        $("#searchValue").val('');
+                    });
+                    return;
+                }
+            }
+        }
+
+        $('input:checkbox[name=deposItem]:checked').each(function (i) {
+            svecdArr.push($(this).val());
+            if ($(this).val() == 'DCS') {
+                svecdArr.push('DVA');
+            }
+        });
+
+        if ($('input:radio[name=inlineRadioOptions]:checked').val() == 'month') {
+            startDate = null;
+            endDate = null;
+            masmonth = $('#yearsBox option:selected').val() + "" + $('#monthBox option:selected').val();
+        } else {
+            masmonth = null;
+            startDate = replaceDot($('#fDate').val());
+            endDate = replaceDot($('#tDate').val());
+            var vdm = dateValidity(startDate, endDate);
+            if (vdm != 'ok') {
+                swal({
+                    type: 'info',
+                    text: vdm,
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: '확인'
+                });
+                return false;
+            }
+        }
+
+        var url = "/org/receiptMgnt/cashReceiptAjax";
+        var param = {
+            selectedDate: selectedDate,
+            masMonth: masmonth,
+            startDate: startDate,
+            endDate: endDate,
+            searchGb: $('#searchGb option:selected').val(), //검색구분(cusname:고객명, vano:계좌번호)
+            searchValue: $('#searchValue').val(),
+            cusGubn: $('#cusGubn option:selected').val(), //고객구분
+            cusGubnValue: $('#cusGubnValue').val(),
+            curPage: cuPage,
+            pageScale: $('#pageScale option:selected').val(),
+            orderBy: $('#orderBy option:selected').val(),
+            cashMasSt: $('input:radio[name=sorting-order-type]:checked').val(),//발행상태  ST02미발행 / ST03 발행
+            svecdList: svecdArr,
+            rcpMasSt: $('input:radio[name=rcpst]:checked').val()
+        };
+
+        $.ajax({
+            type: "post",
+            async: true,
+            url: url,
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify(param),
+            success: function (result) {
+                if (result.retCode != '0000') {
+                    swal({
+                        type: 'error',
+                        text: result.retMsg,
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: '확인'
+                    });
+                }
+
+                fnGrid(result, 'resultBody'); // 현재 데이터로 셋팅
+                ajaxPaging(result, 'PageArea');
+            }
+        });
+    }
+
+    // 데이터 새로고침
+    function fnGrid(result, obj) {
+        var str = '';
+        $('#pageCnt').val(result.PAGE_SCALE);
+        $('#totCnt').text(numberToCommas(result.count));
+        $('#appCnt').text(numberToCommas(result.appCnt));
+        $('#totPayAmt').text(numberToCommas(result.totPayAmt));
+        $('#totAmt').text(numberToCommas(result.totAmt));
+
+        if (result.count <= 0) {
+            str += '<tr><td colspan="16" style="text-align: center;">[조회된 내역이 없습니다.]</td></tr>';
+        } else {
+            $.each(result.list, function (i, v) {
+                str += '<tr id="cash-master-' + v.cashMasCd + '">';
+                str += '<td>' + v.rn + '</td>';
+                str += '<td>' + changeDateFormat(v.payDay) + '</td>';
+                str += '<td>' + changeDateFormat(v.appDay) + '</td>';
+                str += '<td>' + nullValueChange(v.appNo) + '</td>';
+                str += '<td><button type="button" class="btn btn-xs btn-link" onclick="cusName(\'' + v.vano + '\')" value="' + v.vano + '">' + basicEscape(nullValueChange(v.cusName)) + '</button></td>';
+                if ($('#cusGubn1').val() != null && $('#cusGubn1').val() != '') {
+                    str += '<td>' + basicEscape(nullValueChange(v.cusGubn1)) + '</td>';
+                }
+                if ($('#cusGubn2').val() != null && $('#cusGubn2').val() != '') {
+                    str += '<td>' + basicEscape(nullValueChange(v.cusGubn2)) + '</td>';
+                }
+                if ($('#cusGubn3').val() != null && $('#cusGubn3').val() != '') {
+                    str += '<td>' + basicEscape(nullValueChange(v.cusGubn3)) + '</td>';
+                }
+                if ($('#cusGubn4').val() != null && $('#cusGubn4').val() != '') {
+                    str += '<td>' + basicEscape(nullValueChange(v.cusGubn4)) + '</td>';
+                }
+                str += '<td>';
+                var newCusOffNo = nullValueChange(v.cusOffNo);
+                if (v.disabled != 'Y' && (v.job == '' || v.job == null) && v.cashMasSt == 'ST02') {
+                    str += nullValueChange(v.cusOffNo);
+                    if (v.cusOffNo2 != null) {
+                        str += '<br><b>' + nullValueChange(v.cusOffNo2) + '</b>';
+                        newCusOffNo = nullValueChange(v.cusOffNo2);
+                    }
+                } else {
+                    str += nullValueChange(v.cusOffNo);
+                    if (v.cusOffNo2 != null) {
+                        str += '<br/><b>' + nullValueChange(v.cusOffNo2) + '</b>';
+                        newCusOffNo = nullValueChange(v.cusOffNo2);
+                    }
+                }
+                str += '<input type="hidden" name="newCusOffNo" value="' + newCusOffNo + '"/>';
+                str += '<input type="hidden" name="cashMasCd" value="' + v.cashMasCd + '" />';
+                str += '<input type="hidden" name="oldCusOffNo" value="' + nullValueChange(v.cusOffNo) + '" />';
+                str += '<input type="hidden" name="cashMasSt" value="' + v.cashMasSt + '" />';
+                str += '<input type="hidden" name="disabled" value="' + v.disabled + '" />';
+                str += '<input type="hidden" name="rcpAmt" value="' + v.rcpAmt + '"/>';
+                str += '<input type="hidden" name="cshAmt" value="' + defaultString(v.cshAmt) + '"/>';
+                str += '<input type="hidden" name="cshAmt2" value="' + defaultString(v.cshAmt2) + '"/>';
+                str += '</td>';
+
+                str += '<td class="text-right">' + numberToCommas(nullValueChange(v.rcpAmt)) + '</td>';
+                str += '<td class="text-right">' + numberToCommas(nullValueChange(v.cshAmt)) + '';
+                if (v.cshAmt2 != null) {
+                    str += '<br/><b>' + numberToCommas(nullValueChange(v.cshAmt2)) + '</b>';
+                }
+                str += '</td>';
+                str += '<td>' + nullValueChange(v.cashMasStNm) + '</td>';
+                str += '<td>' + nullValueChange(v.sveCdNm) + '</td>';
+                str += '<td>';
+
+                if (v.cashMasSt == 'ST02') {
+                    str += '<button class="btn btn-xs btn-gray-outlined" onclick="issue(\'' + v.cashMasCd + '\',\'I\');">발행</button>';
+                } else if (v.cashMasSt == 'ST03') {
+                    str += '<button class="btn btn-xs btn-gray-outlined" onclick="deleteIssue(\'' + v.cashMasCd + '\');" >취소</button>';
+                    str += '<button class="btn btn-xs btn-gray-outlined" onclick="issue(\'' + v.cashMasCd + '\', \'U\');">재발행</button>';
+                } else if (v.cashMasSt == 'ST05') {
+                    if (v.job == 'D') {
+                        str += '<button class="btn btn-xs btn-gray-outlined" onclick="noDeleteIssue(\'' + v.cashMasCd + '\');">취소요청 철회</button>';
+                    } else if (v.job == 'U') {
+                        str += '<button class="btn btn-xs btn-gray-outlined" onclick="reInsertIssueDelete(\'' + v.cashMasCd + '\');">재발행요청 철회</button>';
+                    } else {
+                        str += '<button class="btn btn-xs btn-gray-outlined" onclick="doInsertIssueDelete(\'' + v.cashMasCd + '\');">발행요청 철회</button>';
+                    }
+                }
+                str += '</td>';
+                str += '<td>';
+                str += nullValueChange(v.appMsg);
+                str += '</td>';
+                str += '<td>';
+                str += '<button type="button" class="btn btn-xs btn-link" onclick="cashRcpHist(\'' + v.cashMasCd + '\' , \'' + v.vano + '\')" value="' + v.cashMasCd + '">보기</button></td>';
+                str += '</td>';
+                str += '</tr>';
+            });
+        }
+        $('#' + obj).html(str);
+    }
+
+    // 파일 저장
+    function fn_fileSave() {
+        fncClearTime();
+        var svecdArr = [];
+        var startDate = '';
+        var endDate = '';
+        var masmonth = '';
+        var selectedDate = $('input[name=selectDate]:checked').val();
+
+        $('input:checkbox[name=deposItem]:checked').each(function (i) {
+            svecdArr.push($(this).val());
+            if ($(this).val() == 'DCS') {
+                svecdArr.push('DVA');
+            }
+        });
+        if ($('input:radio[name=inlineRadioOptions]:checked').val() == 'month') {
+            startDate = null;
+            endDate = null;
+            masmonth = $('#yearsBox option:selected').val() + "" + $('#monthBox option:selected').val();
+        } else {
+            masmonth = null;
+            startDate = replaceDot($('#fDate').val());
+            endDate = replaceDot($('#tDate').val());
+        }
+
+        if ($('#totCnt').text() <= 0) {
+            swal({
+                type: 'info',
+                text: '다운로드할 데이터가 없습니다.',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: '확인'
+            });
+            return;
+        }
+
+        swal({
+            type: 'question',
+            html: "다운로드 하시겠습니까?",
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: '확인',
+            cancelButtonText: '취소'
+        }).then(function (result) {
+            if (!result.value) {
+                return;
+            }
+
+            $('#selectedDate').val(selectedDate);
+            $('#startDate').val(startDate);
+            $('#endDate').val(endDate);
+            $('#masMonth').val(masmonth);
+            $('#fSearchGb').val($('#searchGb option:selected').val());
+            $('#fSearchValue').val($('#searchValue').val());
+            $('#fCusGubn').val($('#cusGubn option:selected').val());
+            $('#fCusGubnValue').val($('#cusGubnValue').val());
+            $('#fOrderBy').val($('#orderBy option:selected').val());
+            $('#fCashMasSt').val($('input:radio[name=sorting-order-type]:checked').val());
+            $('#svecdList').val(svecdArr);
+            $('#fRcpMasSt').val($('input:radio[name=rcpst]:checked').val());
+
+            var url = '/org/receiptMgnt/cashReceiptExcelDown?' + $('#fileForm').serialize();
+            window.open(url, '_parent');
+        });
+    }
+    
+ 	//국세청 양식 현금영수증 발행이력 파일 저장
+    function fn_downHistory() {
+ 		
+    	var ntsStartDate = replaceDot($('#ntsStartDate').val());
+    	var ntsEndDate = replaceDot($('#ntsEndDate').val());
+    	
+    	if (CalcDay(ntsStartDate, ntsEndDate) < 0) {
+    		swal({
+                type: 'info',
+                text: "조회 시작일이 종료일보다 큽니다. 날짜를 다시 선택해 주세요.",
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: '확인'
+            });
+            return false;
+    	}
+    	
+    	if (CalcDay(ntsStartDate, ntsEndDate) > 365) {
+            swal({
+                type: 'info',
+                text: "최대 조회기간은 1년 입니다. 다시 선택해 주세요",
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: '확인'
+            });
+            return false;
+        }
+ 		
+    	var svecdArr = [];
+    	
+    	$('input:checkbox[name=deposItem]:checked').each(function (i) {
+            svecdArr.push($(this).val());
+            if ($(this).val() == 'DCS') {
+                svecdArr.push('DVA');
+            }
+        });
+ 		
+    	swal({
+            type: 'question',
+            html: "다운로드 하시겠습니까?",
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: '확인',
+            cancelButtonText: '취소'
+        }).then(function (result) {
+        	if (!result.value) {
+                return;
+            }
+        	
+        	$('#selectedDate').val('appDay');	//승인일자	
+        	$('#startDate').val(ntsStartDate);
+            $('#endDate').val(ntsEndDate);
+            $('#masMonth').val(null);
+            
+            //- 조회 조건
+            $('#fSearchGb').val($('#searchGb option:selected').val());
+            $('#fSearchValue').val($('#searchValue').val());
+            $('#fCusGubn').val($('#cusGubn option:selected').val());
+            $('#fCusGubnValue').val($('#cusGubnValue').val());
+            $('#fOrderBy').val('app');	//승인일 고객명 오름차순.
+            $('#fCashMasSt').val('ST03');	//발행
+            $('#svecdList').val(svecdArr);
+        	
+        	var url = '/org/receiptMgnt/ntsCashReceiptExcelDown?' + $('#fileForm').serialize();
+        	window.open(url, '_parent');
+        	
+        	$("#download-receipt-history").modal("hide");
+        });
+ 	}
+
+    /**
+     * 현금영수증 발행 / 재 발행
+     */
+    function issue(cashMasCd, jobType) {
+        checkCash();
+
+        var msg;
+        if (jobType == 'I') {
+            msg = '현금영수증 발행을 요청 하시겠습니까?';
+        } else {
+            msg = '발행된 현금영수증을 취소처리하고 재발행 하시겠습니까? 재발행 시 금일날짜로 취소 후 재발행 처리되오니 참고바랍니다.';
+        }
+
+        swal({
+            type: 'question',
+            html: msg,
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: '확인',
+            cancelButtonText: '취소',
+            reverseButtons: true
+        }).then(function (result) {
+            if (!result.value) {
+                return;
+            }
+
+            getCashMasCd(cashMasCd, jobType);
+        });
+    }
+
+    /**
+     * 발행요청 철회(취소), 발행요청 상태 -> 미발행 상태
+     */
+    function doInsertIssueDelete(cashMasCd) {
+        checkCash();
+
+        var param = {
+            cashMasCd : cashMasCd,
+        };
+
+        swal({
+            type: 'question',
+            html: '발행요청 철회시 미발행 상태로 복원됩니다.<p>발행요청을 철회(취소) 하시겠습니까?',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: '확인',
+            cancelButtonText: '취소',
+            reverseButtons: true
+        }).then(function (result) {
+            if (!result.value) {
+                return;
+            }
+
+            $.ajax({
+                type: "post",
+                async: true,
+                url: '/org/receiptMgnt/doInsertIssueDelete',
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(param),
+                success: function (result) {
+                    if (result.retCode != "0000") {
+                        swal({
+                            type: 'error',
+                            text: result.retMsg,
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: '확인'
+                        });
+                        return;
+                    }
+
+                    swal({
+                        type: 'info',
+                        text: '발행요청을 철회(취소)하였습니다.',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: '확인'
+                    });
+
+                    fnSearch();
+                }
+            });
+        });
+    }
+
+    /**
+     * 취소 ( 현금영수증 발행완료 후 ), 발행 -> 발행 취소 요청 접수
+     */
+    function deleteIssue(cashMasCd) {
+        checkCash();
+
+        var param = {
+            cashMasCd : cashMasCd,
+            job : 'D'
+        };
+
+        swal({
+            type: 'question',
+            html: '발행된 현금영수증을 취소 요청하시겠습니까? 발행 취소시 금일날짜로 취소처리되오니 참고바랍니다.',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: '확인',
+            cancelButtonText: '취소',
+            reverseButtons: true
+        }).then(function (result) {
+            if (!result.value) {
+                return;
+            }
+
+            $.ajax({
+                type: "post",
+                async: true,
+                url: '/org/receiptMgnt/deleteCashMas',
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(param),
+                success: function (result) {
+                    if (result.retCode != "0000") {
+                        swal({
+                            type: 'error',
+                            text: result.retMsg,
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: '확인'
+                        });
+                        return;
+                    }
+
+                    swal({
+                        type: 'info',
+                        text: '발행된 현금영수증 취소 요청을 완료하였습니다.',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: '확인'
+                    });
+
+                    fnSearch();
+                }
+            });
+        });
+    }
+
+    /**
+     * 재발행요청 철회, 발행 -> 재발행 -> 재발행 요청 철회 -> 발행
+     */
+    function reInsertIssueDelete(cashMasCd) {
+        checkCash();
+
+        var param = {
+            cashMasCd : cashMasCd
+        };
+
+        swal({
+            type: 'question',
+            html: '재발행 요청 철회시 발행 상태로 복원됩니다.<p>재발행 요청을 철회(취소) 하시겠습니까?',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: '확인',
+            cancelButtonText: '취소',
+            reverseButtons: true
+        }).then(function (result) {
+            if (!result.value) {
+                return;
+            }
+
+            $.ajax({
+                type: "post",
+                async: true,
+                url: "/org/receiptMgnt/reInsertIssueDelete",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(param),
+                success: function (result) {
+                    if (result.retCode != "0000") {
+                        swal({
+                            type: 'error',
+                            text: result.retMsg,
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: '확인'
+                        });
+                        return;
+                    }
+
+                    swal({
+                        type: 'info',
+                        text: '재발행 요청을 철회(취소) 하였습니다.',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: '확인'
+                    });
+
+                    fnSearch();
+                }
+            });
+        });
+    }
+
+
+    /**
+     * 취소요청 철회, 발행 -> 취소 -> 취소요청 철회 -> 발행
+     */
+    function noDeleteIssue(cashMasCd) {
+        checkCash();
+
+        var param = {
+            cashMasCd : cashMasCd
+        };
+
+        swal({
+            type: 'question',
+            html: '취소 요청 철회시 발행 상태로 복원됩니다.<p>취소 요청을 철회(취소) 하시겠습니까?',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: '확인',
+            cancelButtonText: '취소',
+            reverseButtons: true
+        }).then(function (result) {
+            if (!result.value) {
+                return;
+            }
+
+            $.ajax({
+                type: "post",
+                async: true,
+                url: "/org/receiptMgnt/noDeleteIssue",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(param),
+                success: function (result) {
+                    if (result.retCode != "0000") {
+                        swal({
+                            type: 'error',
+                            text: result.retMsg,
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: '확인'
+                        });
+                        return;
+                    }
+
+                    swal({
+                        type: 'info',
+                        text: '취소요청을 철회(취소)하였습니다.',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: '확인'
+                    });
+
+                    fnSearch();
+                }
+            });
+        });
+    }
+
+    /**
+     * 현금영수증 사용여부
+     */
+    function checkCash() {
+        if ($('#rcpReqYn').val() != 'Y') {
+            swal({
+                type: 'error',
+                text: '현금영수증 발행 미사용 상태입니다.\n[마이페이지 > 서비스설정 > 현금영수증 발행] 화면에서 현금영수증 발행 기능을 [사용] 으로 변경해주세요.',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: '확인'
+            });
+            return false;
+        }
+    }
+
+</script>
+
+<form id="fileForm" name="fileForm" method="post" action="/org/receiptMgnt/cashExcelDown">
+    <input type="hidden" id="selectedDate" name="selectedDate"/>
+    <input type="hidden" id="masMonth" name="masMonth"/>
+    <input type="hidden" id="startDate" name="startDate"/>
+    <input type="hidden" id="endDate" name="endDate"/>
+    <input type="hidden" id="svecdList" name="svecdList"/>
+    <input type="hidden" id="fSearchGb" name="fSearchGb"/>
+    <input type="hidden" id="fSearchValue" name="fSearchValue"/>
+    <input type="hidden" id="fCusGubn" name="fCusGubn"/>
+    <input type="hidden" id="fCusGubnValue" name="fCusGubnValue"/>
+    <input type="hidden" id="fCashMasSt" name="fCashMasSt"/>
+    <input type="hidden" id="fRcpMasSt" name="fRcpMasSt"/>
+    <input type="hidden" id="fOrderBy" name="fOrderBy"/>
+</form>
+
+<input type="hidden" id="cusGubn1" name="cusGubn1" value="${orgSess.cusGubn1}"/>
+<input type="hidden" id="cusGubn2" name="cusGubn2" value="${orgSess.cusGubn2}"/>
+<input type="hidden" id="cusGubn3" name="cusGubn3" value="${orgSess.cusGubn3}"/>
+<input type="hidden" id="cusGubn4" name="cusGubn4" value="${orgSess.cusGubn4}"/>
+<input type="hidden" id="rcpReqYn" name="rcpReqYn" value="${orgSess.rcpReqYn}"/>
+
+<div id="contents">
+    <div id="damoa-breadcrumb">
+        <nav class="nav container">
+            <a class="nav-link" href="/org/receiptMgnt/receiptList">수납내역 조회</a>
+            <a class="nav-link" href="/org/receiptMgnt/paymentList">입금내역 조회</a>
+            <a class="nav-link" href="/org/receiptMgnt/payItemList">항목별 입금내역</a>
+            <a class="nav-link" href="/org/receiptMgnt/directReceiptReg">수기수납내역</a>
+            <a class="nav-link" href="/org/receiptMgnt/refundReceipt">수기환불내역</a>
+            <a class="nav-link active" href="/org/receiptMgnt/cashReceipt">현금영수증</a>
+        </nav>
+    </div>
+
+    <div class="container">
+        <div id="page-title">
+            <div id="breadcrumb-in-title-area" class="row align-items-center">
+                <div class="col-12 text-right">
+                    <img src="/assets/imgs/common/icon-home.png" class="mr-2">
+                    <span> > </span>
+                    <span class="depth-1">수납관리</span>
+                    <span> > </span>
+                    <span class="depth-2 active">현금영수증</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <h2>현금영수증</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div id="page-description">
+            <div class="row">
+                <div class="col-12">
+                    <p>고객별 총 입금금액 중 현금영수증 신청/발행여부를 확인할 수 있는 화면입니다.<br/>(가상계좌/현금 입금건의 경우만 현금영수증 발행이 가능합니다.)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="search-box">
+            <form>
+                <div class="row">
+                    <label class="col col-md-1 col-sm-2 col-2 col-form-label"></label>
+                    <div class="col col-md-4 col-sm-8 col-8 form-inline">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" id="payDay" name="selectDate" value="payDay" checked="checked">
+                            <label for="payDay"><span class="mr-2"></span>입금일자</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" id="appDay" name="selectDate" value="appDay">
+                            <label for="appDay"><span class="mr-2"></span>승인일자</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <label class="col col-md-1 col-sm-2 col-2 col-form-label">조회방식</label>
+                    <div class="col col-md-4 col-sm-8 col-8 form-inline">
+                        <div class="date-input">
+                            <div class="input-group">
+                                <input type="text" id="fDate" class="form-control date-picker-input" placeholder="YYYY.MM.DD" aria-describedby="basic-addon2" maxlength="8" onkeydown="onlyNumber(this)">
+                            </div>
+                        </div>
+                        <span class="range-mark"> ~ </span>
+                        <div class="date-input">
+                            <div class="input-group">
+                                <input type="text" id="tDate" class="form-control date-picker-input" placeholder="YYYY.MM.DD" aria-describedby="basic-addon2" maxlength="8" onkeydown="onlyNumber(this)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col col-md-6 col-sm-9 offset-md-0 offset-sm-2 offset-3">
+                        <button type="button" id="pMonth1" class="btn btn-sm btn-preset-month active" onclick="prevDate(1)">1개월</button>
+                        <button type="button" id="pMonth2" class="btn btn-sm btn-preset-month" onclick="prevDate(2)">2개월</button>
+                        <button type="button" id="pMonth3" class="btn btn-sm btn-preset-month" onclick="prevDate(3)">3개월</button>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <label class="col col-md-1 col-sm-2 col-2 col-form-label">검색구분</label>
+                    <div class="col col-md-4 col-sm-10 col-9 form-inline">
+                        <select class="form-control" id="searchGb" onchange="onSearchGb();">
+                            <option value="cusname">고객명</option>
+                            <option value="cusOffNo">현금영수증발행번호</option>
+                        </select>
+                        <input class="form-control col-auto" type="text" name="searchValue" id="searchValue" placeholder="콤마(,) 구분자로 다중검색이 가능합니다." onkeypress="if(event.keyCode == 13){fnSearch();}"/>
+                    </div>
+                    <label class="col col-md-1 col-sm-2 col-2 col-form-label">발행현황</label>
+                    <div class="col col-md-5 col-sm-10 col-9 form-inline">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" id="tableCheckbox1" name="sorting-order-type" checked="checked" value="ALL">
+                            <label for="tableCheckbox1"><span class="mr-2"></span>전체</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" id="tableCheckbox2" name="sorting-order-type" value="ST03">
+                            <label for="tableCheckbox2"><span class="mr-2"></span>발행</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" id="tableCheckbox3" name="sorting-order-type" value="ST02">
+                            <label for="tableCheckbox3"><span class="mr-2"></span>미발행</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" id="tableCheckbox5" name="sorting-order-type" value="ST05">
+                            <label for="tableCheckbox5"><span class="mr-2"></span>요청접수</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" id="tableCheckbox4" name="sorting-order-type" value="ST04">
+                            <label for="tableCheckbox4"><span class="mr-2"></span>처리중</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <label class="col col-md-1 col-sm-2 col-2 col-form-label">고객구분</label>
+                    <div class="col col-md-4 col-sm-10 col-9 form-inline">
+                        <select class="form-control" id="cusGubn" onchange="fnCusGubn(this);"></select>
+                        <div class="input-with-magnet">
+                            <input class="form-control" type="text" id="cusGubnValue" placeholder="콤마(,) 구분자로 다중검색이 가능합니다." onkeypress="if(event.keyCode == 13){fnSearch();}"/>
+                        </div>
+                    </div>
+                    <label class="col col-md-1 col-sm-2 col-2 col-form-label">입금수단</label>
+                    <div class="col col-md-4 col-sm-10 col-9 form-inline">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="deposAll" id="deposRadio1" value="ALL">
+                            <label class="form-check-label" for="deposRadio1"><span class="mr-1"></span>전체</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="deposItem" id="deposRadio2" value="VAS">
+                            <label class="form-check-label" for="deposRadio2"><span class="mr-1"></span>가상계좌</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="deposItem" id="deposRadio3" value="DCS">
+                            <label class="form-check-label" for="deposRadio3"><span class="mr-1"></span>현금</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <label class="col col-md-1 col-sm-2 col-2 col-form-label"></label>
+                    <div class="col col-md-4 col-sm-10 col-9 form-inline">
+                    </div>
+                    <label class="col col-md-1 col-sm-2 col-2 col-form-label">수납상태</label>
+                    <div class="col col-md-4 col-sm-10 col-9 form-inline">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" id="rcpstAll" name="rcpst" checked="checked" value="ALL">
+                            <label for="rcpstAll"><span class="mr-2"></span>전체</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" id="rcpstR" name="rcpst" value="PA03">
+                            <label for="rcpstR"><span class="mr-2"></span>수납</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" id="rcpstC" name="rcpst" value="PA09">
+                            <label for="rcpstC"><span class="mr-2"></span>취소</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row form-inline mt-3">
+                    <div class="col-12 text-center">
+                        <button type="button" class="btn btn-primary btn-wide" onclick="fnSearch();">조회</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="receipt-list">
+            <div class="table-option row mb-2">
+                <div class="col-md-6 col-sm-12 form-inline">
+                    <span class="amount mr-2">조회결과 [총 <em class="font-blue" id="totCnt"><fmt:formatNumber pattern="#,###" value="${map.count}"/></em>건]</span>
+                    <%--<span class="amount mr-2">발행건수 [총 <em class="font-blue" id="appCnt"><fmt:formatNumber pattern="#,###" value="${map.appCnt}"/></em>건]</span>--%>
+                    <span class="amount mr-2">입금금액 [총 <em class="font-blue" id="totPayAmt"><fmt:formatNumber pattern="#,###" value="${map.totPayAmt}"/></em>원]</span>
+                    <span class="amount">발행금액 [총 <em class="font-blue" id="totAmt"><fmt:formatNumber pattern="#,###" value="${map.totAmt}"/></em>원]</span>
+                </div>
+
+                <div class="col-md-6 col-sm-12 text-right mt-1">
+                    <select class="form-control" id="orderBy" onchange="pageChange();">
+                        <option value="pay">입금일자순 정렬</option>
+                        <option value="name">고객명순 정렬</option>
+                        <option value="app">승인일자순 정렬</option>
+                    </select>
+
+                    <select class="form-control" name="pageScale" id="pageScale" onchange="pageChange();">
+                        <option value="10" <c:if test="${map.PAGE_SCALE == '10'}">selected</c:if>>10개씩 조회</option>
+                        <option value="20" <c:if test="${map.PAGE_SCALE == '20'}">selected</c:if>>20개씩 조회</option>
+                        <option value="50" <c:if test="${map.PAGE_SCALE == '50'}">selected</c:if>>50개씩 조회</option>
+                        <option value="100" <c:if test="${map.PAGE_SCALE == '100'}">selected</c:if>>100개씩 조회</option>
+                        <option value="200" <c:if test="${map.PAGE_SCALE == '200'}">selected</c:if>>200개씩 조회</option>
+                    </select>
+                    <button class="btn btn-sm btn-d-gray" type="button" onclick="fn_fileSave()">파일저장</button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <div class="table-responsive mb-3">
+                        <table class="table table-sm table-hover table-primary">
+                            <colgroup>
+                                <col width="68">
+                                <col width="120">
+                                <col width="120">
+                                <col width="120">
+                                <col width="120">
+                                <c:if test="${orgSess.cusGubn1 != '' && orgSess.cusGubn1 != null}">
+                                    <col width="130">
+                                </c:if>
+                                <c:if test="${orgSess.cusGubn2 != '' && orgSess.cusGubn2 != null}">
+                                    <col width="130">
+                                </c:if>
+                                <c:if test="${orgSess.cusGubn3 != '' && orgSess.cusGubn3 != null}">
+                                    <col width="130">
+                                </c:if>
+                                <c:if test="${orgSess.cusGubn4 != '' && orgSess.cusGubn4 != null}">
+                                    <col width="130">
+                                </c:if>
+                                <col width="120">
+                                <col width="140">
+                                <col width="140">
+                                <col width="110">
+                                <col width="110">
+                                <col width="80">
+                                <col width="180">
+                                <col width="80">
+                            </colgroup>
+
+                            <thead>
+                                <tr>
+                                    <th>NO</th>
+                                    <th>입금일자</th>
+                                    <th>승인일자</th>
+                                    <th>승인번호</th>
+                                    <th>고객명</th>
+                                    <c:if test="${orgSess.cusGubn1 != '' && orgSess.cusGubn1 != null}">
+                                        <th>${orgSess.cusGubn1}</th>
+                                    </c:if>
+                                    <c:if test="${orgSess.cusGubn2 != '' && orgSess.cusGubn2 != null}">
+                                        <th>${orgSess.cusGubn2}</th>
+                                    </c:if>
+                                    <c:if test="${orgSess.cusGubn3 != '' && orgSess.cusGubn3 != null}">
+                                        <th>${orgSess.cusGubn3}</th>
+                                    </c:if>
+                                    <c:if test="${orgSess.cusGubn4 != '' && orgSess.cusGubn4 != null}">
+                                        <th>${orgSess.cusGubn4}</th>
+                                    </c:if>
+                                    <th>현금영수증 발행번호</th>
+                                    <th>입금금액(원)</th>
+                                    <th>발행금액(원)</th>
+                                    <th>발행현황</th>
+                                    <th>입금구분</th>
+                                    <th class="border-r-e6">요청</th>
+                                    <th class="border-l-n">메시지</th>
+                                    <th class="border-l-n">발행이력</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="resultBody">
+                                <tr>
+                                    <td colspan="16" style="text-align: center;">[조회된 내역이 없습니다.]</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <jsp:include page="/WEB-INF/views/include/paging.jsp" flush="false"/>
+        </div>
+    </div>
+    
+    <!--  신규기능(국세청 양식 다운로드)  ----------------------------------------------------------------------------------->
+    <div class="container mb-3">
+		<table class="table table-form mb-2">
+			<tbody class="container-fluid">
+				<tr class="row no-gutters">
+					<th class="col col-lg-2 col-4">
+						발행이력다운로드
+						<!-- 
+						<a tabindex="0" class="popover-dismiss ml-2" role="button" data-toggle="popover" data-trigger="focus"
+						   title="일괄고지서 파일생성이란?" data-content="조회결과 테이블에 조회된 모든 고지서 출력 대상을 하나의 PDF파일로 생성하여 제공 (대량출력을 보다 쉽게 처리 가능)">
+							<img src="/assets/imgs/common/icon-info.png">
+						</a>
+						 -->
+					</th>
+					<td class="col col-lg-10 col-8">
+						<button class="btn btn-sm btn-d-gray ml-3" onclick="fn_open_downloadHistory()">파일생성</button>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<!-- 
+		<div class="guide-mention mb-5">
+			* 고지서화면이 보이지 않을 경우 PC에 Acrobat Reader를 설치하세요.
+			<a href="https://get.adobe.com/reader/?loc=kr" target="_blank" class="btn btn-acrobat-reader-download">
+				<img src="/assets/imgs/common/icon-acrobat-reader.png"> ACROBAT READER 설치
+			</a>
+		</div>
+		 -->
+	</div>    
+
+    <div class="container">
+        <div id="quick-instruction" class="foldable-box">
+            <div class="row foldable-box-header">
+                <div class="col-8">
+                    <img src="/assets/imgs/common/icon-notice.png"> 알려드립니다.
+                </div>
+                <div class="col-4 text-right">
+                    <img src="/assets/imgs/common/btn-arrow-notice.png" class="fold-status">
+                </div>
+            </div>
+            <div class="row foldable-box-body">
+                <div class="col">
+                    <h6>■ 현금영수증 발행 방법</h6>
+                    <ul>
+                        <li>발행 신청한 고객의 청구월, 입금수단, 고객구분 등을 선택 후 조회 버튼 클릭</li>
+                        <li>현금영수증 정보 미등록시 입력 후 발행 버튼 클릭</li>
+                        <li class="depth-2 text-danger">* 가상계좌/현금 경우만 현금영수증 발행이 가능</li>
+                    </ul>
+
+                    <h6>■ 현금영수증 재발행</h6>
+                    <ul>
+                        <li>발행번호 또는 발행금액 변경시 사용</li>
+                        <li>재발행 신청한 고객 조회 후 우측 재발행 버튼 클릭</li>
+                    </ul>
+
+                    <h6>■ 현금영수증 취소</h6>
+                    <ul>
+                        <li>발행 취소를 신청한 고객을 조회 후 우측 취소 버튼 클릭</li>
+                        <li>수기수납등록을 취소한 건에 대하여 발행상태에 따라 수납상태를 취소로 조회하여 취소가능</li>
+                    </ul>
+
+                    <h6>■ 현금영수증 발행</h6>
+                    <ul>
+                        <li>소득세법 및 소득세법 시행령에 따라 현금영수증을 발행하시는 사업자 및 법인의 현금영수증 발급 의무 이행 및 모든 책임은 운영사와 무관함을 사전 고지합니다.</li>
+                        <li>현금영수증의 수동발행 및 재발행 시 실 입금일자(현금수령일)가 아닌 발행을 요청하신 날짜로 국세청에 등록 되오니 업무에 참고하시기 바랍니다.</li>
+                        <li>의무발행업체 서비스를 사용중인 경우, 현금영수증 발행번호 미입력시 국세청 자진발행 지정번호로 자동발행 처리됩니다.
+                            자동발행(요청)처리 된 고객의 현금영수증 발행번호 및 발행금액을 변경하고자 하는 경우, 발행(요청)을 취소(철회)한 후 발행하시기 바랍니다.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<jsp:include page="/WEB-INF/views/include/org/footer.jsp" flush="false"/>
+
+<%--현금영수증 재발행 --%>
+<jsp:include page="/WEB-INF/views/include/modal/re-issue-receipt.jsp" flush="false"/>
+
+<%-- 고객정보수정 팝업 --%>
+<jsp:include page="/WEB-INF/views/include/modal/detail-payer-information.jsp" flush="false"/>
+
+<jsp:include page="/WEB-INF/views/include/modal/detail-cash-history.jsp" flush="false"/>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        getYearsBox('yearsBox');
+        getMonthBox('monthBox');
+        $('#fDate').val(getPrevDate(toDay, 1));
+        $('#tDate').val(toDay);
+        cusGubnBox('cusGubn');
+        $('input:checkbox[name=deposItem]').prop('checked', true);
+        $('#deposRadio1').prop('checked', true);
+
+        //입금수단 전체 체크, 해제
+        $('#deposRadio1').click(function () {
+            if ($(this).prop('checked')) {
+                $('input:checkbox[name=deposItem]').prop('checked', true);
+            } else {
+                $('input:checkbox[name=deposItem]').prop('checked', false);
+            }
+        });
+
+        $('input:checkbox[name=deposItem]').click(function () {
+            if ($('#deposRadio1').is(":checked")) {
+                $('#deposRadio1').prop("checked", false);
+                $(this).prop("checked", false);
+            }
+            if ($('input:checkbox[name=deposItem]').length == $('input:checkbox[name=deposItem]:checked').length) {
+                $('#deposRadio1').prop("checked", true);
+            }
+        });
+
+        fnSearch(1);
+    });
+    
+  	//발행이력 다운로드 Modal Open
+    function fn_open_downloadHistory(){
+    	fn_reset_scroll();
+
+        $('#download-receipt-history').modal({
+            backdrop: 'static',
+            keyboard: false
+        });
+    	
+    }
+</script>
+
+<jsp:include page="/WEB-INF/views/include/modal/download_receipt_history.jsp" flush="false"/>

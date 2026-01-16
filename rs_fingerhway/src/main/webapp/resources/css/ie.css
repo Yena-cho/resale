@@ -1,0 +1,10 @@
+﻿@charset "utf-8";
+
+#contents {*margin-left:-80%; _float:right; _width:100%;}
+#contents .wrap_top .wrap_data div.select_box {*width:145px;}
+#contents .wrap_top .wrap_data .input_radio {*margin-top:4px; *width:170px;}
+.wrap_sms .sms_col2 .top_tit li {*padding-bottom:10px; }
+.mail_input .lay_mail li a {*width:99%; }
+div.select_box select.select_layer {padding:0px 10px 10px;}
+#contents .wrap_top .wrap_data {*width:260px;} 
+#contents .wrap_top .wrap_data.wrap_col3 {*width:500px !important;} /* 추가180207 */

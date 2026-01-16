@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="OrgMainDao">	
+	
+	<select id="selXmontSum" resultType="com.finger.shinhandamoa.org.main.dto.XmontSumDTO">
+		SELECT COALESCE(NR.NOTICNT, 0)																			AS NOTICNT
+		      ,COALESCE(NR.NOTIAMT, 0)                          												AS NOTIAMT
+		      ,COALESCE(NR.RCPCNT, 0)                           												AS RCPCNT
+		      ,COALESCE(NR.RCPAMT, 0)                           												AS RCPAMT
+		      ,COALESCE(NR.RCPCNTNOT, 0)                        												AS RCPCNTNOT
+		      ,COALESCE(NR.NOTIAMT, 0) - COALESCE(NR.RCPAMT, 0) 												AS RCPAMTNOT
+		      ,COALESCE(SM.SMSCNT, 0)                           												AS SMSCNT
+		      ,COALESCE(SM.SMSFEE, 0)																			AS SMSFEE
+		      ,COALESCE(ROUND((NR.RCPAMT / CASE NR.NOTIAMT  WHEN 0 THEN  NULL  ELSE NR.NOTIAMT END) * 100), 0)                AS RCPRATIO1
+		      ,COALESCE(ROUND(((NR.NOTIAMT - NR.RCPAMT) / CASE NR.NOTIAMT  WHEN 0 THEN  NULL  ELSE NR.NOTIAMT END) * 100), 0) AS RCPRATIO2
+		      ,CASE WHEN (NR.NOTIAMT - NR.RCPAMT)  &lt;  0 THEN 'Y' ELSE 'N' END                				AS OVERRCPYN
+		      ,TO_CHAR(NOW(), 'YYYY.MM.DD AM HH:MI')                                                   			AS DAY
+		      ,ROUND(COALESCE(NR.BEFORE / CASE NR.AFTER  WHEN 0 THEN  NULL  ELSE NR.AFTER END, 0) * 100)        AS RESULT
+		      ,CASE WHEN TO_CHAR(CURRENT_DATE - INTERVAL '1 MONTH' , 'DD') = TO_CHAR(NOW(), 'DD')
+		                 THEN TO_CHAR(NOW(), 'DD')
+		            ELSE TO_CHAR(CURRENT_DATE - INTERVAL '1 MONTH', 'DD')
+		       END                                                                                       		AS TODAY
+		FROM   (
+			SELECT * FROM ( SELECT COUNT(1) AS NOTICNT,
+					   SUM(NON_PAYMENT_FLAG) AS RCPCNTNOT,
+					   SUM(PAYMENT_FLAG) AS RCPCNT,
+					   SUM(BILL_AMOUNT) AS NOTIAMT,
+					   SUM(NON_PAYMENT_AMOUNT) AS RCPAMTNOT
+				FROM (
+					SELECT A.NOTIMASCD,
+						   A.NOTIMASST,
+						   CASE A.NOTIMASST  WHEN 'PA02' THEN  1  WHEN 'PA04' THEN  1  ELSE 0 END AS NON_PAYMENT_FLAG, -- 미납 여부
+						   CASE A.NOTIMASST  WHEN 'PA03' THEN  1  WHEN 'PA05' THEN  1  WHEN 'PA06' THEN  1  ELSE 0 END AS PAYMENT_FLAG, -- 완납 여부
+						   SUM(B.PAYITEMAMT) AS BILL_AMOUNT, -- 청구액
+						   GREATEST(SUM(B.PAYITEMAMT)-SUM(COALESCE(C.RCPAMT, 0)), 0) AS NON_PAYMENT_AMOUNT -- 미납액
+					FROM XNOTIMAS A
+						LEFT OUTER JOIN XNOTIDET B ON B.NOTIMASCD=A.NOTIMASCD
+						LEFT OUTER JOIN (
+							SELECT
+								RM.NOTIMASCD,
+								SUM(COALESCE(RD.PAYITEMAMT, RM.RCPAMT)) AS RCPAMT
+							FROM XRCPMAS RM
+							INNER JOIN XRCPDET RD ON RM.RCPMASCD = RD.RCPMASCD
+							WHERE RM.RCPMASST='PA03'
+								AND RM.CHACD=#{chaCd}
+					  			AND RM.MASMONTH=#{month} 
+					  		GROUP BY RM.NOTIMASCD
+						) C ON C.NOTIMASCD=A.NOTIMASCD 
+					WHERE A.NOTIMASST != 'PA00'
+					  AND A.NOTI_CAN_YN  = 'N'
+					  AND A.CHACD=#{chaCd}
+					  AND A.MASMONTH=#{month}
+					GROUP BY A.NOTIMASCD, A.NOTIMASST
+				) X
+			) XX, (
+				SELECT SUM(COALESCE(B.PAYITEMAMT, A.RCPAMT)) AS RCPAMT
+				FROM XRCPMAS A
+				INNER JOIN XRCPDET B ON A.RCPMASCD = B.RCPMASCD
+				WHERE A.RCPMASST='PA03'
+				  AND A.CHACD=#{chaCd}
+				  AND A.MASMONTH=#{month}
+			) YY, (
+				SELECT SUM(CASE TO_CHAR(PAYDAY::timestamp - INTERVAL '1 MONTH', 'YYYYMM') WHEN #{month} THEN B.PAYITEMAMT ELSE 0 END) AS BEFORE,
+				       SUM(CASE SUBSTR(PAYDAY, 1, 6) WHEN #{month} THEN B.PAYITEMAMT ELSE 0 END) AS AFTER
+				FROM XRCPMAS A
+				INNER JOIN XRCPDET B ON A.RCPMASCD = B.RCPMASCD
+				WHERE A.RCPMASST='PA03'
+				  AND A.CHACD=#{chaCd}
+			) ZZ
+		) NR -- 청구/수납결과
+		      ,(
+		        SELECT MAX(CHACD) AS CHACD,
+		        	   COUNT(1) AS SMSCNT,
+		        	   COALESCE(SUM(CASE TYPE  WHEN '0' THEN  22  WHEN '1' THEN  44 END), 0) AS SMSFEE
+		        FROM   SMSREQ
+		        WHERE  CHACD                    = #{chaCd}
+		        AND  TO_CHAR(REQDATE, 'YYYYMM') = #{month}
+		        AND  STATUS                     = '2'
+		       ) SM -- SMS 결과
+	</select>
+
+	<select id="selectPaymentRatio"  resultType="com.finger.shinhandamoa.org.main.dto.XmontSumDTO">
+		SELECT
+		 		A.NOTICNT    AS        noticnt
+			, 	A.NOTIAMT    AS        notiamt
+			, 	A.NOTIFEE    AS        notifee
+			, 	A.RCPCNT     AS        rcpcnt
+			, 	A.RCPAMT     AS        rcpamt
+			, 	A.RCPFEE     AS        rcpfee
+			, 	A.RCPBNKFEE  AS        rcpbnkfee
+			, 	A.SMSCNT     AS        smscnt
+			, 	A.SMSFEE     AS        smsfee
+			, 	A.RCPBNKFEE  AS        rcpbnkfee
+			, 	A.SMSCNT     AS        smscnt
+			, 	A.SMSFEE     AS        smsfee			
+			, 	(A.NOTICNT- A.RCPCNT)     AS        rcpcntNot
+			, 	(A.NOTIAMT- A.RCPAMT)     AS        rcpamtNot
+			, 	(A.NOTIFEE- A.RCPFEE)     AS        rcpfeeNot
+			, 	A.FINISHYN   AS        finishyn
+			,   A.MONTH      AS month			
+         ,CASE WHEN (A.RCPAMT   / A.NOTIAMT * 100)  &gt; 100
+                    THEN 100 
+               ELSE ROUND(A.RCPAMT / A.NOTIAMT * 100, 2) 
+          END          rcpRatio1
+        , CASE WHEN  ((A.NOTIAMT- A.RCPAMT) /A.NOTIAMT *100) &lt; 0
+          THEN 0 
+          ELSE ROUND(((A.NOTIAMT- A.RCPAMT) /A.NOTIAMT *100) , 2)
+          END          rcpRatio2
+        , CASE WHEN  ((A.NOTIAMT- A.RCPAMT) /A.NOTIAMT *100) &lt; 0
+          THEN 'Y'
+          ELSE 'N'
+          END     overRcpYn			
+		FROM 	XMONTHSUM 	A
+		WHERE 	A.CHACD 	= #{chaCd}
+        <if test='month != "" and month != null'>
+		 AND	A.MONTH     = #{month}
+        </if>					
+        <if test='month == "" or month == null'>
+         AND   A.MONTH = (SELECT MAX(MONTH) FROM XMONTHSUM WHERE  CHACD = #{chaCd} AND NOTIAMT != 0  )
+        </if>		
+	</select>	
+			
+	<!-- 납부집계 -->
+	<select id="selectPaymentSummary" resultType="PaymentDTO">
+		SELECT A.PAYDAY,
+		       A.RCPUSRNAME AS cusName,
+		       A.RCPAMT
+		FROM XRCPMAS A
+		WHERE A.RCPMASST='PA03'
+		  AND A.CHACD=#{chaCd}
+		  AND A.SVECD='VAS'
+		ORDER BY A.PAYDAY || A.PAYTIME DESC
+	</select>
+</mapper>

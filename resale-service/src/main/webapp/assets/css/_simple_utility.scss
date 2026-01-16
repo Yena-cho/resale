@@ -1,0 +1,198 @@
+@charset "UTF-8";
+
+/*
+**
+** _simple_utilty.scss
+** Author : 이영주
+** Create date : 2018.04.11
+** Description : Damoa 서비스에서 사용하는 간단한 유틸들 모음 damoa.scss 에서 최종으로 compile 됨
+**
+*/
+
+
+/* borders */
+
+.bt-1-e6e6e6 {
+    border-top: .0625rem solid #e6e6e6;
+}
+
+
+.ui-datepicker {
+    z-index: 1051 !important;
+}
+
+
+/* Warning text */
+.error-message {
+    font-size: .875rem;
+    padding: .375rem;
+}
+
+.guide-mention {
+    font-size:.75rem;
+    color:#8d8b8b;
+}
+
+.has-ellipsis {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+
+
+/* Angle */
+
+.rotate-180-deg {
+    transform: rotate(180deg);
+
+    transition: all .3s forwards;
+}
+
+/* no scrolling */
+
+.noscroll {
+    // overflow : hidden;
+    // height: 100vh;
+
+    position: fixed;
+    overflow: hidden;
+    width: 100%;
+    height: 100%
+}
+
+
+/*
+    custom scrollbar
+*/
+
+/* width */
+.table-responsive::-webkit-scrollbar {
+    width: 5px;
+    height: 10px;
+}
+
+/* Track */
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+/* Handle */
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #a2a2a2;
+    border-radius: 2.5px;
+
+    transition: all .5s;
+}
+
+/* Handle on hover */
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #555;
+
+    transition: all .5s;
+}
+
+/* badge */
+
+.badge {
+    width:1.4rem;
+    height:1.4rem;
+    padding: .3rem;
+    vertical-align: middle;
+
+    &.round {
+        border-radius: 50%;
+    }
+    &.light-blue {
+        background: #90b3ee;
+        color: #fff;
+    }
+}
+
+
+/* body scroll */
+
+body.modal-open {
+    overflow-y: hidden;
+    // position: fixed;
+}
+
+
+@media screen and (max-width:768px) {
+    .guide-mention {
+        display:block;
+    }
+}
+
+/* Hidden on mobile */
+@media screen and (max-width:768px) {
+    .hidden-on-mobile {
+        display:none !important;
+    }
+}
+
+/* show on mobile */
+@media screen and (max-width:768px) {
+    .show-on-mobile {
+        display: block !important;
+    }
+}
+
+/* Hidden on web */
+@media screen and (min-width:768px) {
+    .hidden-on-web {
+        display:none !important;
+    }
+}
+
+/* show on mobile */
+@media screen and (min-width:768px) {
+    .show-on-web {
+        display: block !important;
+    }
+}
+
+
+
+/* progress bar */
+
+.ajax-loader-area {
+    position: fixed;
+    top: 0;
+    width:100%;
+    height: 100vh;
+    z-index: 1050;
+
+    .ajax-loader {
+        position: relative;
+        top: 50%;
+        left: 50%;
+        margin-left: -25px;
+        width: 50px;
+        height: 50px;
+        background-image:url('/assets/imgs/common/loader.gif');
+        background-size: cover;
+        background-repeat: no-repeat;
+        z-index: 1051;
+
+    }
+}
+
+/* ie 10 용 css 들 */
+
+@media screen and (-ms-high-contrast: active) , ( -ms-high-contrast : none) {
+    .inline-btn-ie-10-fix {
+        display: -webkit-box;
+        -webkit-box-orient:horizontal;
+        -webkit-box-direction:normal;
+        flex-flow:row wrap;
+        -webkit-box-align:center;
+        select, input {
+        }
+    }
+}
+
+.payDay-text {
+   text-align: right;
+   line-height: 0;
+}

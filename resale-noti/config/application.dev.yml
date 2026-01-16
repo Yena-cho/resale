@@ -1,0 +1,39 @@
+server:
+  port: 8089
+  servlet:
+    session:
+      timeout: 6000
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+spring:
+  banner:
+    location: classpath:banner/banner_local.txt
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    hikari:
+      jdbc-url: jdbc:postgresql://20.20.20.205:5432/damoarsdb
+      driver-class-name: org.postgresql.Driver
+      username: damoarsdb
+      password: damoarsdb2021@
+      maximum-pool-size: 20
+      max-lifetime: 30000
+      connection-timeout: 30000
+
+logging:
+  level:
+    root: debug
+  config: config/logback-spring.xml
+
+mybatis:
+  mapper-locations: "classpath:mybatis/mapper/*/*Mapper.xml"
+  config-location: "classpath:mybatis/MybatisConfig.xml"
+
+# 입금 통지 서버 정보
+#noti-server:
+#  rqst-url: http://localhost:8081
+

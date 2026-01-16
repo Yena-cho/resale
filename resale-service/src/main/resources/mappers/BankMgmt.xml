@@ -1,0 +1,818 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="BankMgmtDao">
+
+	<!-- 페이징을 위한 header -->
+	<sql id="paging_header">
+		select *
+		from (
+		    select (ROW_NUMBER() OVER()) as rn, C.*
+		    from (
+	</sql>
+	<!-- 페이징을 위한 footer -->
+	<sql id="paging_footer">
+		    ) C
+		) X where rn between #{start} and #{end}
+	</sql>
+
+	<!-- 지점검색 total count -->
+	<select id="getBranchListTotalCount" resultType="int">
+		SELECT 	COUNT(*)	AS  cnt
+		FROM 	FIAGTLIST
+		WHERE	1 = 1
+		<if test="agtCd != null and agtCd != ''">
+		AND		AGTCD	LIKE '%' || #{agtCd} || '%'
+		</if>
+		<if test="agtName != null and agtName != ''">
+		AND		AGTNAME	LIKE '%' || #{agtName} || '%'
+		</if>
+	</select>
+
+	<!-- 지점검색 -->
+	<select id="getBranchListAll"  resultType="BankReg01DTO">
+		<include refid="paging_header" />
+		SELECT 	AGTCD     AS  agtCd
+			, 	AGTNAME   AS  agtName
+		FROM 	FIAGTLIST
+		WHERE	1 = 1
+		<if test="agtCd != null and agtCd != ''">
+		AND		AGTCD	LIKE '%' || #{agtCd} || '%'
+		</if>
+		<if test="agtName != null and agtName != ''">
+		AND		AGTNAME	LIKE '%' || #{agtName} || '%'
+		</if>
+		ORDER BY AGTCD ASC
+		<include refid="paging_footer" />
+	</select>
+
+	<!-- 기관검색 total count -->
+	<select id="getCollectorListTotalCount" resultType="int">
+		SELECT 	COUNT(*) AS cnt
+		FROM 	XCHALIST
+		WHERE	1 = 1
+		<if test="chaCd != null and chaCd != ''">
+		AND		CHACD	LIKE '%' || #{chaCd} || '%'
+		</if>
+		<if test="chaName != null and chaName != ''">
+		AND		CHANAME	LIKE '%' || #{chaName} || '%'
+		</if>
+		<if test="chaGb != null and chaGb == 'new'">
+		AND		CHAST IN ('ST01', 'ST03', 'ST05')
+		</if>
+	</select>
+
+	<!-- 기관검색 -->
+	<select id="getCollectorListAll"  resultType="BankReg01DTO">
+		<include refid="paging_header" />
+		SELECT 	CHACD           AS chaCd
+			,   AGTCD		    AS agtCd
+			,   CHANAME		    AS chaName
+			,   OWNERTEL	    AS ownertel
+		FROM 	XCHALIST
+		WHERE 	1=1
+		<if test="chaCd != null and chaCd != ''">
+		AND		CHACD	LIKE '%' || #{chaCd} || '%'
+		</if>
+		<if test="chaName != null and chaName != ''">
+		AND		CHANAME	LIKE '%' || #{chaName} || '%'
+		</if>
+		<if test="chaGb != null and chaGb == 'new'">
+		AND		CHAST IN ('ST01', 'ST03', 'ST05')
+		</if>
+		ORDER BY CHACD ASC
+		<include refid="paging_footer" />
+	</select>
+
+	<!-- 가입승인관리, 이용기관조회 조회 count -->
+	<select id="getNewChaListTotalCount" resultType="int">
+		SELECT	COUNT(*) 	AS cnt
+		  FROM XCHALIST A LEFT JOIN FIAGTLIST B ON A.AGTCD = B.AGTCD
+		  WHERE 1=1
+		<include refid="newChaSearch"/>
+	</select>
+
+	<!-- 기관승인관리, 이용기관조회 조회 select -->
+	<select id="getNewChaListAll" resultType="BankReg01DTO">
+		<include refid="paging_header" />
+		SELECT TO_CHAR(A.REGDT, 'YYYY.MM.DD')                             AS regDt,
+				TO_CHAR(TO_DATE(A.BANK_REGI_DT, 'YYYYMMDD'), 'YYYY.MM.DD') AS bnkRegiDt,
+				TO_CHAR(TO_DATE(A.BANK_ACPT_DT, 'YYYYMMDD'), 'YYYY.MM.DD') AS bnkAcptDt,
+				TO_CHAR(TO_DATE(A.CHA_CLOSE_DT, 'YYYYMMDD'), 'YYYY.MM.DD') AS chaCloseDt,
+				A.CHACD                                                    AS chaCd,
+				A.CHANAME                                                  AS chaName,
+				A.CHRNAME                                                  AS chrName,
+				A.OWNERTEL                                                 AS ownerTel,
+				A.AGTCD                                                    AS agtCd,
+				B.AGTNAME                                                  AS agtName,
+				A.CHAST                                                    AS chast,
+				A.ADJACCYN                                                 AS adjaccyn,
+				TO_CHAR(A.MAKEDT, 'YYYY.MM.DD')                            AS makeDt,
+				A.REMARK                                                   AS remark,
+				COALESCE(A.CHA_CLOSE_CHK, 'N')							   AS chaCloseChk,
+				A.AMTCHKTY                                                 AS amtChkTy,
+				A.ACCNOCNT                                                 AS accNoCnt,
+				A.CHATRTY                                                  AS chatrty
+		 FROM XCHALIST A LEFT JOIN FIAGTLIST B ON A.AGTCD = B.AGTCD
+		WHERE 1=1
+		<include refid="newChaSearch"/>
+		<include refid="newChaOrderBy"/>
+		<include refid="paging_footer" />
+	</select>
+
+	<!--
+	ST01 다모아-관리자용 승인대기(신규기관)
+	ST02 해지 : 다모아
+	ST04 은행정지 : 은행
+	ST05 은행승인대기 : 은행
+	ST06 이용승인 : 다모아
+	ST07 이용거부 : 다모아
+	ST08 이용정지 : 다모아
+	 -->
+	<sql id="newChaSearch">
+	SELECT TO_CHAR(A.REGDT, 'YYYY.MM.DD')                             AS regDt,
+		   TO_CHAR(TO_DATE(A.BANK_REGI_DT, 'YYYYMMDD'), 'YYYY.MM.DD') AS bnkRegiDt,
+		   TO_CHAR(TO_DATE(A.BANK_ACPT_DT, 'YYYYMMDD'), 'YYYY.MM.DD') AS bnkAcptDt,
+		   TO_CHAR(TO_DATE(A.CHA_CLOSE_DT, 'YYYYMMDD'), 'YYYY.MM.DD') AS chaCloseDt,
+		   A.CHACD                                                    AS chaCd,
+		   A.CHANAME                                                  AS chaName,
+		   A.CHRNAME                                                  AS chrName,
+		   A.OWNERTEL                                                 AS ownerTel,
+		   A.AGTCD                                                    AS agtCd,
+		   B.AGTNAME                                                  AS agtName,
+		   A.CHAST                                                    AS chast,
+		   A.ADJACCYN                                                 AS adjaccyn,
+		   TO_CHAR(A.MAKEDT, 'YYYY.MM.DD')                            AS makeDt,
+		   A.REMARK                                                   AS remark,
+		   COALESCE(A.CHA_CLOSE_CHK, 'N')							   AS chaCloseChk,
+		   A.AMTCHKTY                                                 AS amtChkTy,
+		   A.ACCNOCNT                                                 AS accNoCnt,
+		   A.CHATRTY                                                  AS chatrty
+	FROM XCHALIST A LEFT JOIN FIAGTLIST B ON A.AGTCD = B.AGTCD
+	WHERE 1=1
+	  	<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(calDateFrom) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(calDateTo)">
+		AND 	TO_CHAR(TO_DATE(A.BANK_REGI_DT, 'YYYYMMDD'), 'YYYYMMDD') BETWEEN #{calDateFrom} AND #{calDateTo}
+		</if>
+		<if test="searchGb == 'new' and chast == 'ALL'">
+		AND		A.CHAST 	IN ('ST01', 'ST07', 'ST05')   /* (다모아) 승인대기상태 추가 */
+		</if>
+		<if test="searchGb == 'new' and chast != null and chast != 'ALL'">
+		AND		A.CHAST 	= #{chast}
+		</if>
+		<if test="searchGb == 'sel' and chast == 'ALL'">
+		AND		A.CHAST 	IN ('ST02', 'ST04', 'ST06', 'ST08')
+		</if>
+		<if test="searchGb == 'sel' and chast == 'ST06'">
+		AND		A.CHAST 	IN ('ST06')
+		</if>
+		<if test="searchGb == 'sel' and chast == 'ST04'">
+		AND		A.CHAST 	IN ('ST04', 'ST08')
+		</if>
+		<if test="searchGb == 'sel' and chast == 'ST02'">
+		AND		A.CHAST 	= 'ST02'
+		</if>
+		<if test="agtCd != null and agtCd != ''">
+		AND		A.AGTCD 	LIKE '%' || #{agtCd} || '%'
+		</if>
+		<if test="agtName != null and agtName != ''">
+		AND		B.AGTNAME 	LIKE '%' || #{agtName} || '%'
+		</if>
+		<if test="chaCd != null and chaCd != ''">
+		AND		A.CHACD 	LIKE '%' || #{chaCd} || '%'
+		</if>
+		<if test="chaName != null and chaName != ''">
+		AND		A.CHANAME 	LIKE '%' || #{chaName} || '%'
+		</if>
+		<if test="adjaccyn != null and adjaccyn != ''">
+		AND		A.ADJACCYN 	= #{adjaccyn}
+		</if>
+        <if test="chatrty != null and chatrty != '' and chatrty == 'ALL'">
+            AND		A.CHATRTY 	IN ('01', '03')
+        </if>
+        <if test="chatrty != null and chatrty != '' and chatrty != 'ALL'">
+            AND		A.CHATRTY 	= #{chatrty}
+        </if>
+        <if test="amtChkTy != null and amtChkTy != '' and amtChkTy == 'ALL'">
+            AND		A.AMTCHKTY 	IN ('Y', 'N')
+        </if>
+        <if test="amtChkTy != null and amtChkTy != '' and amtChkTy != 'ALL'">
+            AND		A.AMTCHKTY 	= #{amtChkTy}
+        </if>
+
+		<if test="chaCloseChk != null and chaCloseChk != '' and chaCloseChk != 'ALL'">
+			AND COALESCE(A.CHA_CLOSE_CHK, 'N') = #{chaCloseChk}
+		</if>
+	</sql>
+
+	<sql id="newChaOrderBy">
+		<if test="searchOrderBy == 'bnkRegiDt'">
+		ORDER	BY	A.BANK_REGI_DT DESC, A.CHANAME, A.CHACD, A.CHAST DESC
+		</if>
+		<if test="searchOrderBy == 'chaName'">
+		ORDER	BY	A.CHANAME, A.CHACD, A.BANK_REGI_DT DESC, A.CHAST DESC
+		</if>
+		<if test="searchOrderBy == 'state'">
+		ORDER	BY	A.CHAST DESC, A.BANK_REGI_DT DESC, A.CHANAME, A.CHACD
+		</if>
+	</sql>
+
+	<!-- 기관관리 - 기관상세조회  -->
+	<select id="selectChaListDetail" resultType="SysChaMgmtDTO">
+		SELECT 	A.CHATRTY 				AS chatrty				--기관분류
+			,	A.FGCD		        	AS fgCd		       		--은행코드
+			,	A.CHACD		        	AS chaCd		       	--기관코드
+			,  	A.CHANAME		    	AS chaName		     	--기관명
+			,  	A.OWNER		        	AS owner		       	--대표자
+			,  	A.OWNERTEL	        	AS ownerTel	       		--대표전화번호
+			,  	A.CHAOFFNO	        	AS chaOffNo	       		--사업자번호
+			,  	A.CHRNAME		    	AS chrName		     	--담당자명
+			,  	A.CHRTELNO	        	AS chrTelNo	       		--담당자전화번호
+			,  	A.USE_PURPOSE		    AS usePurpose		    --사용목적
+			,  	A.CHAST		        	AS chast		       	--상태
+			,  	A.CHAZIPCODE	        AS chaZipCode	        --우편번호
+			,  	A.CHAADDRESS1	    	AS chaAddress1	     	--주소1
+			,  	A.CHAADDRESS2	    	AS chaAddress2	     	--주소2
+			,  	A.FEEACCNO	        	AS feeAccNo	       		--수수료계좌번호
+			,  	A.ADJACCYN	        	AS adjaccyn	       		--다계좌사용여부
+			,  	A.NOTMINLIMIT	    	AS notMinLimit	      	--청구정액범위
+			,  	A.NOTMINFEE	        	AS notMinFee	        --청구정액수수료
+			,  	A.NOTCNTFEE	        	AS notCntFee	        --청구건당수수료
+			,  	A.RCPCNTFEE	        	AS rcpCntFee	        --수납건당수수료
+			,  	A.RCPBNKFEE	        	AS rcpBnkFee	        --수납건당은행수수료
+			,  	A.ACCNOCNT		        AS accNoCnt		       	--계좌발급수
+			, 	A.CHRMAIL 				AS chrMail
+			,	A.CHASTATUS				AS chaStatus
+			,	A.CHATYPE				AS chaType
+			, 	COALESCE(A.FINGER_FEE_ACCOUNT_NO, ' ')		AS fingerFeeAccountNo
+			, 	COALESCE(A.FINGER_FEE_PAYTY, ' ')			AS fingerFeePayty
+			, 	COALESCE(A.FINGER_FEE_BANK_CODE, ' ')		AS fingerFeeBankCode
+			,   COALESCE((SELECT VALUE FROM KFTC_CODE WHERE CODE = A.FINGER_FEE_BANK_CODE AND SHOWYN='Y'),' ')    AS fingerFeeBankValue
+			, 	A.DA_MNG_MEMO 			AS daMngMemo
+			,	TO_CHAR(A.REGDT, 'yyyyMMddHHMIss') AS regDt
+			,   B.LOGINID				AS loginId
+			,	A.USESMSYN				AS useSmsYn
+			,   A.AMTCHKTY				AS amtChkTy
+			,   A.RCP_DUE_CHK			AS rcpDueChk
+			,   A.PARTIAL_PAYMENT 		AS partialPayment
+			,	A.RCPREQYN 				AS rcpReqYn
+			, 	A.RCPREQTY 				AS rcpReqTy
+			,	A.NOTAXYN 				AS noTaxYn
+			,	A.MNLRCPREQTY 			AS mnlRcpReqTy
+			,	A.RCPREQSVETY 			AS rcpReqSveTy
+			,	A.CUSNAMETY 			AS cusNameTy
+			,	COALESCE(A.MAND_RCP_YN, 'N') AS mandRcpYn
+			,   A.RCP_NOTICE_URL        AS rcpNoticeUrl
+			,   A.CHA_API_URL_QUERY     AS chaApiUrlQuery
+			,   A.CHA_API_URL_NOTICE    AS chaApiUrlNotice
+
+			/*
+			,  	A.REMARK		        AS remark		       	--비고
+			,	A.USEPGYN 				AS usePgYn
+			,	A.PG_APR_DT				AS pgAprDt
+			,	A.PG_APR_MEMO			AS pgAprMemo
+			, 	A.SMS_APL_DT 			AS smsAplDt
+			, 	A.SMS_APL_MEMO 			AS smsAplMemo
+			, 	A.PG_COM_NAME    		AS pgComName
+			,	A.PGSERVICEID			AS pgServiceId
+			,	A.PG_LICEN_KEY   		AS pgLicenKey
+			,   A.PG_REV_COMMI_RATE 	AS pgRevCommiRate
+			,	A.FINGER_REV_COMMI_RATE AS fingerRevCommiRate
+			,	COALESCE(A.BILLCONT1, 'Y') AS concurrentBlockYn*/
+		FROM 	XCHALIST	A
+		   LEFT OUTER JOIN WEBUSER B ON A.CHACD	= B.CHACD
+		WHERE A.CHACD = #{chaCd}
+	</select>
+
+	<!-- 기관승인관리 - 기관상세조회  (기존)-->
+	<select id="selectChaListInfo" resultType="BankReg01DTO">
+		SELECT 	A.CHATRTY 				AS chatrty
+			,	A.CHACD		        	AS chaCd		       	--가맹점코드
+			,  	A.CHANAME		    	AS chaName		     	--가맹점명
+			,  	A.OWNER		        	AS owner		       	--대표자
+			,  	A.OWNERTEL	        	AS ownerTel	       		--대표전화번호
+			,  	A.CHAOFFNO	        	AS chaOffNo	       		--학원사업자번호
+			,  	A.CHRNAME		    	AS chrName		     	--담당자명
+			,  	A.CHRTELNO	        	AS chrTelNo	       		--담당자전화번호
+			,  	A.CHAST		        	AS chast		       	--상태
+			,  	A.CHAZIPCODE	        AS chaZipCode	        --우편번호
+			,  	A.CHAADDRESS1	    	AS chaAddress1	     	--학원주소1
+			,  	A.CHAADDRESS2	    	AS chaAddress2	     	--학원주소2
+			,  	A.FEEACCNO	        	AS feeAccNo	       		--수수료계좌번호
+			,  	A.ADJACCYN	        	AS adjaccyn	       		--다계좌사용여부
+			,  	A.NOTMINLIMIT	    	AS notMinLimit	      	--청구정액범위
+			,  	A.NOTMINFEE	        	AS notMinFee	        --청구정액수수료
+			,  	A.NOTCNTFEE	        	AS notCntFee	        --청구건당수수료
+			,  	A.RCPCNTFEE	        	AS rcpCntFee	        --수납건당수수료
+			,  	A.RCPBNKFEE	        	AS rcpBnkFee	        --수납건당은행수수료
+			,  	F.AGTNAME     			AS agtName
+			,  	A.AGTCD		        	AS agtCd		       	--계약지점코드
+			,  	A.REMARK		        AS remark		       	--비고
+			,  	A.ACCNOCNT		        AS accNoCnt		       	--계좌발급수
+			,   A.CHRHP 				AS chrHp
+			, 	A.CHRMAIL 				AS chrMail
+			,	A.USEPGYN 				AS usePgYn
+			,	A.PG_APR_DT				AS pgAprDt
+			,	A.PG_APR_MEMO			AS pgAprMemo
+			, 	A.SMS_APL_DT 			AS smsAplDt
+			, 	A.SMS_APL_MEMO 			AS smsAplMemo
+			, 	A.PG_COM_NAME    		AS pgComName
+			,	A.PGSERVICEID			AS pgServiceId
+			,	A.PG_LICEN_KEY   		AS pgLicenKey
+			,   A.PG_REV_COMMI_RATE 	AS pgRevCommiRate
+			, 	A.DA_MNG_MEMO 			AS daMngMemo
+			,	A.USESMSYN				AS useSmsYn
+			,	A.FINGER_REV_COMMI_RATE AS fingerRevCommiRate
+			,	TO_CHAR(A.REGDT, 'yyyyMMddHHMIss') AS regDt
+			,	A.CHASTATUS				AS chaStatus
+			,	A.CHATYPE				AS chaType
+			,   B.LOGINID				AS loginId
+			,   A.AMTCHKTY				AS amtChkTy
+			,   A.RCP_DUE_CHK			AS rcpDueChk
+			,   A.PARTIAL_PAYMENT 		AS partialPayment
+			,   COALESCE((SELECT VALUE FROM KFTC_CODE WHERE CODE = A.FINGER_FEE_BANK_CODE),' ')    AS bValue
+			,   COALESCE((SELECT CODE FROM KFTC_CODE WHERE CODE = A.FINGER_FEE_BANK_CODE),' ')    AS bnkCd
+			, 	COALESCE(A.FINGER_FEE_ACCOUNT_NO, ' ')		AS finFeeAccNo
+			, 	COALESCE(A.FINGER_FEE_ACCOUNT_OWNER, ' ')		AS finFeeAccOwner
+			, 	COALESCE(A.FINGER_FEE_ACCOUNT_IDENTITY, ' ')		AS finFeeAccIdent
+			, 	COALESCE(A.FINGER_FEE_OWNER_NO, ' ')		AS finFeeOwnNo
+			, 	COALESCE(A.FINGER_FEE_PAYTY, ' ')		AS finFeePayTy
+			,	A.RCPREQYN AS rcpReqYn
+			, 	A.RCPREQTY AS rcpReqTy
+			,	A.NOTAXYN AS noTaxYn
+			,	A.MNLRCPREQTY AS mnlRcpReqTy
+			,	A.RCPREQSVETY AS rcpReqSveTy
+			,	TO_CHAR(TO_DATE(A.BANK_ACPT_DT, 'YYYYMMDD'), 'YYYY.MM.DD') AS bnkAcptDt
+			,	TO_CHAR(TO_DATE(A.BANK_REGI_DT, 'YYYYMMDD'), 'YYYY.MM.DD') AS bnkRegiDt
+			,	A.BANK_REGI_DT AS bnkRegiDt
+			,	A.CHA_CLOSE_DT AS chaCloseDt
+			,	A.CHA_NEW_REG_DT AS chaNewRegDt
+			,	A.CUSNAMETY AS cusNameTy
+			,	COALESCE(A.MAND_RCP_YN, 'N') AS mandRcpYn
+			,	COALESCE(A.BILLCONT1, 'Y') AS concurrentBlockYn
+			,   A.RCP_NOTICe_URL AS rcpNoticeUrl
+			,   A.CHA_API_URL_QUERY     AS chaApiUrlQuery
+			,   A.CHA_API_URL_NOTICE    AS chaApiUrlNotice
+		FROM 	XCHALIST	A
+		   LEFT OUTER JOIN FIAGTLIST F ON A.AGTCD = F.AGTCD
+		   LEFT OUTER JOIN WEBUSER B ON A.CHACD	= B.CHACD
+		WHERE A.CHACD = #{chaCd}
+	</select>
+
+	<!-- 기관정보 상세보기 - 다계좌 -->
+	<select id="getAgencyList"  resultType="hashMap">
+		SELECT	CHACD       AS  "chaCd"
+			, 	ADJFIREGKEY AS  "adjfiregKey"
+			, 	GRPADJNAME  AS  "grpAdjName"
+			, 	REAL_ACCNO  AS  "realAccno"
+			, 	BANKCD  	AS  "bankCd"
+			, 	B.value     AS  "bankValue"
+		FROM   	XADJGROUP A LEFT OUTER JOIN kftc_code B ON A.bankcd = B.code
+		WHERE 	CHACD	= #{chaCd}
+		ORDER 	BY ADJFIREGKEY
+    </select>
+
+	<!-- 가입승인관리 - 승인코드 변경 -->
+	<update id="updateChaSt">
+		UPDATE	XCHALIST
+		SET		CHAST	= #{chaSt}
+			,	MAKEDT	= NOW()
+			,	MAKER	= #{maker}
+		<if test="chaSt == 'ST01'">
+			,	BANK_ACPT_DT = TO_CHAR(NOW(), 'YYYYMMDD')
+		</if>
+		WHERE	CHACD 	= #{chaCd}
+	</update>
+
+	<!-- 수수료 조회 - total count -->
+	<select id="getBankFeeListTotalCount" resultType="BankReg01DTO">
+		SELECT	COUNT(TA.MONTH)		          AS totCnt
+	        , 	SUM(TA.notiCnt)               AS totNotiCnt
+	        , 	SUM(TA.notiFee)               AS totNotiFee
+	        , 	SUM(TA.rcpCnt)                AS totRcpCnt
+	        , 	SUM(TA.rcpFee)                AS totRcpFee
+	        , 	SUM(TA.notiFee + TA.rcpFee)   AS totFeeSum
+		FROM	(SELECT C.MONTH
+					,	A.CHACD
+					, 	A.CHANAME
+					, 	A.AGTCD
+					, 	B.AGTNAME
+					, 	COALESCE(C.NOTICNT   , 0) AS        notiCnt
+					, 	COALESCE(C.NOTIFEE   , 0) AS        notiFee
+					, 	COALESCE(C.RCPCNT    , 0) AS        rcpCnt
+					, 	COALESCE(C.RCPFEE    , 0) AS        rcpFee
+				FROM 	XCHALIST 	A
+					, 	FIAGTLIST 	B
+					,  	XMONTHSUM 	C
+				WHERE 	A.AGTCD 	= B.AGTCD
+				AND 	A.CHACD 	= C.CHACD
+				AND 	C.MONTH  	BETWEEN #{startDate} AND #{endDate}
+				<include refid="feeSearch"/>
+			) TA
+	</select>
+
+	<!-- 수수료 조회 -->
+	<select id="getBankFeeListAll"  resultType="BankReg01DTO">
+		<include refid="paging_header" />
+		SELECT	*
+		FROM	(SELECT TO_CHAR(TO_DATE(C.MONTH, 'YYYYMM'), 'YYYY.MM') AS month
+					,	A.CHACD
+					, 	A.CHANAME
+					, 	A.AGTCD
+					, 	B.AGTNAME
+					, 	COALESCE(C.NOTICNT   , 0) AS        notiCnt
+					, 	COALESCE(C.NOTIAMT   , 0) AS        notiAmt
+					, 	COALESCE(C.NOTIFEE   , 0) AS        notiFee
+					, 	COALESCE(C.RCPCNT    , 0) AS        rcpCnt
+					, 	COALESCE(C.RCPAMT    , 0) AS        rcpAmt
+					, 	COALESCE(C.RCPFEE    , 0) AS        rcpFee
+					, 	COALESCE(C.RCPBNKFEE , 0) AS        rcpBnkFee
+					, 	COALESCE(C.SMSCNT    , 0) AS        smsCnt
+					, 	COALESCE(C.SMSFEE    , 0) AS        smsFee
+					,   COALESCE(C.NOTIFEE + C.RCPFEE, 0)	AS totFee
+					, 	COALESCE(C.NOTICNT- C.RCPCNT, 0)     AS rcpCntNot
+					, 	COALESCE(C.NOTIAMT- C.RCPAMT, 0)     AS rcpAmtNot
+					, 	COALESCE(C.NOTIFEE- C.RCPFEE, 0)     AS rcpFeeNot
+				FROM 	XCHALIST 	A
+					, 	FIAGTLIST 	B
+					,  	XMONTHSUM 	C
+				WHERE 	A.AGTCD 	= B.AGTCD
+				AND 	A.CHACD 	= C.CHACD
+				AND 	C.MONTH  	BETWEEN #{startDate} AND #{endDate}
+				<include refid="feeSearch"/>
+			) TA
+		<include refid="feeChaOrderBy"/>
+		<include refid="paging_footer" />
+	</select>
+
+	<sql id="feeSearch">
+		<if test="chaCd != null and chaCd != ''">
+		AND 	A.CHACD 	= #{chaCd}
+		</if>
+		<if test="agtCd != null and agtCd != ''">
+		AND 	A.AGTCD 	= #{agtCd}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaName)">
+		AND		A.CHANAME 	LIKE '%' || #{chaName} || '%'
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(agtName)">
+		AND		B.AGTNAME 	LIKE '%' || #{agtName} || '%'
+		</if>
+	</sql>
+
+	<sql id="feeChaOrderBy">
+		<if test="searchOrderBy == 'month'">
+		ORDER	BY	TA.MONTH DESC
+		</if>
+		<if test="searchOrderBy == 'chaName'">
+		ORDER	BY	TA.CHANAME ASC, TA.MONTH DESC
+		</if>
+		<if test="searchOrderBy == 'sumAmt'">
+		ORDER	BY  TA.TOTFEE DESC, TA.CHACD ASC, TA.MONTH DESC
+		</if>
+		<if test="searchOrderBy == 'agtCd'">
+		ORDER	BY	TA.AGTCD DESC, TA.MONTH DESC
+		</if>
+	</sql>
+
+	<!-- 기관정보수정 - 기존 -->
+	<update id="updateXChaList">
+	UPDATE 	XCHALIST
+	SET 	MAKEDT      =  NOW()
+	<if test='jobType  != null and jobType == "UB"'>
+		, 	CHANAME		    = #{chaname}
+		, 	OWNER		    = #{owner}
+		, 	OWNERTEL	    = #{ownertel}
+		, 	CHRNAME		    = #{chrname}
+		, 	CHRTELNO	    = #{chrtelno}
+		,	CHRHP			= #{chrhp}
+		,	CHRMAIL			= #{chrmail}
+		, 	CHAZIPCODE	    = #{chazipcode}
+		, 	CHAADDRESS1	    = #{chaaddress1}
+		, 	CHAADDRESS2	    = #{chaaddress2}
+		, 	RCPCNTFEE 		= #{rcpCntFee}
+		, 	RCPBNKFEE		= #{rcpBnkFee}
+		,	CHASTATUS		= #{chaStatus}
+		,	CHATYPE			= #{chaType}
+		<if test="flag != '' and flag == 'ST03'">
+			,	CHAST			= #{chast}
+		</if>
+	</if>
+	<if test='jobType  != null and jobType == "U"'>
+		, 	CHANAME		    = #{chaname}
+		, 	OWNER		    = #{owner}
+		, 	OWNERTEL	    = #{ownertel}
+		, 	CHAOFFNO	    = #{chaoffno}
+		, 	CHRNAME		    = #{chrname}
+		, 	CHRTELNO	    = #{chrtelno}
+		, 	CHRHP	        = #{chrhp}
+		, 	CHRMAIL	        = #{chrmail}
+		, 	CHAZIPCODE	    = #{chazipcode}
+		, 	CHAADDRESS1	    = #{chaaddress1}
+		, 	CHAADDRESS2	    = #{chaaddress2}
+		, 	FEEACCNO	    = #{feeaccno}
+		,	USEPGYN 		= #{usepgyn}
+		,	PG_APR_DT 		= #{pgAprDt}
+		, 	PG_APR_MEMO		= #{pgAprMemo}
+		,	USESMSYN		= #{usesmsyn}
+		,	SMS_APL_DT		= #{smsAplDt}
+		,	SMS_APL_MEMO	= #{smsAplMemo}
+		,	PGSERVICEID		= #{pgServiceId}
+		,	PG_LICEN_KEY	= #{pgLicenKey}
+		, 	PG_REV_COMMI_RATE = #{pgRevCommiRate}
+		,	FINGER_REV_COMMI_RATE = #{fingerRevCommiRate}
+		,	CHASTATUS		= #{chaStatus}
+		,	CHATYPE			= #{chaType}
+		,	RCPREQYN		= #{rcpReqYn}
+		,	RCPREQTY		= #{rcpReqTy}
+		,	MNLRCPREQTY	= #{mnlRcpReqTy}
+		,	NOTAXYN			= #{noTaxYn}
+		,	RCPREQSVETY		= #{rcpReqSveTy}
+		<if test='chast != null and chast == "ST08"'>
+			, CHA_CLOSE_DT      = TO_CHAR(NOW(), 'YYYYMMDD')
+		</if>
+		<if test='chast != null and chast == "ST06"'>
+			, CHA_CLOSE_DT      = ''
+		</if>
+		,	DA_MNG_MEMO		= #{daMngMemo}
+		, 	NOTMINLIMIT	    = COALESCE(#{notminlimit}, 0)
+		, 	NOTMINFEE	    = COALESCE(#{notminfee}, 0)
+		, 	NOTCNTFEE	    = COALESCE(#{notcntfee}, 0)
+	</if>
+	<if test='jobType  != null and jobType == "CONFIRM"'>
+		, 	CHA_CLOSE_CHK		  = #{chaCloseChk}
+		, 	CHA_CLOSE_ST	      = #{chaCloseSt}
+		, 	CHA_CLOSE_VAR_DT	  = TO_CHAR(NOW(), 'YYYYMMDD')
+		, 	CHA_CLOSE_VAR_RESON   = #{chaCloseVarReson}
+	</if>
+	<if test='cusNameTy != null and cusNameTy != ""'>
+		, 	CUSNAMETY			  =  #{cusNameTy}
+	</if>
+	<if test='mandRcpYn != null and mandRcpYn != ""'>
+		, 	MAND_RCP_YN 		  = #{mandRcpYn}
+	</if>
+	<if test='maker    != null and maker != ""'>
+		, 	MAKER    			  =  #{maker}
+	</if>
+	<if test='chast != null and chast != ""'>
+		, 	CHAST    			  =  #{chast}
+	</if>
+	<if test='prechast != null and prechast != ""'>
+		, 	PRECHAST    		  =  #{prechast}
+	</if>
+	<if test='cmsFileName != null and cmsFileName != ""'>
+		, 	CMS_FILE_NAME    	  =  #{cmsFileName}
+	</if>
+	<if test='chatrty != null and chatrty != ""'>
+		, 	CHATRTY     		  =  #{chatrty}
+	</if>
+	<if test='jobType != null and jobType == "M"'>
+		, 	DA_MNG_MEMO    		  =  #{daMngMemo}
+	</if>
+	<if test='amtChkTy != null'>
+		, 	AMTCHKTY    		  =  #{amtChkTy}
+	</if>
+	<if test='rcpDueChk != null'>
+		, 	RCP_DUE_CHK    		  =  #{rcpDueChk}
+	</if>
+	<if test='partialPayment != null'>
+		, 	PARTIAL_PAYMENT    	  =  #{partialPayment}
+	</if>
+	<if test='concurrentBlockYn != null and concurrentBlockYn != ""'>
+		, 	BILLCONT1    		  =  #{concurrentBlockYn}
+	</if>
+	<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(finFeeAccNo)">
+		,	FINGER_FEE_ACCOUNT_NO = #{finFeeAccNo}
+		,	FINGER_FEE_BANK_CODE = #{bnkCd}
+		,	FINGER_FEE_ACCOUNT_IDENTITY = #{finFeeAccIdent}
+		,	FINGER_FEE_ACCOUNT_OWNER = #{finFeeAccOwner}
+		,	FINGER_FEE_OWNER_NO = #{finFeeOwnNo}
+		,	FINGER_FEE_PAYTY = #{finFeePayTy}
+	</if>
+	    ,   RCP_NOTICE_URL = #{rcpNoticeUrl}
+	    ,   CHA_API_URL_QUERY = #{chaApiUrlQuery}
+	    ,   CHA_API_URL_NOTICE = #{chaApiUrlNotice}
+	WHERE 	CHACD     		=  #{chacd}
+	</update>
+
+	<update id="updateChaListInfo">
+		UPDATE 	XCHALIST
+		SET 	AMTCHKTY		= #{amtChkTy}
+			, 	ACCNOCNT		= #{accNoCnt}
+			, 	OWNER		    = #{owner}
+			, 	OWNERTEL		= #{ownerTel}
+			, 	CHRTELNO		= #{chrTelNo}
+			, 	CHRHP		    = #{chrHp}
+			, 	REMARK		    = #{remark}
+			, 	RCPCNTFEE		= #{rcpCntFee}
+			, 	RCPBNKFEE		= #{rcpBnkFee}
+		WHERE 	CHACD     		= #{chaCd}
+	</update>
+
+	<update id="updateWebuser">
+		UPDATE WEBUSER
+		SET IDST = #{chast}
+		WHERE CHACD = #{chacd}
+	</update>
+
+	<!-- 임시작업이력테이블 작업시작등록  -->
+	<insert id="insertJobhistory">
+		INSERT 	INTO
+		JOBHISTORY(STARTDATE
+				,  JOBID)
+		VALUES	  (TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
+				,  #{jobid})
+	</insert>
+
+	<select id="getBnkList" resultType="KftcCode" parameterType="map">
+		SELECT	code,
+				value
+		FROM  KFTC_CODE
+	<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(showYn)">
+		WHERE showyn = #{showYn}
+	</if>
+		ORDER BY code
+	</select>
+
+	<!-- 기관 등록  -->
+	<insert id="insertXchalist" parameterType="SysChaMgmtDTO" useGeneratedKeys="true" keyProperty="chaCd">
+		INSERT INTO
+		xchalist (  chacd,
+					chaname,
+					owner,
+					ownertel,
+					chaoffno,
+					use_purpose,
+					chastatus,
+					chatrty,
+					chast,
+					chatype,
+					chrname,
+					chrtelno,
+					chazipcode,
+					chaaddress1,
+					chaaddress2,
+					chrmail,
+					feeaccno,
+					finger_fee_account_no,
+					finger_fee_bank_code,
+					finger_fee_payty,
+					adjaccyn,
+					amtChkTy,
+					partial_payment,
+					rcp_due_chk,
+					cusnamety,
+					rcpreqyn,
+					mand_rcp_yn,
+					rcpreqty,
+					notaxyn,
+					rcpreqsvety,
+					mnlrcpreqty,
+					notMinLimit,
+					notMinFee,
+					notCntFee,
+					rcpCntFee,
+					rcpBnkFee,
+					da_mng_memo,
+					fgcd,
+					maker,
+					makedt,
+					regDt,
+					cha_new_reg_dt,
+					rcpdtdupyn,
+					usesmsyn,
+					notsmsyn,
+					rcpsmsyn,
+					rcpsmsty,
+					usemailyn,
+					cusgubnyn1,
+					cusgubnyn2,
+					cusgubnyn3,
+					cusgubnyn4,
+					chasvcyn,
+					billimgty,
+					usepgyn,
+					chkcash,
+					chkoff,
+					rcp_notice_url,
+					cha_api_url_query,
+					cha_api_url_notice
+					)
+		VALUES (
+		        	default,
+					#{chaName},
+					#{owner},
+					#{ownerTel},
+					#{chaOffNo},
+					#{usePurpose},
+					#{chaStatus},
+					#{chatrty},
+					#{chast},
+					#{chaType},
+					#{chrName},
+					#{chrTelNo},
+					#{chaZipCode},
+					#{chaAddress1},
+					#{chaAddress2},
+					#{chrMail},
+					#{fingerFeeAccountNo},
+					#{fingerFeeAccountNo},
+					#{fingerFeeBankCode},
+					#{fingerFeePayty},
+					#{adjaccyn},
+					#{amtChkTy},
+					#{partialPayment},
+					#{rcpDueChk},
+					#{cusNameTy},
+					#{rcpReqYn},
+					#{mandRcpYn},
+					#{rcpReqTy},
+					#{noTaxYn},
+					#{rcpReqSveTy},
+					#{mnlRcpReqTy},
+					#{notMinLimit},
+					#{notMinFee},
+					#{notCntFee},
+					#{rcpCntFee},
+					#{rcpBnkFee},
+					#{daMngMemo},
+					#{fgCd},
+					#{maker},
+					to_timestamp(#{regDt},'YYYY-MM-DD HH24:MI:SS'),
+					to_timestamp(#{regDt},'YYYY-MM-DD HH24:MI:SS'),
+					to_char(now(), 'YYYYMMDD'),
+					#{rcpdtdupyn},
+					#{usesmsyn},
+					#{notsmsyn},
+					#{rcpsmsyn},
+					#{rcpsmsty},
+					#{usemailyn},
+					#{cusgubnyn1},
+					#{cusgubnyn2},
+					#{cusgubnyn3},
+					#{cusgubnyn4},
+					#{chasvcyn},
+					#{billimgty},
+					#{usepgyn},
+					#{chkcash},
+					#{chkoff},
+		            #{rcpNoticeUrl},
+		            #{chaApiUrlQuery},
+		            #{chaApiUrlNotice}
+			   )
+	</insert>
+
+	<!-- 기관정보수정 -->
+	<update id="updateXchaList" parameterType="SysChaMgmtDTO">
+		UPDATE 	XCHALIST
+		SET 	MAKEDT      	=  NOW()
+			,	chaname			= #{chaName}
+			,	owner			= #{owner}
+			,	ownertel		= #{ownerTel}
+			,	chaoffno		= #{chaOffNo}
+			,	use_purpose		= #{usePurpose}
+			,	chastatus		= #{chaStatus}
+			,	chatrty			= #{chatrty}
+			,	chast			= #{chast}
+			,	chatype			= #{chaType}
+			,	chrname			= #{chrName}
+			,	chrtelno		= #{chrTelNo}
+			,	chazipcode		= #{chaZipCode}
+			,	chaaddress1		= #{chaAddress1}
+			,	chaaddress2		= #{chaAddress2}
+			,	chrmail			= #{chrMail}
+			,	feeaccno		= #{fingerFeeAccountNo}
+			,	finger_fee_account_no	= #{fingerFeeAccountNo}
+			,	finger_fee_bank_code	= #{fingerFeeBankCode}
+			,	finger_fee_payty		= #{fingerFeePayty}
+			,	adjaccyn		= #{adjaccyn}
+			,	amtChkTy		= #{amtChkTy}
+			,	partial_payment	= #{partialPayment}
+			,	rcp_due_chk		= #{rcpDueChk}
+			,	cusnamety		= #{cusNameTy}
+			,	rcpreqyn		= #{rcpReqYn}
+			,	mand_rcp_yn		= #{mandRcpYn}
+			,	rcpreqty		= #{rcpReqTy}
+			,	notaxyn			= #{noTaxYn}
+			,	rcpreqsvety		= #{rcpReqSveTy}
+			,	mnlrcpreqty		= #{mnlRcpReqTy}
+			,	notMinLimit		= COALESCE(#{notMinLimit}, 0)
+			,	notMinFee		= COALESCE(#{notMinFee}, 0)
+			,	notCntFee		= COALESCE(#{notCntFee}, 0)
+			,	rcpCntFee		= COALESCE(#{rcpCntFee}, 0)
+			,	rcpBnkFee		= COALESCE(#{rcpBnkFee}, 0)
+			,	da_mng_memo		= #{daMngMemo}
+			,	fgcd			= #{fgCd}
+			,	maker			= #{maker}
+		    ,   rcp_notice_url  = #{rcpNoticeUrl}
+		    ,   cha_api_url_query = #{chaApiUrlQuery}
+		    ,   cha_api_url_notice = #{chaApiUrlNotice}
+			<if test='chast == "ST08" or chast == "ST02"'>
+				, CHA_CLOSE_DT      = TO_CHAR(NOW(), 'YYYYMMDD')
+			</if>
+			<if test='chast != null and chast == "ST06"'>
+				, CHA_CLOSE_DT      = ''
+			</if>
+		WHERE 	CHACD     		=  #{chaCd}
+	</update>
+</mapper>

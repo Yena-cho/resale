@@ -1,0 +1,53 @@
+<html xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/html">
+
+<head>
+    <title>전문분석</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"/>
+</head>
+<body>
+<div class="container">
+    <br />
+    <br />
+    <form action="#" th:action="@{/parse/message}" method="post">
+        <textarea class="form-control"  id="message" name="message" rows="3" th:inline="text">[[${message}]]</textarea>
+        <br />
+        <button type="submit" value="parsing." class="btn btn-primary">Submit</button>
+        <div th:if="${not #strings.isEmpty(srcmessage)}">
+            <br />
+            <div class="container">
+                <div class="row">
+                    <div class="col">
+                        <p th:text="|전문 : ${messageDesc}|"/>
+                    </div>
+                    <div class="col">
+                        <p th:text="|타입 : ${messageType}|"/>
+                    </div>
+                    <div class="col">
+                        <p th:text="|길이 : ${messageLength}|"/>
+                    </div>
+                </div>
+            </div>
+            <div th:if="${not #lists.isEmpty(list)}">
+                <table border="1" class="table">
+                    <tr th:each="msg : ${list}">
+                        <td th:text="${msg.desc}"></td>
+                        <td th:text="${msg.value}"></td>
+                        <td th:text="${msg.type}"></td>
+                        <td th:text="${msg.name}"></td>
+                        <td th:text="${msg.length}"></td>
+                    </tr>
+                </table>
+            </div>
+            <div th:if="${#lists.isEmpty(list)}">
+                <h2>잘못된 전문</h2>
+                <br />
+            </div>
+        </div>
+
+
+    </form>
+</div>
+</body>
+
+</html>

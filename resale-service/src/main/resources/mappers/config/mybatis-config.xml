@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+	<!-- 마이바티스의 작동 규칙정의 -->
+	<settings>
+		<setting name="cacheEnabled" value="false"/>
+		<setting name="useGeneratedKeys" value="false"/>
+		<setting name="mapUnderscoreToCamelCase" value="true"/>
+	</settings>
+	
+	<typeAliases>
+		<!-- 암호화 alias -->
+		<typeAlias alias="encrypt" type="com.finger.shinhandamoa.typehandlers.alias.Encrypt"/>
+		
+		<!-- 공통 DTO -->
+		<typeAlias alias="CodeDTO" type="com.finger.shinhandamoa.util.dto.CodeDTO"/>
+		<typeAlias alias="LoginDTO" type="com.finger.shinhandamoa.home.dto.LoginDTO"/>
+		<!-- 청구관리 DTO -->
+		<typeAlias alias="ClaimDTO" type="com.finger.shinhandamoa.org.claimMgmt.dto.ClaimDTO"/>
+		<typeAlias alias="ClaimItemDTO" type="com.finger.shinhandamoa.org.claimMgmt.dto.ClaimItemDTO"/>
+		<!-- 공지사항 DTO by puki -->
+		<typeAlias alias="NoticeDTO" type="com.finger.shinhandamoa.main.dto.NoticeDTO"/>
+		<!-- 자주하는 질문  DTO by puki -->
+		<typeAlias alias="FaqDTO" 	 type="com.finger.shinhandamoa.main.dto.FaqDTO"/>
+ 		<!-- 고지서 관리 -->
+		<typeAlias alias="NotiMgmtBaseDTO" type="com.finger.shinhandamoa.org.notimgmt.dto.NotiMgmtBaseDTO"/> 		
+		<typeAlias alias="NotiMgmtResDTO" type="com.finger.shinhandamoa.org.notimgmt.dto.NotiMgmtResDTO"/>
+		<typeAlias alias="NotiMgmtReqDTO" type="com.finger.shinhandamoa.org.notimgmt.dto.NotiMgmtReqDTO"/>
+		<typeAlias alias="NotiMgmtPdfReqDTO" type="com.finger.shinhandamoa.org.notimgmt.dto.NotiMgmtPdfReqDTO"/>
+		<typeAlias alias="NotiMgmtPdfResDTO" type="com.finger.shinhandamoa.org.notimgmt.dto.NotiMgmtPdfResDTO"/>
+		<typeAlias alias="NotiConfigDTO" type="com.finger.shinhandamoa.org.notimgmt.dto.NotiConfigDTO"/>
+		<typeAlias alias="NotiMgmtPrintResDTO" type="com.finger.shinhandamoa.org.notimgmt.dto.NotiMgmtPrintResDTO"/>
+		<typeAlias alias="NotiMgmtPrintResDetDTO" type="com.finger.shinhandamoa.org.notimgmt.dto.NotiMgmtPrintResDetDTO"/>
+		<typeAlias alias="NotificationDTO" 	 type="com.finger.shinhandamoa.payer.notification.dto.NotificationDTO"/>
+		<typeAlias alias="PaymentDTO" 	 type="com.finger.shinhandamoa.payer.payment.dto.PaymentDTO"/>
+		<typeAlias alias="CashReceiptDTO" 	 type="com.finger.shinhandamoa.payer.cashreceipt.dto.CashReceiptDTO"/>
+		<typeAlias alias="LayOutDTO" 	 type="com.finger.shinhandamoa.util.dto.LayOutDTO"/>
+		<!-- 고객관리 DTO -->
+		<typeAlias alias="CustReg01DTO" type="com.finger.shinhandamoa.org.custMgmt.dto.CustReg01DTO"/>	
+		<!-- 그룹관리 -->
+		<typeAlias alias="GroupDTO" type="com.finger.shinhandamoa.group.dto.GroupDTO"/>
+		<!-- 마이페이지 -->
+		<typeAlias alias="MyPageDTO" type="com.finger.shinhandamoa.org.mypage.dto.MyPageDTO"/>
+		<typeAlias alias="MyPageSumDTO" type="com.finger.shinhandamoa.org.mypage.dto.MyPageSumDTO"/>
+		<!-- 수납관리 -->		
+		<typeAlias alias="PdfReceiptMgmtDTO" 	 type="com.finger.shinhandamoa.org.receiptmgmt.dto.PdfReceiptMgmtDTO"/>
+		<typeAlias alias="ReceiptMgmtDTO" type="com.finger.shinhandamoa.org.receiptmgmt.dto.ReceiptMgmtDTO"/>
+		<typeAlias alias="PayMgmtDTO" type="com.finger.shinhandamoa.org.receiptmgmt.dto.PayMgmtDTO"/>
+		<typeAlias alias="ActualRegDTO" type="com.finger.shinhandamoa.org.receiptmgmt.dto.ActualRegDTO"/>
+		<typeAlias alias="NotiDTO" type="com.finger.shinhandamoa.org.receiptmgmt.dto.NotiDTO"/>
+		<typeAlias alias="FwCashReceiptMasterDTO" type="com.finger.shinhandamoa.org.receiptmgmt.dto.FwCashReceiptMasterDTO"/>
+		<!-- 은행관리 DTO -->
+		<typeAlias alias="BankReg01DTO"  type="com.finger.shinhandamoa.bank.dto.BankReg01DTO"/>	
+		<!-- 핑거관리자 DTO -->
+		<typeAlias alias="SysDTO" type="com.finger.shinhandamoa.sys.bbs.dto.SysDTO"/>
+		<typeAlias alias="PopupDTO" type="com.finger.shinhandamoa.sys.bbs.dto.PopupDTO"/>
+		<typeAlias alias="BannerDTO" type="com.finger.shinhandamoa.sys.bbs.dto.BannerDTO"/>
+		<typeAlias alias="AddServiceMgmtDTO" type="com.finger.shinhandamoa.sys.addServiceMgmt.dto.AddServiceMgmtDTO"/>
+		<typeAlias alias="XNotimasreqDTO" type="com.finger.shinhandamoa.sys.addServiceMgmt.dto.XNotimasreqDTO"/>
+		<typeAlias alias="XCashmasDTO" type="com.finger.shinhandamoa.sys.addServiceMgmt.dto.XCashmasDTO"/>
+		<typeAlias alias="SysChaDTO" type="com.finger.shinhandamoa.sys.chaMgmt.dto.SysChaDTO"/>
+		<typeAlias alias="SysChaMgmtDTO" type="com.finger.shinhandamoa.sys.chaMgmt.dto.SysChaMgmtDTO"/>
+		<typeAlias alias="VanoMgmtDTO" type="com.finger.shinhandamoa.sys.setting.dto.VanoMgmtDTO"/>
+		<typeAlias alias="TransInfoDTO" type="com.finger.shinhandamoa.sys.setting.dto.TransInfoDTO"/>
+		<!-- 관리자 고객상담관리 -->
+		<typeAlias alias="SysCustDTO" type="com.finger.shinhandamoa.sys.cust.dto.SysCustDTO"/>
+		<typeAlias alias="SysNoticeDTO" type="com.finger.shinhandamoa.sys.cust.dto.SysNoticeDTO"/>
+		<!-- 설정관리 -->
+		<typeAlias alias="AutoDTO"  	type="com.finger.shinhandamoa.sys.setting.dto.AutoDTO"/>
+		<typeAlias alias="AdminInfoDTO" type="com.finger.shinhandamoa.sys.setting.dto.AdminInfoDTO"/>
+		<!-- 관리자 정산관리 -->
+		<typeAlias alias="SysAdminClosingDTO" type="com.finger.shinhandamoa.sys.rcpMgmt.dto.SysAdminClosingDTO"/>
+		<typeAlias alias="SysInvoiceDTO" type="com.finger.shinhandamoa.sys.rcpMgmt.dto.SysInvoiceDTO" />
+		<typeAlias alias="SysAutoTransDTO" type="com.finger.shinhandamoa.sys.rcpMgmt.dto.SysAutoTransDTO" />
+		<typeAlias alias="SysCommStatDTO" type="com.finger.shinhandamoa.sys.rcpMgmt.dto.SysCommStatDTO" />
+		<typeAlias alias="SysRcpStatDTO" type="com.finger.shinhandamoa.sys.rcpMgmt.dto.SysRcpStatDTO" />
+		<typeAlias alias="SysSmsUsageDTO" type="com.finger.shinhandamoa.sys.rcpMgmt.dto.SysSmsUsageDTO" />
+		<typeAlias alias="ClientWithCashReceiptStatusDTO" type="com.finger.shinhandamoa.sys.cashreceipt.service.ClientWithCashReceiptStatusDTO" />
+		<typeAlias alias="ReceiptWithCashReceiptStatusDTO" type="com.finger.shinhandamoa.sys.cashreceipt.service.ReceiptWithCashReceiptStatusDTO" />
+		<typeAlias alias="IssueWithCashReceiptStatusDTO" type="com.finger.shinhandamoa.sys.cashreceipt.service.IssueWithCashReceiptStatusDTO" />
+		<typeAlias alias="DetailPopUpCashmasCdDTO" type="com.finger.shinhandamoa.sys.cashreceipt.service.DetailPopUpCashmasCdDTO" />
+		<typeAlias alias="DetailPopUpChaNameDTO" type="com.finger.shinhandamoa.sys.cashreceipt.service.DetailPopUpChaNameDTO" />
+		<typeAlias alias="DetailPopUpRegDtDTO" type="com.finger.shinhandamoa.sys.cashreceipt.service.DetailPopUpRegDtDTO" />
+		<typeAlias alias="CashReceiptHistoryDTO" type="com.finger.shinhandamoa.sys.cashreceipt.service.CashReceiptHistoryDTO" />
+
+		<package name="com.finger.shinhandamoa.org.mypage.dto" />
+		<package name="com.finger.shinhandamoa.data.table.model" />
+	</typeAliases>
+	
+	<typeHandlers>
+		<package name="com.finger.shinhandamoa.typehandlers.type" />
+		<!-- <typeHandler handler="com.finger.shinhandamoa.typehandlers.type.EncryptTypeHandler"/> -->
+	</typeHandlers>
+	
+	<!--<plugins>-->
+		<!--<plugin interceptor="com.finger.shinhandamoa.common.SqlLoggingPlugin"></plugin>-->
+	<!--</plugins>-->
+
+	<mappers>
+		<mapper resource="mybatis/mapper/CashReceiptMasterMapper.xml" />
+	</mappers>
+	
+</configuration>

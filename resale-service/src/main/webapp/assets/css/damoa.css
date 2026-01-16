@@ -1,0 +1,174 @@
+@charset "UTF-8";
+/*
+**
+** damoa.css
+** Author : 이영주
+** Create date : 2018.02.26
+** Description : 신한 다모아 서비스 용 css , damoa.scss 에서 관리됨
+**
+*/
+/* 나눔고딕체 구글 웹폰트 */
+@import url(http://fonts.googleapis.com/earlyaccess/nanumgothic.css);
+html { font-size: 1rem; word-break: keep-all; }
+
+body { font-family: "Nanum Gothic", sans-serif; }
+
+/*******************
+********************
+Reboot
+********************
+*******************/
+/* Variation */
+/* Color set */
+/* Background */
+.bg-primary { background-color: #2e5ca9 !important; }
+
+.bg-blue { background-color: #3779d0 !important; }
+
+/* Font */
+.font-white { color: #fff; }
+
+/* Container */
+/*******************
+********************
+Components
+********************
+*******************/
+/* buttons */
+.btn { border-radius: .1rem; /* button size */ }
+
+.btn.btn-xs { padding: 0.175rem 0.325rem; font-size: 0.8rem; line-height: 1.325; border-radius: 0.2rem; }
+
+.btn.btn-primary { background: #1e75d6 !important; }
+
+.btn.btn-secondary { border-color: #ff9c4e !important; background: #ff9c4e !important; }
+
+/* top-bar */
+#top-bar { font-size: 0.8rem; padding: .4rem 15px; }
+
+/* nav */
+/* nav drop down */
+.dropdown-toggle::after { content: none; }
+
+/* sitemap nav */
+.btn.btn-sitemap { position: absolute; right: 0rem; top: -.6375rem; width: 51px; height: 47px; border-radius: 0; background: #d99103; /*557bb9*/ box-shadow: 5px 5px 5px 0 rgba(0, 0, 0, 0.2); }
+
+.navbar { padding-top: 0; padding-bottom: 0; }
+
+#navbar-menus { display: flex; flex: 1; position: relative; padding-top: 0; padding-bottom: 0; font-size: 1rem; }
+
+#navbar-menus .navbar-nav { flex: 1; }
+
+#navbar-menus .navbar-nav li.nav-item { text-align: center; flex: 1; font-size: 1.125rem; }
+
+#navbar-menus .navbar-nav li.nav-item.active::after { content: " "; position: absolute; bottom: 0; left: 5%; background-color: #ffc470; height: .1rem; width: 90%; }
+
+#navbar-menus .navbar-nav li.nav-item.active a.nav-link { color: #ffc470; }
+
+#navbarTogglerSitemap { display: none; }
+
+#navbarTogglerSitemap li { margin: 0; padding: 0; list-style: none; }
+
+/* breadcrumb */
+#damoa-breadcrumb a, #damoa-breadcrumb button { color: black; }
+
+#damoa-breadcrumb button:hover { text-decoration: none; }
+
+#damoa-breadcrumb a { position: relative; color: #646464; font-size: .875rem; }
+
+#damoa-breadcrumb a::after { content: " "; position: absolute; right: 0; top: .7rem; border-right: 1px solid #969696; height: 1rem; }
+
+#damoa-breadcrumb a:hover { color: #1e1e1e; }
+
+#damoa-breadcrumb a.active { color: #ee771b; }
+
+/* footer */
+footer { background: rgba(0, 0, 0, 0.5); padding: 3rem 2rem; font-size: .8125rem; color: white; }
+
+footer a { color: #fff; margin-right: 2.0625rem; }
+
+footer a:hover { color: #fff; text-decoration: none; }
+
+/* login box */
+#login-box-in-main { max-width: 300px; width: 100%; margin-top: 2.5rem; margin-left: auto; margin-bottom: 2.375rem; padding: 1.875rem .9375rem .9375rem; background: linear-gradient(to right, #ea9544, #e66931); box-shadow: 5px 5px 5px 0 rgba(0, 0, 0, 0.2); }
+
+#login-box-in-main h3 { margin-left: 15px; margin-right: 15px; margin-bottom: 1.6875rem; font-size: 1.5rem; font-weight: 400; color: #fff; }
+
+#login-box-in-main h3 img { margin-top: -.5rem; }
+
+#login-box-in-main .form-group { margin-bottom: 1px; }
+
+#login-box-in-main .form-control { border-radius: 0; border: 0; }
+
+#login-box-in-main #tab-selecter { font-size: .875rem; margin-bottom: .5rem; margin-left: 15px; margin-right: 15px; }
+
+#login-box-in-main #tab-selecter .nav-tabs { border-bottom: 0; }
+
+#login-box-in-main #tab-selecter .nav-tabs .nav-item { width: 50%; text-align: center; }
+
+#login-box-in-main #tab-selecter .nav-tabs .nav-item .nav-link { background: #fff; color: rgba(119, 119, 119, 0.3); border-radius: 0; }
+
+#login-box-in-main #tab-selecter .nav-tabs .nav-item .nav-link.active { color: #e66b32; }
+
+#login-box-in-main .btn-login { color: #fff; background: #ab5226; margin-top: .4375rem; }
+
+#login-box-in-main .id-option { font-size: .8125rem; color: #fff; }
+
+#login-box-in-main .id-option a { color: #fff; }
+
+#login-box-in-main #find-id-pw { position: absolute; right: 0; }
+
+#contact { display: none; }
+
+/* Table */
+table th { text-align: center; }
+
+table.table-summary thead th { border: 0; background: #e0e8f0; font-size: 0.875rem; padding: .8rem 1rem; }
+
+table.table-summary tbody td { border: 0; font-size: 0.875rem; padding-left: .7rem; padding-right: .7rem; }
+
+/*******************
+********************
+Payer
+********************
+*******************/
+#payer-dashboard { background: #63b1dd; color: #fff; padding-top: 2.5rem; padding-bottom: 1.6875rem; }
+
+#payer-dashboard .summary { margin-top: 2.3125rem; margin-bottom: 3.625rem; }
+
+#payer-dashboard .summary .col { border-right: 1px solid rgba(255, 255, 255, 0.4); }
+
+#payer-dashboard .summary .col:last-child { border-right: none; }
+
+#payer-dashboard .summary .col label { font-weight: 700; color: #63b1dd; background: #fff; border-radius: .7rem; padding: 0 .4rem; margin-bottom: 2.125rem; }
+
+#payer-dashboard .summary .col .amount { font-size: 3.125rem; }
+
+#payer-dashboard .summary .col .amount::after { content: " 원"; font-size: 1.5rem; }
+
+#payer-dashboard .summary .col .amount.issue::after { content: " 건"; }
+
+/*******************
+********************
+Global - main
+********************
+*******************/
+.section { color: #fff; padding-top: 2.125rem; padding-bottom: 2.9375rem; }
+
+.section .section-title { margin-bottom: 2.75rem; }
+
+.section .summary .keyword { font-size: 1.25rem; max-width: 12.125rem; color: #3779d0; background: #fff; border-radius: 1.2rem; padding-top: .3rem; padding-bottom: .3rem; margin-top: 2rem; margin-bottom: .875rem; margin-left: auto; margin-right: auto; }
+
+.section .summary p { font-size: 1rem; line-height: 1.3rem; max-width: 12.125rem; margin-left: auto; margin-right: auto; }
+
+.section .summary .icon { width: 100%; max-width: 5.875rem; }
+
+.doughnut-wrap { width: 13rem; height: 13rem; margin-left: auto; margin-right: auto; }
+
+.graph-wrap { width: 14rem; height: 10.6875rem; margin-left: auto; margin-right: auto; }
+
+/*******************
+********************
+Library
+********************
+*******************/

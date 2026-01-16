@@ -1,0 +1,476 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CustomerAsist">	
+<!--
+	<resultMap type="NoticeDTO" id="selChrHp">
+		<result	column="cusHp"	property="cusHp"	javaType="encrypt"	jdbcType="VARCHAR"/>
+	</resultMap>
+	
+	<resultMap type="NoticeDTO" id="NoticeResultMap">
+		<result	column="data1"	property="data1"	javaType="encrypt"	jdbcType="VARCHAR"/>
+	</resultMap>-->
+	
+	<!-- 페이징을 위한 header -->
+	<sql id="paging_header">
+		select *
+		from (
+		    select (ROW_NUMBER() OVER()) as rn, Z.*
+		    from (	
+	</sql>
+	<!-- 페이징을 위한 footer -->
+	<sql id="paging_footer">
+		    ) Z
+		) X where rn between #{start} and #{end}
+	</sql>
+	
+	<!-- 공지사항 COUNT -->
+	<select id="noticeTotalCount"  resultType="int">
+		SELECT COUNT(*) AS CNT 
+        FROM BOARD
+        WHERE ISFIX = '0'
+        and bbs = #{bbs}
+        <include refid="search" />
+	</select>
+	
+	<!-- 공지사항 COUNT -->
+	<select id="noticeOnlyCount"  resultType="int">
+		SELECT COUNT(*) AS CNT FROM (
+			(SELECT * FROM BOARD
+			WHERE ISFIX = 1
+			AND BBS = #{bbs}
+			LIMIT 5
+			<include refid="search"/>
+			)
+			UNION ALL
+			(SELECT * FROM BOARD
+			WHERE ISFIX = 0
+			AND BBS = #{bbs}
+			<include refid="search"/>
+		    )
+		) A
+	</select>
+	
+	<!-- 공지사항 목록 -->
+	<select id="noticeListAll" resultType="NoticeDTO">
+		(
+			SELECT *
+			FROM (
+				SELECT 	(ROW_NUMBER() OVER()) as rn
+					,   NO
+					, 	NUM
+					, 	TITLE
+					, 	CONTENTS
+					,	ISFIX
+					,	COUNT
+					, 	TO_CHAR(DAY, 'yyyy-mm-dd-hh-MM-ss') as DAY
+					, 	ID
+					, 	TRUNC(DATE_PART('day', NOW() - DAY)) as recently
+				FROM 	(SELECT *
+						FROM BOARD
+						ORDER BY NO DESC
+						) T
+				WHERE 	ISFIX = '1'
+				AND		BBS = #{bbs}
+				<include refid="search" />
+			) A
+			LIMIT 5
+		)
+		UNION ALL
+		SELECT * FROM (
+			SELECT (ROW_NUMBER() OVER()) as rn,
+					Z.*
+			FROM (
+				SELECT NO
+					, NUM
+					, TITLE
+					, CONTENTS
+					, ISFIX
+					, COUNT
+					, TO_CHAR(DAY, 'yyyy-mm-dd-hh-MM-ss') as day
+					, ID
+					, TRUNC(DATE_PART('day', NOW() - DAY)) as recently
+				FROM BOARD
+				WHERE ISFIX = '0'
+				AND BBS = #{bbs}
+				<include refid="search" />
+					ORDER BY NO DESC
+			) Z
+		) X where rn between #{start} and #{end}
+	</select>
+	
+	<!-- 공지사항 검색조건 -->
+	
+	
+	<!-- 공지사항 상세 보기 조회수 증가 -->
+	<update id="noticeIncrease">
+		UPDATE	BOARD
+		SET		COUNT = COUNT + 1
+		WHERE	NO  = #{no}
+	</update>
+	
+	<!-- 공지사항  상세 보기 -->
+	<select id="noticeDetail" resultType="NoticeDTO">
+		SELECT 
+			NO
+			, BBS
+			, NUM
+			, FROMNO
+			, STEP
+			, ID
+			, PASSWORD
+			, WRITER
+			, EMAIL
+			, TITLE
+			, CONTENTS
+			, IP
+			, ISHTML
+			, ISFIX
+			, COUNT
+			, DAY
+			, SENDEMAIL
+			, ISSEND
+			, CODE
+			, DAY1
+			, DATA1
+			, DATA2
+			, DATA3
+			, DATA4
+			, DATA5
+			, DATA6
+			, DATA7
+			, DATA8
+			, FILE_ID AS FILEID
+			, FILE_EXT AS FILEEXT
+			, FILENAME
+			, FILESIZE
+		FROM BOARD
+		WHERE NO = #{no}
+	</select>
+	
+	<!-- 공지사항 이전글, 다음글 -->
+	<select id="noticeNextList" resultType="NoticeDTO">
+		SELECT * FROM BOARD WHERE NO = #{no}
+		UNION ALL (SELECT * FROM ( SELECT * FROM BOARD WHERE NO &lt; #{no} AND BBS = #{bbs} AND isfix = #{isfix} ORDER BY no DESC ) A LIMIT 1)
+		UNION ALL (SELECT * FROM ( SELECT * FROM BOARD WHERE NO > #{no} AND BBS = #{bbs} AND isfix = #{isfix} ORDER BY no ASC ) A LIMIT 1)
+		ORDER BY 1 DESC
+	</select>
+	
+	<!-- 자주하는 질문 COUNT -->
+	<select id="faqTotalCount" resultType="int">
+		SELECT	COUNT(*) AS CNT
+		FROM	BOARD
+		WHERE	1 = 1
+		AND 	TITLE != '통신서비스 이용증명원 신청'
+		<include refid="faqIconSearch"/>
+		<include refid="search" />
+	</select>
+
+	<!-- 자주하는 질문 목록 -->
+	<select id="faqListAll" resultType="NoticeDTO">
+		<include refid="paging_header" />
+			SELECT 	NUM
+				, 	TITLE
+				, 	BBS
+				, 	CONTENTS
+				, 	DAY
+				, 	ID
+			FROM 	BOARD
+			WHERE	1 = 1
+			AND 	TITLE != '통신서비스 이용증명원 신청'
+			<include refid="faqIconSearch"/>
+			<include refid="search" />
+			ORDER BY DAY DESC
+			<include refid="paging_footer" />
+	</select>
+	
+	<!-- 자주하는 질문 검색조건 -->
+	<sql id="search">
+	<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(keyword) ">
+		<choose>
+			<!-- 검색조건 조회 -->
+			<when test="search_option == 'title' ">
+			    AND	TITLE like '%'|| #{keyword} ||'%'			
+			</when>
+			<when test="search_option == 'contents' ">
+			    AND	CONTENTS like '%'|| #{keyword}|| '%'			
+			</when>
+			<otherwise>
+				AND (TITLE like '%'|| #{keyword} ||'%'
+			        OR CONTENTS like '%'|| #{keyword} ||'%' )
+			</otherwise>
+		</choose>
+	</if>
+	</sql>
+	
+	<!-- 자주하는 질문 기관코드 -->
+	<sql id="searchbycode">
+		<choose>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(code) ">
+				AND CODE = #{code}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</sql>
+	
+	<!-- 자주하는 카테고리 선택조건 -->
+	<sql id="faqIconSearch">
+		<choose>
+			<!-- 아이콘클릭 조회 -->
+			<when test="icon == 'req'">
+				<choose>
+					<when test="role == 'ROLE_ADMIN'">AND BBS = 61</when>
+					<when test="role == 'ROLE_USER'">AND BBS = 71</when>
+					<when test="role == 'ROLE_CHACMS'">AND BBS = 61</when>
+					<otherwise>AND BBS = 51</otherwise>
+				</choose>
+			</when>
+			<when test="icon == 'pay'">
+				<choose>
+					<when test="role == 'ROLE_ADMIN'">AND BBS = 62</when>
+					<when test="role == 'ROLE_USER'">AND BBS = 72</when>
+					<when test="role == 'ROLE_CHACMS'">AND BBS = 62</when>
+					<otherwise>AND BBS = 52</otherwise>
+				</choose>
+			</when>
+			<when test="icon == 'site'">
+				<choose>
+					<when test="role == 'ROLE_ADMIN'">AND BBS = 63</when>
+					<when test="role == 'ROLE_USER'">AND BBS = 73</when>
+					<when test="role == 'ROLE_CHACMS'">AND BBS = 63</when>
+					<otherwise>AND BBS = 53</otherwise>
+				</choose>
+			</when>
+			<when test="icon == 'noti'">
+				<choose>
+					<when test="role == 'ROLE_ADMIN'">AND BBS = 64</when>
+					<when test="role == 'ROLE_USER'">AND BBS = 74</when>
+					<when test="role == 'ROLE_CHACMS'">AND BBS = 64</when>
+					<otherwise>AND BBS = 54</otherwise>
+				</choose>
+			</when>
+			<when test="icon == 'receive'">
+				<choose>
+					<when test="role == 'ROLE_ADMIN'">AND BBS = 65</when>
+					<when test="role == 'ROLE_USER'">AND BBS = 75</when>
+					<when test="role == 'ROLE_CHACMS'">AND BBS = 65</when>
+					<otherwise>AND BBS = 55</otherwise>
+				</choose>
+			</when>
+			<when test="icon == 'additional'">
+				<choose>
+					<when test="role == 'ROLE_ADMIN'">AND BBS = 66</when>
+					<when test="role == 'ROLE_USER'">AND BBS = 76</when>
+					<when test="role == 'ROLE_CHACMS'">AND BBS = 66</when>
+					<otherwise>AND BBS = 56</otherwise>
+				</choose>
+			</when>
+			<when test="icon == 'cash'">
+				<choose>
+					<when test="role == 'ROLE_ADMIN'">AND BBS = 67</when>
+					<when test="role == 'ROLE_USER'">AND BBS = 77</when>
+					<when test="role == 'ROLE_CHACMS'">AND BBS = 67</when>
+					<otherwise>AND BBS = 57</otherwise>
+				</choose>
+			</when>
+			<otherwise>
+				<choose>
+					<when test="role == 'ROLE_ADMIN'">AND BBS BETWEEN 61 AND 67</when>
+					<when test="role == 'ROLE_USER'">AND BBS BETWEEN 71 AND 77</when>
+					<when test="role == 'ROLE_CHACMS'">AND BBS BETWEEN 61 AND 67</when>
+					<otherwise>AND BBS BETWEEN 51 AND 57</otherwise>
+				</choose>
+			</otherwise>
+		</choose>
+	</sql>
+	
+	<!-- QnA 전체 조회 -->
+	<select id="qnaListAll" resultType="NoticeDTO">
+		<include refid="paging_header" />
+		SELECT  NO
+			,	BBS
+			,	(SELECT COUNT(*) FROM BOARD B WHERE B.FROMNO = A.NO) AS DATCNT
+			,	TITLE
+			,	to_char(DAY, 'yyyy-mm-dd-hh-MM-ss') as DAY
+			, 	FILENAME
+			, 	TRUNC(DATE_PART('day', now() - DAY)) as RECENTLY
+		FROM BOARD A
+		WHERE BBS = 10
+		AND FROMNO is null
+		AND CODE = #{code}
+		AND TITLE != '통신서비스 이용증명원 신청'
+		<include refid="search" />
+		ORDER BY NO DESC 
+		<include refid="paging_footer"/>
+	</select>
+
+	<!-- 공지사항  상세 보기 -->
+	<select id="qnaDetail" resultType="NoticeDTO">
+		SELECT NO
+			, BBS
+			, NUM
+			, FROMNO
+			, STEP
+			, ID
+			, PASSWORD
+			, WRITER
+			, EMAIL
+			, TITLE
+			, CONTENTS
+			, IP
+			, ISHTML
+			, ISFIX
+			, COUNT
+			, DAY
+			, SENDEMAIL
+			, ISSEND
+			, CODE
+			, DAY1
+			, DATA1
+			, DATA2
+			, DATA3
+			, DATA4
+			, DATA5
+			, DATA6
+			, DATA7
+			, DATA8
+			, FILE_ID AS FILEID
+			, FILE_EXT AS FILEEXT
+			, FILENAME
+			, FILESIZE
+		FROM BOARD
+		WHERE NO = #{no} AND CODE = #{code}
+	</select>
+	
+	<!-- QnA 글 수 조회 -->
+	<select id="qnaTotalCount" resultType="int">
+		SELECT COUNT(*)
+		FROM BOARD
+		WHERE BBS = #{bbs}::numeric
+		AND FROMNO IS NULL
+		AND CODE = #{code}
+		AND TITLE != '통신서비스 이용증명원 신청'
+		<include refid="search" />
+	</select>
+	
+	<!-- QnA 이전글, 다음글 -->
+	<select id="qnaNextList" resultType="NoticeDTO">
+		SELECT * FROM BOARD WHERE NO = #{no} AND TITLE != '통신서비스 이용증명원 신청'
+		UNION ALL (SELECT * FROM ( SELECT * FROM BOARD WHERE <![CDATA[NO < #{no}]]> AND BBS = #{bbs} AND TITLE != '통신서비스 이용증명원 신청' ORDER BY NUM DESC ) A WHERE FROMNO is null AND CODE = #{code} LIMIT 1)
+		UNION ALL (SELECT * FROM ( SELECT * FROM BOARD WHERE <![CDATA[NO > #{no}]]> AND BBS = #{bbs} AND TITLE != '통신서비스 이용증명원 신청' ORDER BY NUM ASC ) A WHERE FROMNO is null AND CODE = #{code} LIMIT 1)
+		ORDER BY 1 DESC
+	</select>
+	
+	<!-- QnA 답글 가져오기 -->
+	<select id="repleList" resultType="NoticeDTO">
+		SELECT 	NO
+			, 	WRITER
+			,	TITLE
+			,	CONTENTS
+			,	TO_CHAR(DAY, 'yyyy-mm-dd-hh-MM-ss') as DAY
+		FROM BOARD
+		WHERE FROMNO = #{no}
+		ORDER BY NO DESC
+	</select>
+	
+	<!-- QnA글 삭제 -->
+	<delete id="qnaDelete">
+		DELETE FROM BOARD
+		WHERE NO = #{no}
+	</delete>
+	
+	<!-- QnA 글쓰기 하기전에 기관 전화번호 가져오기 -->
+	<select id="getPhoneNumber" resultType="NoticeDTO">
+		SELECT 	OWNERTEL
+			, 	CHRHP
+		FROM 	XCHALIST
+		WHERE 	CHACD 	= #{code}
+	</select>
+
+	<!-- QnA 글등록 전 금일 등록한 게시글 수 확인 -->
+	<select id="getDailyQnaCount" resultType="int">
+		SELECT 	COUNT(*) AS cnt
+		FROM 	BOARD
+		WHERE	BBS = 10
+		AND	ID	= #{id}
+		AND	TO_CHAR(DAY, 'YYYYMMDD') = TO_CHAR(NOW(), 'YYYYMMDD')
+	</select>
+
+	<!-- QnA글 Insert -->
+	<insert id="qnaInsert" parameterType="java.util.HashMap">
+		INSERT INTO BOARD (NO, BBS, NUM, FROMNO, STEP, ID, WRITER, EMAIL, TITLE, CONTENTS, FILENAME, FILESIZE, IP, ISHTML, ISFIX, CODE, DATA1, DATA7, FILE_ID, FILE_EXT)
+		VALUES (NEXTVAL('board_seq'),
+				10,
+				COALESCE((SELECT MAX(num)
+                	FROM board
+                    WHERE bbs = 10), 0)+1,
+                NULL,
+                '0',
+                #{id},
+                #{writer},
+                #{email},
+                #{title},
+                #{contents},
+                #{fileName},
+                #{filesize},
+                #{ip},
+                0,
+                0,
+                #{code},
+                #{data1},
+                #{data7},
+                #{fileid},
+                #{fileext}
+				)
+	</insert>
+	
+	<!-- QnA글 수정 실행 -->
+	<update id="qnaUpdateExcute" parameterType="java.util.HashMap">
+		UPDATE BOARD
+		SET TITLE = #{title},
+			CONTENTS = #{contents},
+			FILENAME = #{filename},
+			FILESIZE = #{filesize},
+			IP = #{ip},
+			DATA7 = #{data7}
+		WHERE NO = #{no}
+	</update>
+	
+	<!-- QnA글 수정 파일 삭제 실행 -->
+	<update id="qnaUpdateRemoveFile" parameterType="java.util.HashMap">
+		UPDATE BOARD
+		SET FILENAME = #{filename},
+			FILESIZE = 0,
+			FILE_ID = #{fileid},
+			FILE_EXT = #{fileext}
+		WHERE NO = #{no}
+	</update>
+	
+	<!-- QnA글 파일 변경 실행 -->
+	<update id="qnaUpdateChangeFile" parameterType="java.util.HashMap">
+		UPDATE BOARD
+		SET TITLE = #{title},
+			CONTENTS = #{contents},
+			FILENAME = #{filename},
+			FILESIZE = #{filesize},
+			DATA7 = #{data7},
+			FILE_ID = #{fileid},
+			FILE_EXT = #{fileext}
+		WHERE NO = #{no}
+	</update>
+	
+	<sql id="orderBy">
+		<choose>
+			<when test="search_orderBy == 'state'">
+				ORDER BY 2
+			</when>
+			<otherwise>
+				ORDER BY 1
+			</otherwise>
+		</choose>
+	</sql>
+	<!--// 자주하는 질문 검색조건 -->
+	
+</mapper>

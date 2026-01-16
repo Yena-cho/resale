@@ -1,0 +1,581 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<messages charset="UTF-8">
+    <message id="common">
+        <field id="length" length="4" type="N" reqChk="M" resChk="" desc="LENGTH" convertType="Integer"/>
+        <field id="systemId" length="3" type="AN" reqChk="M" resChk="" desc="시스템ID"/>
+        <field id="msgSndRcvCorpCode" length="8" type="AN" reqChk="M" resChk="" desc="전문송수신기관코드"/>
+        <field id="sndRcvFlag" length="1" type="AN" reqChk="M" resChk="M" desc="송수신 FLAG"/>
+        <field id="msgTypeCode" length="4" type="N" reqChk="M" resChk="M" desc="전문구분코드(MSG TYPE)"/>
+        <field id="dealTypeCode" length="4" type="N" reqChk="M" resChk="" desc="거래구분코드"/>
+        <field id="handlingAgencyCode" length="8" type="N" reqChk="M" resChk="" desc="취급기관코드"/>
+        <field id="dealSeqNo" length="7" type="N" reqChk="M" resChk="" desc="거래일련번호"/>
+        <field id="msgSndDate" length="14" type="N" reqChk="M" resChk="" desc="전문전송 일시"/>
+        <field id="dealStartDate" length="14" type="N" reqChk="M" resChk="" desc="거래개시일 시"/>
+        <field id="resCode" length="4" type="AN" reqChk="N" resChk="M" desc="응답코드"/>
+        <field id="usrWorkArea1" length="15" type="AN" reqChk="N" resChk="" desc="USER WORK AREA 1"/>
+        <field id="usrWorkArea2" length="15" type="AN" reqChk="N" resChk="" desc="USER WORK AREA 2"/>
+        <field id="deadlineYn" length="1" type="AN" reqChk="M" resChk="" desc="마감전후구분"/>
+        <field id="occurGubun" length="1" type="AN" reqChk="M" resChk="" desc="발생구분"/>
+        <field id="mediaGubun" length="1" type="AN" reqChk="M" resChk="" desc="매체구분"/>
+        <field id="institutionCode" length="8" type="N" reqChk="M" resChk="" desc="개설기관코드"/>
+        <field id="terminalInfo" length="25" type="AN" reqChk="M" resChk="" desc="취급단말정보"/>
+        <field id="resMsg" length="50" type="AN" reqChk="N" resChk="M" desc="응답 MESSAGE"/>
+        <field id="commonNetworkNo" length="13" type="AN" reqChk="N" resChk="" desc="공동망 고유번호"/>
+    </message>
+
+    <message id="depositReqMessage" tranTypeCode="02001100" recieveVoType="kr.co.finger.damoa.model.msg.NoticeMessage" desc="입금통지">
+        <field id="common" ref="common"/>
+        <field id="depositCorpCode" length="8" type="AN" reqChk="M" resChk="" desc="입금기관코드"/>
+        <field id="depositAccountNo" length="16" type="AN" reqChk="M" resChk="" desc="입금계좌번호"/>
+        <field id="depositAccountName" length="20" type="AN" reqChk="M" resChk="M" desc="입금계좌성명"/>
+        <field id="withdrawalCorpCode" length="8" type="AN" reqChk="N" resChk="" desc="출금기관코드"/>
+        <field id="withdrawalAccountNo" length="16" type="AN" reqChk="N" resChk="" desc="출금계좌번호"/>
+        <field id="withdrawalAccountName" length="20" type="AN" reqChk="N" resChk="" desc="출금계좌성명"/>
+        <field id="wathdrawalAccountPw" length="16" type="AN" reqChk="N" resChk="" desc="출금계좌비밀번호"/>
+        <field id="secretCardInfo" length="20" type="AN" reqChk="M" resChk="" desc="SECRET카드정보"/>
+        <field id="transactionAmount" length="13" type="N" reqChk="M" resChk="" desc="거래금액"/>
+        <field id="cashOfTransactionAmount" length="13" type="N" reqChk="N" resChk="" desc="거래금액중현금금액"/>
+        <field id="outstandingCheckOfTransactionAmount" length="13" type="N" reqChk="N" resChk="" desc="거래금액중미결제수표금액"/>
+        <field id="balanceSignAfterTransaction" length="1" type="AN" reqChk="N" resChk="" desc="거래후잔액부호"/>
+        <field id="balanceAfterTransaction" length="13" type="N" reqChk="N" resChk="" desc="거래 후 잔액"/>
+        <field id="outstandingBalanceAfterTransaction" length="13" type="N" reqChk="N" resChk="" desc="거래후잔액중미결제타점권잔액"/>
+        <field id="amountOfFee" length="28" type="N" reqChk="M" resChk="" desc="수수료금액"/>
+        <field id="clearingHouseCode" length="6" type="AN" reqChk="M" resChk="" desc="어음교환소코드"/>
+        <field id="referenceNo" length="20" type="AN" reqChk="M" resChk="" desc="참조번호"/>
+        <field id="cancelReasonCode" length="4" type="AN" reqChk="M" resChk="" desc="취소사유코드"/>
+        <field id="accountProcessingInfo" length="87" type="AN" reqChk="M" resChk="" desc="계정처리정보"/>
+        <field id="msTrackData" length="60" type="AN" reqChk="N" resChk="" desc="MS TRACK DATA"/>
+        <field id="filter" length="5" type="AN" reqChk="M" resChk="" desc="FILLER"/>
+        <field id="virtualAccountDivideCount" length="2" type="AN" reqChk="M" resChk="M" desc="가상계좌거래배분건수"/>
+        <field id="virtualAccountKey01" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호01"/>
+        <field id="virtualAccountAmount01" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액01"/>
+        <field id="filler01" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey02" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호02"/>
+        <field id="virtualAccountAmount02" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액02"/>
+        <field id="filler02" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey03" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호03"/>
+        <field id="virtualAccountAmount03" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액03"/>
+        <field id="filler03" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey04" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호04"/>
+        <field id="virtualAccountAmount04" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액04"/>
+        <field id="filler04" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey05" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호05"/>
+        <field id="virtualAccountAmount05" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액05"/>
+        <field id="filler05" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey06" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호06"/>
+        <field id="virtualAccountAmount06" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액06"/>
+        <field id="filler06" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey07" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호07"/>
+        <field id="virtualAccountAmount07" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액07"/>
+        <field id="filler07" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey08" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호08"/>
+        <field id="virtualAccountAmount08" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액08"/>
+        <field id="filler08" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey09" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호09"/>
+        <field id="virtualAccountAmount09" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액09"/>
+        <field id="filler09" length="28" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+    </message>
+    <message id="depositResMessage" tranTypeCode="02101100" recieveVoType="kr.co.finger.damoa.model.msg.NoticeMessage" desc="입금통지응답">
+        <field id="common" ref="common"/>
+        <field id="depositCorpCode" length="8" type="AN" reqChk="M" resChk="" desc="입금기관코드"/>
+        <field id="depositAccountNo" length="16" type="AN" reqChk="M" resChk="" desc="입금계좌번호"/>
+        <field id="depositAccountName" length="20" type="AN" reqChk="M" resChk="M" desc="입금계좌성명"/>
+        <field id="withdrawalCorpCode" length="8" type="AN" reqChk="N" resChk="" desc="출금기관코드"/>
+        <field id="withdrawalAccountNo" length="16" type="AN" reqChk="N" resChk="" desc="출금계좌번호"/>
+        <field id="withdrawalAccountName" length="20" type="AN" reqChk="N" resChk="" desc="출금계좌성명"/>
+        <field id="wathdrawalAccountPw" length="16" type="AN" reqChk="N" resChk="" desc="출금계좌비밀번호"/>
+        <field id="secretCardInfo" length="20" type="AN" reqChk="M" resChk="" desc="SECRET카드정보"/>
+        <field id="transactionAmount" length="13" type="N" reqChk="M" resChk="" desc="거래금액"/>
+        <field id="cashOfTransactionAmount" length="13" type="N" reqChk="N" resChk="" desc="거래금액중현금금액"/>
+        <field id="outstandingCheckOfTransactionAmount" length="13" type="N" reqChk="N" resChk="" desc="거래금액중미결제수표금액"/>
+        <field id="balanceSignAfterTransaction" length="1" type="AN" reqChk="N" resChk="" desc="거래후잔액부호"/>
+        <field id="balanceAfterTransaction" length="13" type="N" reqChk="N" resChk="" desc="거래 후 잔액"/>
+        <field id="outstandingBalanceAfterTransaction" length="13" type="N" reqChk="N" resChk="" desc="거래후잔액중미결제타점권잔액"/>
+        <field id="amountOfFee" length="28" type="N" reqChk="M" resChk="" desc="수수료금액"/>
+        <field id="clearingHouseCode" length="6" type="AN" reqChk="M" resChk="" desc="어음교환소코드"/>
+        <field id="referenceNo" length="20" type="AN" reqChk="M" resChk="" desc="참조번호"/>
+        <field id="cancelReasonCode" length="4" type="AN" reqChk="M" resChk="" desc="취소사유코드"/>
+        <field id="accountProcessingInfo" length="87" type="AN" reqChk="M" resChk="" desc="계정처리정보"/>
+        <field id="msTrackData" length="60" type="AN" reqChk="N" resChk="" desc="MS TRACK DATA"/>
+        <field id="filter" length="5" type="AN" reqChk="M" resChk="" desc="FILLER"/>
+        <field id="virtualAccountDivideCount" length="2" type="AN" reqChk="M" resChk="M" desc="가상계좌거래배분건수"/>
+        <field id="virtualAccountKey01" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호01"/>
+        <field id="virtualAccountAmount01" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액01"/>
+        <field id="filler01" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey02" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호02"/>
+        <field id="virtualAccountAmount02" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액02"/>
+        <field id="filler02" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey03" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호03"/>
+        <field id="virtualAccountAmount03" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액03"/>
+        <field id="filler03" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey04" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호04"/>
+        <field id="virtualAccountAmount04" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액04"/>
+        <field id="filler04" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey05" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호05"/>
+        <field id="virtualAccountAmount05" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액05"/>
+        <field id="filler05" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey06" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호06"/>
+        <field id="virtualAccountAmount06" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액06"/>
+        <field id="filler06" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey07" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호07"/>
+        <field id="virtualAccountAmount07" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액07"/>
+        <field id="filler07" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey08" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호08"/>
+        <field id="virtualAccountAmount08" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액08"/>
+        <field id="filler08" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey09" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호09"/>
+        <field id="virtualAccountAmount09" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액09"/>
+        <field id="filler09" length="28" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+    </message>
+    <message id="transferMoneyReqMessage" tranTypeCode="02003110" recieveVoType="kr.co.finger.damoa.model.msg.NoticeMessage" desc="입금이체통지">
+        <field id="common" ref="common"/>
+        <field id="depositCorpCode" length="8" type="AN" reqChk="M" resChk="" desc="입금기관코드"/>
+        <field id="depositAccountNo" length="16" type="AN" reqChk="M" resChk="" desc="입금계좌번호"/>
+        <field id="depositAccountName" length="20" type="AN" reqChk="M" resChk="M" desc="입금계좌성명"/>
+        <field id="withdrawalCorpCode" length="8" type="AN" reqChk="N" resChk="" desc="출금기관코드"/>
+        <field id="withdrawalAccountNo" length="16" type="AN" reqChk="N" resChk="" desc="출금계좌번호"/>
+        <field id="withdrawalAccountName" length="20" type="AN" reqChk="N" resChk="" desc="출금계좌성명"/>
+        <field id="wathdrawalAccountPw" length="16" type="AN" reqChk="N" resChk="" desc="출금계좌비밀번호"/>
+        <field id="secretCardInfo" length="20" type="AN" reqChk="M" resChk="" desc="SECRET카드정보"/>
+        <field id="transactionAmount" length="13" type="N" reqChk="M" resChk="" desc="거래금액"/>
+        <field id="cashOfTransactionAmount" length="13" type="N" reqChk="N" resChk="" desc="거래금액중현금금액"/>
+        <field id="outstandingCheckOfTransactionAmount" length="13" type="N" reqChk="N" resChk="" desc="거래금액중미결제수표금액"/>
+        <field id="balanceSignAfterTransaction" length="1" type="AN" reqChk="N" resChk="" desc="거래후잔액부호"/>
+        <field id="balanceAfterTransaction" length="13" type="N" reqChk="N" resChk="" desc="거래 후 잔액"/>
+        <field id="outstandingBalanceAfterTransaction" length="13" type="N" reqChk="N" resChk="" desc="거래후잔액중미결제타점권잔액"/>
+        <field id="amountOfFee" length="28" type="N" reqChk="M" resChk="" desc="수수료금액"/>
+        <field id="clearingHouseCode" length="6" type="AN" reqChk="M" resChk="" desc="어음교환소코드"/>
+        <field id="referenceNo" length="20" type="AN" reqChk="M" resChk="" desc="참조번호"/>
+        <field id="cancelReasonCode" length="4" type="AN" reqChk="M" resChk="" desc="취소사유코드"/>
+        <field id="accountProcessingInfo" length="87" type="AN" reqChk="M" resChk="" desc="계정처리정보"/>
+        <field id="msTrackData" length="60" type="AN" reqChk="N" resChk="" desc="MS TRACK DATA"/>
+        <field id="filter" length="5" type="AN" reqChk="M" resChk="" desc="FILLER"/>
+        <field id="virtualAccountDivideCount" length="2" type="AN" reqChk="M" resChk="M" desc="가상계좌거래배분건수"/>
+        <field id="virtualAccountKey01" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호01"/>
+        <field id="virtualAccountAmount01" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액01"/>
+        <field id="filler01" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey02" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호02"/>
+        <field id="virtualAccountAmount02" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액02"/>
+        <field id="filler02" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey03" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호03"/>
+        <field id="virtualAccountAmount03" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액03"/>
+        <field id="filler03" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey04" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호04"/>
+        <field id="virtualAccountAmount04" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액04"/>
+        <field id="filler04" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey05" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호05"/>
+        <field id="virtualAccountAmount05" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액05"/>
+        <field id="filler05" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey06" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호06"/>
+        <field id="virtualAccountAmount06" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액06"/>
+        <field id="filler06" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey07" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호07"/>
+        <field id="virtualAccountAmount07" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액07"/>
+        <field id="filler07" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey08" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호08"/>
+        <field id="virtualAccountAmount08" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액08"/>
+        <field id="filler08" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey09" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호09"/>
+        <field id="virtualAccountAmount09" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액09"/>
+        <field id="filler09" length="28" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+    </message>
+    <message id="transferMoneyResMessage" tranTypeCode="02103110" recieveVoType="kr.co.finger.damoa.model.msg.NoticeMessage" desc="입금이체통지응답">
+        <field id="common" ref="common"/>
+        <field id="depositCorpCode" length="8" type="AN" reqChk="M" resChk="" desc="입금기관코드"/>
+        <field id="depositAccountNo" length="16" type="AN" reqChk="M" resChk="" desc="입금계좌번호"/>
+        <field id="depositAccountName" length="20" type="AN" reqChk="M" resChk="M" desc="입금계좌성명"/>
+        <field id="withdrawalCorpCode" length="8" type="AN" reqChk="N" resChk="" desc="출금기관코드"/>
+        <field id="withdrawalAccountNo" length="16" type="AN" reqChk="N" resChk="" desc="출금계좌번호"/>
+        <field id="withdrawalAccountName" length="20" type="AN" reqChk="N" resChk="" desc="출금계좌성명"/>
+        <field id="wathdrawalAccountPw" length="16" type="AN" reqChk="N" resChk="" desc="출금계좌비밀번호"/>
+        <field id="secretCardInfo" length="20" type="AN" reqChk="M" resChk="" desc="SECRET카드정보"/>
+        <field id="transactionAmount" length="13" type="N" reqChk="M" resChk="" desc="거래금액"/>
+        <field id="cashOfTransactionAmount" length="13" type="N" reqChk="N" resChk="" desc="거래금액중현금금액"/>
+        <field id="outstandingCheckOfTransactionAmount" length="13" type="N" reqChk="N" resChk="" desc="거래금액중미결제수표금액"/>
+        <field id="balanceSignAfterTransaction" length="1" type="AN" reqChk="N" resChk="" desc="거래후잔액부호"/>
+        <field id="balanceAfterTransaction" length="13" type="N" reqChk="N" resChk="" desc="거래 후 잔액"/>
+        <field id="outstandingBalanceAfterTransaction" length="13" type="N" reqChk="N" resChk="" desc="거래후잔액중미결제타점권잔액"/>
+        <field id="amountOfFee" length="28" type="N" reqChk="M" resChk="" desc="수수료금액"/>
+        <field id="clearingHouseCode" length="6" type="AN" reqChk="M" resChk="" desc="어음교환소코드"/>
+        <field id="referenceNo" length="20" type="AN" reqChk="M" resChk="" desc="참조번호"/>
+        <field id="cancelReasonCode" length="4" type="AN" reqChk="M" resChk="" desc="취소사유코드"/>
+        <field id="accountProcessingInfo" length="87" type="AN" reqChk="M" resChk="" desc="계정처리정보"/>
+        <field id="msTrackData" length="60" type="AN" reqChk="N" resChk="" desc="MS TRACK DATA"/>
+        <field id="filter" length="5" type="AN" reqChk="M" resChk="" desc="FILLER"/>
+        <field id="virtualAccountDivideCount" length="2" type="AN" reqChk="M" resChk="M" desc="가상계좌거래배분건수"/>
+        <field id="virtualAccountKey01" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호01"/>
+        <field id="virtualAccountAmount01" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액01"/>
+        <field id="filler01" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey02" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호02"/>
+        <field id="virtualAccountAmount02" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액02"/>
+        <field id="filler02" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey03" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호03"/>
+        <field id="virtualAccountAmount03" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액03"/>
+        <field id="filler03" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey04" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호04"/>
+        <field id="virtualAccountAmount04" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액04"/>
+        <field id="filler04" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey05" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호05"/>
+        <field id="virtualAccountAmount05" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액05"/>
+        <field id="filler05" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey06" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호06"/>
+        <field id="virtualAccountAmount06" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액06"/>
+        <field id="filler06" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey07" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호07"/>
+        <field id="virtualAccountAmount07" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액07"/>
+        <field id="filler07" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey08" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호08"/>
+        <field id="virtualAccountAmount08" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액08"/>
+        <field id="filler08" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey09" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호09"/>
+        <field id="virtualAccountAmount09" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액09"/>
+        <field id="filler09" length="28" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+    </message>
+    <message id="receiptInquiryReqMessage" tranTypeCode="02004110" recieveVoType="kr.co.finger.damoa.model.msg.QueryMessage" desc="계좌수취조회">
+        <field id="common" ref="common"/>
+        <field id="depositCorpCode" length="8" type="AN" reqChk="M" resChk="" desc="입금기관코드"/>
+        <field id="depositAccountNo" length="16" type="AN" reqChk="M" resChk="" desc="입금계좌번호"/>
+        <field id="depositAccountName" length="20" type="AN" reqChk="M" resChk="M" desc="입금계좌성명"/>
+        <field id="withdrawalCorpCode" length="8" type="AN" reqChk="M" resChk="" desc="출금기관코드"/>
+        <field id="withdrawalAccountNo" length="16" type="AN" reqChk="M" resChk="" desc="출금계좌번호"/>
+        <field id="withdrawalAccountName" length="20" type="AN" reqChk="M" resChk="" desc="출금계좌성명"/>
+        <field id="wathdrawalAccountPw" length="16" type="AN" reqChk="N" resChk="" desc="출금계좌비밀번호"/>
+        <field id="secretCardInfo" length="20" type="AN" reqChk="N" resChk="" desc="SECRET카드정보"/>
+        <field id="transactionAmount" length="13" type="N" reqChk="M" resChk="" desc="거래금액"/>
+        <field id="cashOfTransactionAmount" length="13" type="N" reqChk="N" resChk="" desc="거래금액중현금금액"/>
+        <field id="outstandingCheckOfTransactionAmount" length="13" type="N" reqChk="N" resChk="" desc="거래금액중미결제수표금액"/>
+        <field id="balanceSignAfterTransaction" length="1" type="AN" reqChk="N" resChk="" desc="거래후잔액부호"/>
+        <field id="balanceAfterTransaction" length="13" type="N" reqChk="N" resChk="" desc="거래 후 잔액"/>
+        <field id="outstandingBalanceAfterTransaction" length="13" type="N" reqChk="N" resChk="" desc="거래후잔액중미결제타점권잔액"/>
+        <field id="amountOfFee" length="28" type="N" reqChk="M" resChk="" desc="수수료금액"/>
+        <field id="clearingHouseCode" length="6" type="AN" reqChk="M" resChk="" desc="어음교환소코드"/>
+        <field id="referenceNo" length="20" type="AN" reqChk="M" resChk="" desc="참조번호"/>
+        <field id="cancelReasonCode" length="4" type="AN" reqChk="M" resChk="" desc="취소사유코드"/>
+        <field id="accountProcessingInfo" length="87" type="AN" reqChk="M" resChk="" desc="계정처리정보"/>
+        <field id="msTrackData" length="60" type="AN" reqChk="N" resChk="" desc="MS TRACK DATA"/>
+        <field id="filter" length="5" type="AN" reqChk="N" resChk="" desc="FILLER"/>
+    </message>
+    <message id="receiptInquiryResMessage" tranTypeCode="02104110" recieveVoType="kr.co.finger.damoa.model.msg.QueryMessage" desc="계좌수취조회응답">
+        <field id="common" ref="common"/>
+        <field id="depositCorpCode" length="8" type="AN" reqChk="M" resChk="" desc="입금기관코드"/>
+        <field id="depositAccountNo" length="16" type="AN" reqChk="M" resChk="" desc="입금계좌번호"/>
+        <field id="depositAccountName" length="20" type="AN" reqChk="M" resChk="M" desc="입금계좌성명"/>
+        <field id="withdrawalCorpCode" length="8" type="AN" reqChk="M" resChk="" desc="출금기관코드"/>
+        <field id="withdrawalAccountNo" length="16" type="AN" reqChk="M" resChk="" desc="출금계좌번호"/>
+        <field id="withdrawalAccountName" length="20" type="AN" reqChk="M" resChk="" desc="출금계좌성명"/>
+        <field id="wathdrawalAccountPw" length="16" type="AN" reqChk="N" resChk="" desc="출금계좌비밀번호"/>
+        <field id="secretCardInfo" length="20" type="AN" reqChk="N" resChk="" desc="SECRET카드정보"/>
+        <field id="transactionAmount" length="13" type="N" reqChk="M" resChk="" desc="거래금액"/>
+        <field id="cashOfTransactionAmount" length="13" type="N" reqChk="N" resChk="" desc="거래금액중현금금액"/>
+        <field id="outstandingCheckOfTransactionAmount" length="13" type="N" reqChk="N" resChk="" desc="거래금액중미결제수표금액"/>
+        <field id="balanceSignAfterTransaction" length="1" type="AN" reqChk="N" resChk="" desc="거래후잔액부호"/>
+        <field id="balanceAfterTransaction" length="13" type="N" reqChk="N" resChk="" desc="거래 후 잔액"/>
+        <field id="outstandingBalanceAfterTransaction" length="13" type="N" reqChk="N" resChk="" desc="거래후잔액중미결제타점권잔액"/>
+        <field id="amountOfFee" length="28" type="N" reqChk="M" resChk="" desc="수수료금액"/>
+        <field id="clearingHouseCode" length="6" type="AN" reqChk="M" resChk="" desc="어음교환소코드"/>
+        <field id="referenceNo" length="20" type="AN" reqChk="M" resChk="" desc="참조번호"/>
+        <field id="cancelReasonCode" length="4" type="AN" reqChk="M" resChk="" desc="취소사유코드"/>
+        <field id="accountProcessingInfo" length="87" type="AN" reqChk="M" resChk="" desc="계정처리정보"/>
+        <field id="msTrackData" length="60" type="AN" reqChk="N" resChk="" desc="MS TRACK DATA"/>
+        <field id="filter" length="5" type="AN" reqChk="N" resChk="" desc="FILLER"/>
+    </message>
+    <message id="aggregateReqMessage" tranTypeCode="07001100" recieveVoType="kr.co.finger.damoa.model.msg.AggregateMessage" desc="집계대사전문">
+        <field id="common" ref="common"/>
+        <field id="dealDate" length="8" type="AN" reqChk="M" resChk="" desc="거래일자"/>
+        <field id="corpCode" length="8" type="AN" reqChk="M" resChk="" desc="기관코드"/>
+        <field id="depositTotalNo" length="7" type="N" reqChk="M" resChk="" desc="입금총건수"/>
+        <field id="depositTotalAmount" length="13" type="N" reqChk="M" resChk="" desc="입금총금액"/>
+        <field id="depositCancelNo" length="7" type="N" reqChk="M" resChk="" desc="입금취소건수"/>
+        <field id="depostCancelAmount" length="13" type="N" reqChk="M" resChk="" desc="입금취소금액"/>
+        <field id="withdrawalTotalNo" length="7" type="N" reqChk="N" resChk="" desc="출금총건수"/>
+        <field id="withdrawalTotalAmount" length="13" type="N" reqChk="N" resChk="" desc="출금총금액"/>
+        <field id="withdrawalCancelNo" length="7" type="N" reqChk="N" resChk="" desc="출금취소건수"/>
+        <field id="withdrawalCancelAmount" length="13" type="N" reqChk="N" resChk="" desc="출금취소 금액"/>
+        <field id="feesNo" length="7" type="N" reqChk="M" resChk="" desc="수수료건수"/>
+        <field id="feesAmount" length="13" type="N" reqChk="M" resChk="" desc="수수료금액"/>
+        <field id="withdrawalInstructionNo" length="7" type="N" reqChk="N" resChk="" desc="출금지시건수"/>
+        <field id="withdrawalInstructionAmount" length="13" type="N" reqChk="N" resChk="" desc="출금지시금액"/>
+        <field id="withdrawalInstructionCancelNo" length="7" type="N" reqChk="N" resChk="" desc="출금지시 취소건수"/>
+        <field id="withdrawalInstructionCancelAmount" length="13" type="N" reqChk="N" resChk="" desc="출급지시 취소금액"/>
+        <field id="withdrawalInstructionFeeNo" length="7" type="N" reqChk="N" resChk="" desc="출금지시 수수료건수"/>
+        <field id="withdrawalInstructionFeeAmount" length="13" type="N" reqChk="N" resChk="" desc="출금지시 수수료금액"/>
+        <field id="filter" length="24" type="AN" reqChk="N" resChk="" desc="FILLER"/>
+    </message>
+    <message id="aggregateResMessage" tranTypeCode="07101100" recieveVoType="kr.co.finger.damoa.model.msg.AggregateMessage" desc="집계대사전문응답">
+        <field id="common" ref="common"/>
+        <field id="dealDate" length="8" type="AN" reqChk="M" resChk="" desc="거래일자"/>
+        <field id="corpCode" length="8" type="AN" reqChk="M" resChk="" desc="기관코드"/>
+        <field id="depositTotalNo" length="7" type="N" reqChk="M" resChk="" desc="입금총건수"/>
+        <field id="depositTotalAmount" length="13" type="N" reqChk="M" resChk="" desc="입금총금액"/>
+        <field id="depositCancelNo" length="7" type="N" reqChk="M" resChk="" desc="입금취소건수"/>
+        <field id="depostCancelAmount" length="13" type="N" reqChk="M" resChk="" desc="입금취소금액"/>
+        <field id="withdrawalTotalNo" length="7" type="N" reqChk="N" resChk="" desc="출금총건수"/>
+        <field id="withdrawalTotalAmount" length="13" type="N" reqChk="N" resChk="" desc="출금총금액"/>
+        <field id="withdrawalCancelNo" length="7" type="N" reqChk="N" resChk="" desc="출금취소건수"/>
+        <field id="withdrawalCancelAmount" length="13" type="N" reqChk="N" resChk="" desc="출금취소 금액"/>
+        <field id="feesNo" length="7" type="N" reqChk="M" resChk="" desc="수수료건수"/>
+        <field id="feesAmount" length="13" type="N" reqChk="M" resChk="" desc="수수료금액"/>
+        <field id="withdrawalInstructionNo" length="7" type="N" reqChk="N" resChk="" desc="출금지시건수"/>
+        <field id="withdrawalInstructionAmount" length="13" type="N" reqChk="N" resChk="" desc="출금지시금액"/>
+        <field id="withdrawalInstructionCancelNo" length="7" type="N" reqChk="N" resChk="" desc="출금지시 취소건수"/>
+        <field id="withdrawalInstructionCancelAmount" length="13" type="N" reqChk="N" resChk="" desc="출급지시 취소금액"/>
+        <field id="withdrawalInstructionFeeNo" length="7" type="N" reqChk="N" resChk="" desc="출금지시 수수료건수"/>
+        <field id="withdrawalInstructionFeeAmount" length="13" type="N" reqChk="N" resChk="" desc="출금지시 수수료금액"/>
+        <field id="filter" length="24" type="AN" reqChk="N" resChk="" desc="FILLER"/>
+    </message>
+    <message id="adminReqMessage" tranTypeCode="08001100" recieveVoType="kr.co.finger.damoa.model.msg.AdminMessage" desc="통신망관리요청">
+        <field id="common" ref="common"/>
+        <field id="dealDate" length="8" type="AN" reqChk="M" resChk="" desc="거래일자"/>
+        <field id="adminInfo" length="3" type="AN" reqChk="M" resChk="" desc="관리정보"/>
+        <field id="holidayCode" length="1" type="N" reqChk="M" resChk="" desc="휴일구분"/>
+        <field id="safCount" length="7" type="N" reqChk="M" resChk="" desc="SAF 건수"/>
+        <field id="filter" length="81" type="AN" reqChk="N" resChk="" desc="FILLER"/>
+    </message>
+    <message id="adminResMessage" tranTypeCode="08101100" recieveVoType="kr.co.finger.damoa.model.msg.AdminMessage" desc="통신망관리응답">
+        <field id="common" ref="common"/>
+        <field id="dealDate" length="8" type="AN" reqChk="M" resChk="" desc="거래일자"/>
+        <field id="adminInfo" length="3" type="AN" reqChk="M" resChk="" desc="관리정보"/>
+        <field id="holidayCode" length="1" type="N" reqChk="M" resChk="" desc="휴일구분"/>
+        <field id="safCount" length="7" type="N" reqChk="M" resChk="" desc="SAF 건수"/>
+        <field id="filter" length="81" type="AN" reqChk="N" resChk="" desc="FILLER"/>
+    </message>
+    <message id="virtualAccountRangeReqMessage" tranTypeCode="02006320" recieveVoType="kr.co.finger.damoa.model.msg.VirtualAccountRangeMessage" desc="범위계좌발금요청">
+        <field id="common" ref="common"/>
+        <field id="accountGubun" length="1" type="AN" reqChk="M" resChk="M" desc="계좌발급구분"/>
+        <field id="corpCode" length="8" type="AN" reqChk="M" resChk="M" desc="기관코드"/>
+        <field id="agencyCode" length="5" type="AN" reqChk="M" resChk="M" desc="대리점코드"/>
+        <field id="branchCode" length="5" type="N" reqChk="M" resChk="M" desc="영업점코드"/>
+        <field id="count" length="7" type="N" reqChk="M" resChk="M" desc="매수"/>
+        <field id="startVirtualAccount" length="16" type="AN" reqChk="M" resChk="M" desc="시작가상계좌번호"/>
+        <field id="issuedSerialNo" length="7" type="N" reqChk="M" resChk="M" desc="발급일련번호"/>
+        <field id="filler" length="51" type="AN" reqChk="N" resChk="M" desc="FILLER"/>
+    </message>
+    <message id="virtualAccountRangeResMessage" tranTypeCode="02106320" recieveVoType="kr.co.finger.damoa.model.msg.VirtualAccountRangeMessage" desc="범위계좌발금응답">
+        <field id="common" ref="common"/>
+        <field id="accountGubun" length="1" type="AN" reqChk="M" resChk="M" desc="계좌발급구분"/>
+        <field id="corpCode" length="8" type="AN" reqChk="M" resChk="M" desc="기관코드"/>
+        <field id="agencyCode" length="5" type="AN" reqChk="M" resChk="M" desc="대리점코드"/>
+        <field id="branchCode" length="5" type="N" reqChk="M" resChk="M" desc="영업점코드"/>
+        <field id="count" length="7" type="N" reqChk="M" resChk="M" desc="매수"/>
+        <field id="startVirtualAccount" length="16" type="AN" reqChk="M" resChk="M" desc="시작가상계좌번호"/>
+        <field id="issuedSerialNo" length="7" type="N" reqChk="M" resChk="M" desc="발급일련번호"/>
+        <field id="filler" length="51" type="AN" reqChk="N" resChk="M" desc="FILLER"/>
+    </message>
+    <message id="pollingRequestMessage" tranTypeCode="HDRREQPOLL" recieveVoType="kr.co.finger.damoa.model.msg.PollingMessage" desc="통신망폴링요청">
+        <field id="pollingType" length="10" type="AN" reqChk="M" resChk="" desc="폴링타입"/>
+        <field id="dateTime" length="10" type="N" reqChk="M" resChk="" desc="월일시분초"/>
+    </message>
+    <message id="pollingResponseMessage" tranTypeCode="HDRRESPOLL" recieveVoType="kr.co.finger.damoa.model.msg.PollingMessage" desc="통신망폴링응답">
+        <field id="pollingType" length="10" type="AN" reqChk="M" resChk="" desc="폴링타입1"/>
+        <field id="dateTime" length="10" type="N" reqChk="M" resChk="" desc="월일시분초"/>
+    </message>
+    <message id="cancelRequestMessage" tranTypeCode="04001100" recieveVoType="kr.co.finger.damoa.model.msg.NoticeMessage" desc="입금취소요청">
+        <field id="common" ref="common"/>
+        <field id="depositCorpCode" length="8" type="AN" reqChk="M" resChk="" desc="입금기관코드"/>
+        <field id="depositAccountNo" length="16" type="AN" reqChk="M" resChk="" desc="입금계좌번호"/>
+        <field id="depositAccountName" length="20" type="AN" reqChk="M" resChk="M" desc="입금계좌성명"/>
+        <field id="withdrawalCorpCode" length="8" type="AN" reqChk="N" resChk="" desc="출금기관코드"/>
+        <field id="withdrawalAccountNo" length="16" type="AN" reqChk="N" resChk="" desc="출금계좌번호"/>
+        <field id="withdrawalAccountName" length="20" type="AN" reqChk="N" resChk="" desc="출금계좌성명"/>
+        <field id="wathdrawalAccountPw" length="16" type="AN" reqChk="N" resChk="" desc="출금계좌비밀번호"/>
+        <field id="secretCardInfo" length="20" type="AN" reqChk="M" resChk="" desc="SECRET카드정보"/>
+        <field id="transactionAmount" length="13" type="N" reqChk="M" resChk="" desc="거래금액"/>
+        <field id="cashOfTransactionAmount" length="13" type="N" reqChk="N" resChk="" desc="거래금액중현금금액"/>
+        <field id="outstandingCheckOfTransactionAmount" length="13" type="N" reqChk="N" resChk="" desc="거래금액중미결제수표금액"/>
+        <field id="balanceSignAfterTransaction" length="1" type="AN" reqChk="N" resChk="" desc="거래후잔액부호"/>
+        <field id="balanceAfterTransaction" length="13" type="N" reqChk="N" resChk="" desc="거래 후 잔액"/>
+        <field id="outstandingBalanceAfterTransaction" length="13" type="N" reqChk="N" resChk="" desc="거래후잔액중미결제타점권잔액"/>
+        <field id="amountOfFee" length="28" type="N" reqChk="M" resChk="" desc="수수료금액"/>
+        <field id="clearingHouseCode" length="6" type="AN" reqChk="M" resChk="" desc="어음교환소코드"/>
+        <field id="referenceNo" length="20" type="AN" reqChk="M" resChk="" desc="참조번호"/>
+        <field id="cancelReasonCode" length="4" type="AN" reqChk="M" resChk="" desc="취소사유코드"/>
+        <field id="accountProcessingInfo" length="87" type="AN" reqChk="M" resChk="" desc="계정처리정보"/>
+        <field id="msTrackData" length="60" type="AN" reqChk="N" resChk="" desc="MS TRACK DATA"/>
+        <field id="filter" length="5" type="AN" reqChk="M" resChk="" desc="FILLER"/>
+        <field id="virtualAccountDivideCount" length="2" type="AN" reqChk="M" resChk="M" desc="가상계좌거래배분건수"/>
+        <field id="virtualAccountKey01" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호01"/>
+        <field id="virtualAccountAmount01" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액01"/>
+        <field id="filler01" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey02" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호02"/>
+        <field id="virtualAccountAmount02" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액02"/>
+        <field id="filler02" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey03" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호03"/>
+        <field id="virtualAccountAmount03" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액03"/>
+        <field id="filler03" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey04" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호04"/>
+        <field id="virtualAccountAmount04" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액04"/>
+        <field id="filler04" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey05" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호05"/>
+        <field id="virtualAccountAmount05" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액05"/>
+        <field id="filler05" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey06" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호06"/>
+        <field id="virtualAccountAmount06" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액06"/>
+        <field id="filler06" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey07" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호07"/>
+        <field id="virtualAccountAmount07" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액07"/>
+        <field id="filler07" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey08" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호08"/>
+        <field id="virtualAccountAmount08" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액08"/>
+        <field id="filler08" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey09" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호09"/>
+        <field id="virtualAccountAmount09" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액09"/>
+        <field id="filler09" length="28" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+    </message>
+    <message id="cancelResponseMessage" tranTypeCode="04101100" recieveVoType="kr.co.finger.damoa.model.msg.NoticeMessage" desc="입금취소응답">
+        <field id="common" ref="common"/>
+        <field id="depositCorpCode" length="8" type="AN" reqChk="M" resChk="" desc="입금기관코드"/>
+        <field id="depositAccountNo" length="16" type="AN" reqChk="M" resChk="" desc="입금계좌번호"/>
+        <field id="depositAccountName" length="20" type="AN" reqChk="M" resChk="M" desc="입금계좌성명"/>
+        <field id="withdrawalCorpCode" length="8" type="AN" reqChk="N" resChk="" desc="출금기관코드"/>
+        <field id="withdrawalAccountNo" length="16" type="AN" reqChk="N" resChk="" desc="출금계좌번호"/>
+        <field id="withdrawalAccountName" length="20" type="AN" reqChk="N" resChk="" desc="출금계좌성명"/>
+        <field id="wathdrawalAccountPw" length="16" type="AN" reqChk="N" resChk="" desc="출금계좌비밀번호"/>
+        <field id="secretCardInfo" length="20" type="AN" reqChk="M" resChk="" desc="SECRET카드정보"/>
+        <field id="transactionAmount" length="13" type="N" reqChk="M" resChk="" desc="거래금액"/>
+        <field id="cashOfTransactionAmount" length="13" type="N" reqChk="N" resChk="" desc="거래금액중현금금액"/>
+        <field id="outstandingCheckOfTransactionAmount" length="13" type="N" reqChk="N" resChk="" desc="거래금액중미결제수표금액"/>
+        <field id="balanceSignAfterTransaction" length="1" type="AN" reqChk="N" resChk="" desc="거래후잔액부호"/>
+        <field id="balanceAfterTransaction" length="13" type="N" reqChk="N" resChk="" desc="거래 후 잔액"/>
+        <field id="outstandingBalanceAfterTransaction" length="13" type="N" reqChk="N" resChk="" desc="거래후잔액중미결제타점권잔액"/>
+        <field id="amountOfFee" length="28" type="N" reqChk="M" resChk="" desc="수수료금액"/>
+        <field id="clearingHouseCode" length="6" type="AN" reqChk="M" resChk="" desc="어음교환소코드"/>
+        <field id="referenceNo" length="20" type="AN" reqChk="M" resChk="" desc="참조번호"/>
+        <field id="cancelReasonCode" length="4" type="AN" reqChk="M" resChk="" desc="취소사유코드"/>
+        <field id="accountProcessingInfo" length="87" type="AN" reqChk="M" resChk="" desc="계정처리정보"/>
+        <field id="msTrackData" length="60" type="AN" reqChk="N" resChk="" desc="MS TRACK DATA"/>
+        <field id="filter" length="5" type="AN" reqChk="M" resChk="" desc="FILLER"/>
+        <field id="virtualAccountDivideCount" length="2" type="AN" reqChk="M" resChk="M" desc="가상계좌거래배분건수"/>
+        <field id="virtualAccountKey01" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호01"/>
+        <field id="virtualAccountAmount01" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액01"/>
+        <field id="filler01" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey02" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호02"/>
+        <field id="virtualAccountAmount02" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액02"/>
+        <field id="filler02" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey03" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호03"/>
+        <field id="virtualAccountAmount03" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액03"/>
+        <field id="filler03" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey04" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호04"/>
+        <field id="virtualAccountAmount04" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액04"/>
+        <field id="filler04" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey05" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호05"/>
+        <field id="virtualAccountAmount05" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액05"/>
+        <field id="filler05" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey06" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호06"/>
+        <field id="virtualAccountAmount06" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액06"/>
+        <field id="filler06" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey07" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호07"/>
+        <field id="virtualAccountAmount07" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액07"/>
+        <field id="filler07" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey08" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호08"/>
+        <field id="virtualAccountAmount08" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액08"/>
+        <field id="filler08" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey09" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호09"/>
+        <field id="virtualAccountAmount09" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액09"/>
+        <field id="filler09" length="28" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+    </message>
+
+    <message id="cancelRequestMessage2" tranTypeCode="04003110" recieveVoType="kr.co.finger.damoa.model.msg.NoticeMessage" desc="입금이체취소요청">
+        <field id="common" ref="common"/>
+        <field id="depositCorpCode" length="8" type="AN" reqChk="M" resChk="" desc="입금기관코드"/>
+        <field id="depositAccountNo" length="16" type="AN" reqChk="M" resChk="" desc="입금계좌번호"/>
+        <field id="depositAccountName" length="20" type="AN" reqChk="M" resChk="M" desc="입금계좌성명"/>
+        <field id="withdrawalCorpCode" length="8" type="AN" reqChk="N" resChk="" desc="출금기관코드"/>
+        <field id="withdrawalAccountNo" length="16" type="AN" reqChk="N" resChk="" desc="출금계좌번호"/>
+        <field id="withdrawalAccountName" length="20" type="AN" reqChk="N" resChk="" desc="출금계좌성명"/>
+        <field id="wathdrawalAccountPw" length="16" type="AN" reqChk="N" resChk="" desc="출금계좌비밀번호"/>
+        <field id="secretCardInfo" length="20" type="AN" reqChk="M" resChk="" desc="SECRET카드정보"/>
+        <field id="transactionAmount" length="13" type="N" reqChk="M" resChk="" desc="거래금액"/>
+        <field id="cashOfTransactionAmount" length="13" type="N" reqChk="N" resChk="" desc="거래금액중현금금액"/>
+        <field id="outstandingCheckOfTransactionAmount" length="13" type="N" reqChk="N" resChk="" desc="거래금액중미결제수표금액"/>
+        <field id="balanceSignAfterTransaction" length="1" type="AN" reqChk="N" resChk="" desc="거래후잔액부호"/>
+        <field id="balanceAfterTransaction" length="13" type="N" reqChk="N" resChk="" desc="거래 후 잔액"/>
+        <field id="outstandingBalanceAfterTransaction" length="13" type="N" reqChk="N" resChk="" desc="거래후잔액중미결제타점권잔액"/>
+        <field id="amountOfFee" length="28" type="N" reqChk="M" resChk="" desc="수수료금액"/>
+        <field id="clearingHouseCode" length="6" type="AN" reqChk="M" resChk="" desc="어음교환소코드"/>
+        <field id="referenceNo" length="20" type="AN" reqChk="M" resChk="" desc="참조번호"/>
+        <field id="cancelReasonCode" length="4" type="AN" reqChk="M" resChk="" desc="취소사유코드"/>
+        <field id="accountProcessingInfo" length="87" type="AN" reqChk="M" resChk="" desc="계정처리정보"/>
+        <field id="msTrackData" length="60" type="AN" reqChk="N" resChk="" desc="MS TRACK DATA"/>
+        <field id="filter" length="5" type="AN" reqChk="M" resChk="" desc="FILLER"/>
+        <field id="virtualAccountDivideCount" length="2" type="AN" reqChk="M" resChk="M" desc="가상계좌거래배분건수"/>
+        <field id="virtualAccountKey01" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호01"/>
+        <field id="virtualAccountAmount01" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액01"/>
+        <field id="filler01" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey02" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호02"/>
+        <field id="virtualAccountAmount02" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액02"/>
+        <field id="filler02" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey03" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호03"/>
+        <field id="virtualAccountAmount03" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액03"/>
+        <field id="filler03" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey04" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호04"/>
+        <field id="virtualAccountAmount04" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액04"/>
+        <field id="filler04" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey05" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호05"/>
+        <field id="virtualAccountAmount05" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액05"/>
+        <field id="filler05" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey06" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호06"/>
+        <field id="virtualAccountAmount06" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액06"/>
+        <field id="filler06" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey07" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호07"/>
+        <field id="virtualAccountAmount07" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액07"/>
+        <field id="filler07" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey08" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호08"/>
+        <field id="virtualAccountAmount08" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액08"/>
+        <field id="filler08" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey09" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호09"/>
+        <field id="virtualAccountAmount09" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액09"/>
+        <field id="filler09" length="28" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+    </message>
+    <message id="cancelResponseMessage2" tranTypeCode="04103110" recieveVoType="kr.co.finger.damoa.model.msg.NoticeMessage" desc="입금이체취소응답">
+        <field id="common" ref="common"/>
+        <field id="depositCorpCode" length="8" type="AN" reqChk="M" resChk="" desc="입금기관코드"/>
+        <field id="depositAccountNo" length="16" type="AN" reqChk="M" resChk="" desc="입금계좌번호"/>
+        <field id="depositAccountName" length="20" type="AN" reqChk="M" resChk="M" desc="입금계좌성명"/>
+        <field id="withdrawalCorpCode" length="8" type="AN" reqChk="N" resChk="" desc="출금기관코드"/>
+        <field id="withdrawalAccountNo" length="16" type="AN" reqChk="N" resChk="" desc="출금계좌번호"/>
+        <field id="withdrawalAccountName" length="20" type="AN" reqChk="N" resChk="" desc="출금계좌성명"/>
+        <field id="wathdrawalAccountPw" length="16" type="AN" reqChk="N" resChk="" desc="출금계좌비밀번호"/>
+        <field id="secretCardInfo" length="20" type="AN" reqChk="M" resChk="" desc="SECRET카드정보"/>
+        <field id="transactionAmount" length="13" type="N" reqChk="M" resChk="" desc="거래금액"/>
+        <field id="cashOfTransactionAmount" length="13" type="N" reqChk="N" resChk="" desc="거래금액중현금금액"/>
+        <field id="outstandingCheckOfTransactionAmount" length="13" type="N" reqChk="N" resChk="" desc="거래금액중미결제수표금액"/>
+        <field id="balanceSignAfterTransaction" length="1" type="AN" reqChk="N" resChk="" desc="거래후잔액부호"/>
+        <field id="balanceAfterTransaction" length="13" type="N" reqChk="N" resChk="" desc="거래 후 잔액"/>
+        <field id="outstandingBalanceAfterTransaction" length="13" type="N" reqChk="N" resChk="" desc="거래후잔액중미결제타점권잔액"/>
+        <field id="amountOfFee" length="28" type="N" reqChk="M" resChk="" desc="수수료금액"/>
+        <field id="clearingHouseCode" length="6" type="AN" reqChk="M" resChk="" desc="어음교환소코드"/>
+        <field id="referenceNo" length="20" type="AN" reqChk="M" resChk="" desc="참조번호"/>
+        <field id="cancelReasonCode" length="4" type="AN" reqChk="M" resChk="" desc="취소사유코드"/>
+        <field id="accountProcessingInfo" length="87" type="AN" reqChk="M" resChk="" desc="계정처리정보"/>
+        <field id="msTrackData" length="60" type="AN" reqChk="N" resChk="" desc="MS TRACK DATA"/>
+        <field id="filter" length="5" type="AN" reqChk="M" resChk="" desc="FILLER"/>
+        <field id="virtualAccountDivideCount" length="2" type="AN" reqChk="M" resChk="M" desc="가상계좌거래배분건수"/>
+        <field id="virtualAccountKey01" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호01"/>
+        <field id="virtualAccountAmount01" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액01"/>
+        <field id="filler01" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey02" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호02"/>
+        <field id="virtualAccountAmount02" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액02"/>
+        <field id="filler02" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey03" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호03"/>
+        <field id="virtualAccountAmount03" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액03"/>
+        <field id="filler03" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey04" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호04"/>
+        <field id="virtualAccountAmount04" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액04"/>
+        <field id="filler04" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey05" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호05"/>
+        <field id="virtualAccountAmount05" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액05"/>
+        <field id="filler05" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey06" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호06"/>
+        <field id="virtualAccountAmount06" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액06"/>
+        <field id="filler06" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey07" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호07"/>
+        <field id="virtualAccountAmount07" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액07"/>
+        <field id="filler07" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey08" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호08"/>
+        <field id="virtualAccountAmount08" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액08"/>
+        <field id="filler08" length="1" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+        <field id="virtualAccountKey09" length="5" type="AN" reqChk="M" resChk="M" desc="배분대리점번호09"/>
+        <field id="virtualAccountAmount09" length="13" type="AN" reqChk="M" resChk="M" desc="배분금액09"/>
+        <field id="filler09" length="28" type="AN" reqChk="M" resChk="M" desc="Filler"/>
+    </message>
+</messages>

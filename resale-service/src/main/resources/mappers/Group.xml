@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="GroupDao">
+    <!-- 페이징을 위한 header -->
+    <sql id="paging_header">
+		select *
+		from (
+		    select (ROW_NUMBER() OVER()) as rn, C.*
+		    from (	
+	</sql>
+
+    <!-- 페이징을 위한 footer -->
+    <sql id="paging_footer">
+		    ) C
+		) X where rn between #{start} and #{end}
+	</sql>
+
+    <select id="selectGroupCount" resultType="int">
+		SELECT COUNT(*)   AS cnt
+		FROM XCHAGROUP  B
+            , XCHALIST  A LEFT OUTER JOIN ( SELECT CHACD, MAX(MASMONTH) AS MASMONTH
+                                             FROM XNOTIMAS
+                                             GROUP BY CHACD ) C ON A.CHACD = C.CHACD
+		WHERE A.CHAGROUPID 	= B.CHAGROUPID
+		AND A.CHAGROUPID 	= #{chaGroupId}
+	</select>
+
+    <select id="selectGroupList" resultType="GroupDTO">
+        <include refid="paging_header"/>
+        SELECT A.CHACD AS chaCd
+            , A.CHANAME AS chaName
+            , A.CHRNAME AS chrName
+            , A.OWNERTEL AS ownerTel
+            , TO_CHAR(TO_DATE(C.MASMONTH, 'YYYYMM'), 'YYYY.MM') AS masMonth
+            , B.CHAGROUPNAME AS groupName
+            , (SELECT LOGINID FROM WEBUSER WHERE CHACD=A.CHACD) AS loginId
+        FROM XCHAGROUP B
+            , XCHALIST A LEFT OUTER JOIN
+             ( SELECT CHACD , MAX(MASMONTH) AS MASMONTH
+                FROM XNOTIMAS
+                GROUP BY CHACD) C ON A.CHACD = C.CHACD
+        WHERE A.CHAGROUPID = B.CHAGROUPID
+        AND A.CHAGROUPID = #{chaGroupId}
+        <include refid="orderBy"/>
+        <include refid="paging_footer"/>
+    </select>
+
+    <sql id="orderBy">
+        <if test="searchOrderBy == 'chaCd'">
+            ORDER BY CHACD, MASMONTH DESC
+        </if>
+        <if test="searchOrderBy == 'chaName'">
+            ORDER BY CHANAME, MASMONTH DESC
+        </if>
+        <if test="searchOrderBy == 'masMonth'">
+            ORDER BY MASMONTH DESC, CHACD
+        </if>
+    </sql>
+
+    <select id="selGroupInfo" resultType="GroupDTO">
+        SELECT B.LOGINID		AS loginId
+            , A.CHAGROUPNAME	AS groupName
+            , A.CHAGROUPID  	AS groupId
+        FROM 	XCHAGROUP 	A
+                , WEBUSER 	B
+        WHERE 	A.CHAGROUPID = B.CHACD
+        AND 	A.CHAGROUPID = #{groupId}
+    </select>
+
+    <sql id="searchPaymentList">
+        <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDate)'>
+            AND A.PAYDAY BETWEEN to_date(#{startDate}, 'YYYYMMDD') AND to_date(#{endDate}, 'YYYYMMDD')
+        </if>
+
+        <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaCd)'>
+            AND B.CHACD LIKE #{chaCd}
+        </if>
+
+        <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchValue)'>
+            <if test='searchGb == "cusname"'>
+                AND
+                <foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+                    A.CUSNAME LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+            <if test='searchGb == "regGb"'>
+                AND
+                <foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+                    A.CUSKEY LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+            <if test='searchGb == "vano"'>
+                AND
+                <foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+                    A.VANO LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+        </if>
+
+        <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusGubnValue)'>
+            <if test='cusGubn == "all"'>
+                AND
+                <foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+                    ( A.CUSGUBN1 LIKE '%' || #{list} || '%' OR A.CUSGUBN2 LIKE '%' || #{list} || '%' OR A.CUSGUBN3 LIKE '%' || #{list} || '%' OR A.CUSGUBN4 LIKE '%' || #{list} || '%' )
+                </foreach>
+            </if>
+            <if test='cusGubn == "cusGubn1"'>
+                AND
+                <foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+                    A.CUSGUBN1 LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+            <if test='cusGubn == "cusGubn2"'>
+                AND
+                <foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+                    A.CUSGUBN2 LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+            <if test='cusGubn == "cusGubn3"'>
+                AND
+                <foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+                    A.CUSGUBN3 LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+            <if test='cusGubn == "cusGubn4"'>
+                AND
+                <foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+                    A.CUSGUBN4 LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+        </if>
+
+        <if test="searchSveCd != '' and searchSveCd != null">
+            AND (A.SVECD = #{searchSveCd}
+            <if test="searchSveCd == 'DCS'">
+                OR A.SVECD = 'DVA'
+            </if>
+            )
+        </if>
+
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(masMonth)">
+            AND A.MASMONTH = #{masMonth}
+        </if>
+    </sql>
+
+    <sql id="orderByPayment">
+        <choose>
+            <when test="searchOrderBy == 'chaCd'">
+                ORDER BY B.CHACD ASC, A.CUSNAME ASC, A.PAYDAY DESC, A.CUSGUBN1 ASC, A.CUSGUBN2 ASC, A.CUSGUBN3 ASC, A.CUSGUBN4 ASC
+            </when>
+            <when test="searchOrderBy == 'cusName'">
+                ORDER BY A.CUSNAME ASC, B.CHACD ASC, A.PAYDAY DESC, A.CUSGUBN1 ASC, A.CUSGUBN2 ASC, A.CUSGUBN3 ASC, A.CUSGUBN4 ASC
+            </when>
+            <when test="searchOrderBy == 'pay'">
+                ORDER BY A.PAYDAY DESC, B.CHACD ASC, A.CUSNAME ASC, A.CUSGUBN1 ASC, A.CUSGUBN2 ASC, A.CUSGUBN3 ASC, A.CUSGUBN4 ASC
+            </when>
+        </choose>
+    </sql>
+
+    <select id="selectGroupPaymentCount" resultType="int">
+        SELECT COUNT(*) AS cnt
+        FROM XRCPMAS A
+            , XCHALIST B
+            , XCHAGROUP C
+        WHERE A.CHACD = B.CHACD
+        AND A.RCPMASST = 'PA03'
+        AND B.CHAGROUPID = C.CHAGROUPID
+        AND B.CHAGROUPID 	= #{chaGroupId}
+        <include refid="searchPaymentList"/>
+    </select>
+
+    <select id="selectGroupPaymentSum" resultType="long">
+        SELECT COALESCE(SUM(A.RCPAMT), 0) totalCnt
+        FROM XRCPMAS A
+            , XCHALIST B
+            , XCHAGROUP C
+        WHERE A.CHACD = B.CHACD
+        AND A.RCPMASST = 'PA03'
+        AND B.CHAGROUPID = C.CHAGROUPID
+        AND B.CHAGROUPID 	= #{chaGroupId}
+        <include refid="searchPaymentList"/>
+    </select>
+
+    <select id="selectGroupPaymentList" resultType="GroupDTO">
+        SELECT (ROW_NUMBER() OVER()) AS RN, X.*
+        FROM (
+            SELECT A.PAYDAY                               AS PAYDAY
+                , A.MASMONTH                              AS MASMONTH
+                , B.CHACD                                 AS CHACD
+                , B.CHANAME                               AS CHANAME
+                , A.CUSNAME                               AS CUSNAME
+                , A.CUSKEY                                AS CUSKEY
+                , COALESCE(A.CUSGUBN1, '-')               AS CUSGUBN1
+                , COALESCE(A.CUSGUBN2, '-')               AS CUSGUBN2
+                , COALESCE(A.CUSGUBN3, '-')               AS CUSGUBN3
+                , COALESCE(A.CUSGUBN4, '-')               AS CUSGUBN4
+                , A.VANO                                  AS VANO
+                , CASE WHEN A.SVECD IS NULL THEN '기타' ELSE (CASE A.SVECD  WHEN 'VAS' THEN  '가상계좌'  WHEN 'DCS' THEN  '현금'  WHEN 'DVA' THEN  '현금'  WHEN 'DCD' THEN  '오프라인카드'  WHEN 'OCD' THEN  '온라인카드' END) END AS SVECD
+                , A.RCPMASST                              AS RCPMASST
+                , A.RCPMASCD                              AS RCPMASCD
+                , COALESCE(A.RCPUSRNAME, '-')             AS RCPUSRNAME
+                , COALESCE(A.RCPAMT, 0)                   AS RCPAMT
+            FROM  XRCPMAS A
+                , XCHALIST B
+                , XCHAGROUP C
+            WHERE A.CHACD = B.CHACD
+            AND A.RCPMASST = 'PA03'
+            AND B.CHAGROUPID = C.CHAGROUPID
+            AND B.CHAGROUPID = #{chaGroupId}
+            <include refid="searchPaymentList"/>
+            <include refid="orderByPayment"/>
+        ) X
+    </select>
+
+    <select id="selectGroupPaymentExcelList" resultType="GroupDTO">
+        SELECT A.PAYDAY                                AS PAYDAY
+            , A.MASMONTH                               AS MASMONTH
+            , B.CHACD                                  AS CHACD
+            , B.CHANAME                                AS CHANAME
+            , A.CUSNAME                                AS CUSNAME
+            , A.CUSKEY                                 AS CUSKEY
+            , COALESCE(A.CUSGUBN1, '-')                AS CUSGUBN1
+            , COALESCE(A.CUSGUBN2, '-')                AS CUSGUBN2
+            , COALESCE(A.CUSGUBN3, '-')                AS CUSGUBN3
+            , COALESCE(A.CUSGUBN4, '-')                AS CUSGUBN4
+            , A.VANO                                   AS VANO
+            , CASE WHEN A.SVECD IS NULL THEN '기타' ELSE (CASE A.SVECD  WHEN 'VAS' THEN  '가상계좌'  WHEN 'DCS' THEN  '현금'  WHEN 'DVA' THEN  '현금'  WHEN 'DCD' THEN  '오프라인카드'  WHEN 'OCD' THEN  '온라인카드' END) END AS SVECD
+            , A.RCPMASST                               AS RCPMASST
+            , A.RCPMASCD                               AS RCPMASCD
+            , COALESCE(A.RCPUSRNAME, '-')              AS RCPUSRNAME
+            , COALESCE(A.RCPAMT, 0)                    AS RCPAMT
+        FROM  XRCPMAS A
+            , XCHALIST B
+            , XCHAGROUP C
+        WHERE A.CHACD = B.CHACD
+        AND A.RCPMASST = 'PA03'
+        AND B.CHAGROUPID = C.CHAGROUPID
+        AND B.CHAGROUPID 	= #{chaGroupId}
+        <include refid="searchPaymentList"/>
+        <include refid="orderByPayment"/>
+    </select>
+
+    <select id="getCollectorListTotalCount" resultType="int">
+        SELECT COUNT(*) AS cnt
+        FROM    XCHALIST
+        WHERE   CHAGROUPID = #{chaGroupId}
+        <if test="chaCd != null and chaCd != ''">
+            AND   CHACD LIKE '%' || #{chaCd} || '%'
+        </if>
+        <if test="chaName != null and chaName != ''">
+            AND   CHANAME LIKE '%' || #{chaName} || '%'
+        </if>
+        <if test="chaGb != null and chaGb == 'new'">
+            AND   CHAST IN ('ST01', 'ST03', 'ST05')
+        </if>
+    </select>
+
+    <select id="getCollectorListAll"  resultType="BankReg01DTO">
+        <include refid="paging_header" />
+        SELECT  CHACD         chaCd
+                , AGTCD        agtCd
+                , CHANAME      chaName
+                , OWNERTEL     ownertel
+        FROM    XCHALIST
+        WHERE   CHAGROUPID = #{chaGroupId}
+        <if test="chaCd != null and chaCd != ''">
+            AND   CHACD LIKE '%' || #{chaCd} || '%'
+        </if>
+        <if test="chaName != null and chaName != ''">
+            AND   CHANAME LIKE '%' || #{chaName} || '%'
+        </if>
+        <if test="chaGb != null and chaGb == 'new'">
+            AND   CHAST IN ('ST01', 'ST03', 'ST05')
+        </if>
+        ORDER BY CHACD ASC
+        <include refid="paging_footer" />
+    </select>
+</mapper>

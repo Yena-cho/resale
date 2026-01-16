@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+	<!-- 마이바티스의 작동 규칙정의 -->
+	<settings>
+	  <setting name="cacheEnabled" value="false"/>
+	  <setting name="useGeneratedKeys" value="false"/>
+	  <setting name="mapUnderscoreToCamelCase" value="true"/>
+	</settings>
+
+	<typeAliases>
+		<typeAlias alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	    
+	    <!--조회용 VO -->	
+		<typeAlias alias="paramVO" type="com.ghvirtualaccount.vo.ParamVO"/>
+		
+		<!-- Table Record 컨트롤 VO -->
+		<typeAlias alias="TbUserVO" type="com.ghvirtualaccount.vo.TbUserVO"/>
+		<typeAlias alias="TbMenuVO" type="com.ghvirtualaccount.vo.TbMenuVO"/>
+		<typeAlias alias="TbAuthGrpVO" type="com.ghvirtualaccount.vo.TbAuthGrpVO"/>
+		<typeAlias alias="TbAuthMenuVO" type="com.ghvirtualaccount.vo.TbAuthMenuVO"/>
+		<typeAlias alias="AegisTransMsgVO" type="com.ghvirtualaccount.vo.AegisTransMsgVO"/>
+		<typeAlias alias="TbPayerInfoVO" type="com.ghvirtualaccount.vo.TbPayerInfoVO"/>
+		<typeAlias alias="TbMsgSendHistVO" type="com.ghvirtualaccount.vo.TbMsgSendHistVO"/>
+		<typeAlias alias="TbPayerInfoMasterVO" type="com.ghvirtualaccount.vo.TbPayerInfoMasterVO"/>
+		<typeAlias alias="TbVirtualAcntVO" type="com.ghvirtualaccount.vo.TbVirtualAcntVO"/>
+		<typeAlias alias="TbReceiptLastDownDtVO" type="com.ghvirtualaccount.vo.TbReceiptLastDownDtVO"/>
+		<typeAlias alias="TbBelongInfoVO" type="com.ghvirtualaccount.vo.TbBelongInfoVO"/>
+		
+		<!-- 업무용 VO -->
+		<typeAlias alias="UserInfoVO" type="com.ghvirtualaccount.vo.UserInfoVO"/>
+		<typeAlias alias="MenuInfoVO" type="com.ghvirtualaccount.vo.MenuInfoVO"/>
+		<typeAlias alias="TotMsgSendHistVO" type="com.ghvirtualaccount.vo.TotMsgSendHistVO"/>
+		<typeAlias alias="MsgUseStateInfoVO" type="com.ghvirtualaccount.vo.MsgUseStateInfoVO"/>
+		<typeAlias alias="MsgSendHistInfoVO" type="com.ghvirtualaccount.vo.MsgSendHistInfoVO"/>
+		<typeAlias alias="PayerInfoMasterInfoVO" type="com.ghvirtualaccount.vo.PayerInfoMasterInfoVO"/>
+		<typeAlias alias="PayerInfoVO" type="com.ghvirtualaccount.vo.PayerInfoVO"/>
+		<typeAlias alias="VAcntAnalysisTotVO" type="com.ghvirtualaccount.vo.VAcntAnalysisTotVO"/>
+		<typeAlias alias="VAcntAnalysisVO" type="com.ghvirtualaccount.vo.VAcntAnalysisVO"/>
+		<typeAlias alias="ReceiptTotVO" type="com.ghvirtualaccount.vo.ReceiptTotVO"/>
+		
+	</typeAliases>
+</configuration>

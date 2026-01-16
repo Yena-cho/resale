@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	
+	<!-- Root Context: defines shared resources visible to all other web components -->
+	
+	 <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<value>classpath:properties/resource.properties</value>
+		</property>
+	</bean>
+	
+	<!-- 가상계좌 반환처리 잡  -->
+	<bean id="returnVirtualAccountJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	    <!-- 서비스 구현 객체의 빈 이름을 인자로 줍니다. -->
+	    <property name="targetObject" ref="batchService" />
+	    <!-- 서비스 객체에서 주기적으로 실행될 메소드른 지정합니다. -->
+	    <property name="targetMethod" value="returnVirtualAccount" />
+	    <!-- 동시 실행을 방지합니다. -->
+	    <property name="concurrent" value="false" />
+	</bean>
+
+	<!-- 메세지 전송 확인 잡  -->
+	<bean id="checkSendMsgResultJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	    <!-- 서비스 구현 객체의 빈 이름을 인자로 줍니다. -->
+	    <property name="targetObject" ref="batchService" />
+	    <!-- 서비스 객체에서 주기적으로 실행될 메소드른 지정합니다. -->
+	    <property name="targetMethod" value="checkSendMsgResult" />
+	    <!-- 동시 실행을 방지합니다. -->
+	    <property name="concurrent" value="false" />
+	</bean>
+	
+	<!-- 가상계좌 반환처리  트리거-->
+	<bean id="returnVirtualAccountJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+	    <property name="jobDetail" ref="returnVirtualAccountJob" />
+	    <!-- CronTrigger를 사용하여 매일 01시에 실행되도록 지정했습니다. -->
+	    <property name="cronExpression" value="0 0 1 * * ?" />
+	</bean>
+
+	<!-- 메세지 전송 결과 처리  트리거-->
+	<bean id="checkSendMsgResultJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+	    <property name="jobDetail" ref="checkSendMsgResultJob" />
+	    <!-- CronTrigger를 사용하여 매일 02시에 실행되도록 지정했습니다. -->
+	    <property name="cronExpression" value="0 0 2 * * ?" />
+	</bean>
+	
+	<!-- 배치 스케줄러 -->
+	<bean id="batchJobScheduler" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+	    <property name="triggers">
+	        <list>
+	        	<!-- 가상계좌 반환처리 -->
+	        	<ref bean="returnVirtualAccountJobTrigger" />
+	        	<!-- 메세지 전송 결과 조회 처리 -->
+	        	<ref bean="checkSendMsgResultJobTrigger" />
+	        </list>
+	    </property>
+	</bean>
+		
+</beans>

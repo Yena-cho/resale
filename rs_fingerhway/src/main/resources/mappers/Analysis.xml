@@ -1,0 +1,575 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="analysisMgmtDao">	
+
+	<select id="selectMsgUseStateListCnt" resultType="Integer" >
+	<![CDATA[
+		SELECT COUNT(1) 
+			FROM (
+				SELECT
+						A.MSG_SEND_MONTH
+				FROM
+						TB_MSG_SEND_HIST	A
+				WHERE
+						1=1
+					AND	A.MSG_SEND_MONTH	>= #{startMonth}
+					AND	A.MSG_SEND_MONTH	<= #{endMonth}
+				GROUP BY A.MSG_SEND_MONTH
+			) T1
+	]]>
+	</select>
+	
+	<select id="selectMsgUseStateTot" resultType="TotMsgSendHistVO" >
+	<![CDATA[
+		SELECT
+				FORMAT(COUNT(A.MSG_SEND_HIST_ID),0)||'건'		AS	SEND_CNT
+			,	FORMAT(SUM(A.USE_AMT),0)||'원'	AS	TOT_USE_AMT
+		FROM
+				TB_MSG_SEND_HIST	A
+		WHERE
+				1=1
+			AND	A.MSG_SEND_MONTH	>= #{startMonth}
+			AND	A.MSG_SEND_MONTH	<= #{endMonth}
+	]]>
+	</select>
+	
+	<select id="selectMsgUseStateList" resultType="MsgUseStateInfoVO" >
+			  SELECT B.*
+			  FROM (
+			  		SELECT
+						CONCAT(SUBSTR(A.MSG_SEND_MONTH, 1, 4),'-',SUBSTR(A.MSG_SEND_MONTH, 5, 2)) AS	MSG_SEND_MONTH
+					,	CASE WHEN A.MSG_SEND_MONTH = DATE_FORMAT(SYSDATE,'%Y%m') THEN '(사용중)' 
+						ELSE ''
+						END	AS	IN_USE_YN	
+					,	CONCAT(FORMAT(COUNT(A.MSG_SEND_HIST_ID),0),'건') AS	SEND_CNT
+					,	CONCAT(FORMAT(SUM(A.USE_AMT),0),'원') AS	USE_AMT
+					FROM
+							TB_MSG_SEND_HIST	A
+					WHERE
+							1=1
+						AND	A.MSG_SEND_MONTH	&gt;= #{startMonth}
+						AND	A.MSG_SEND_MONTH	&lt;= #{endMonth}
+					GROUP BY A.MSG_SEND_MONTH
+					ORDER BY A.MSG_SEND_MONTH DESC
+			  LIMIT #{startIdx} , #{pageSize}
+			  ) B
+	</select>
+	
+	<select id="selectMsgSendHistListCnt" resultType="Integer" >
+	<![CDATA[
+		SELECT
+			COUNT(1)
+		FROM
+				TB_MSG_SEND_HIST	A
+		WHERE
+				1=1
+			AND	A.MSG_SEND_DTTM	>= CONCAT(#{startDate},'000000')
+			AND	A.MSG_SEND_DTTM	<= CONCAT(#{endDate},'235959')
+	]]>
+		<if test='searchInd == "N"'> 
+			AND	A.RECV_NUM	LIKE	CONCAT('%',#{searchStr},'%')
+		</if>
+		<if test='searchInd == "C"'> 
+			AND	A.MSG_CONTENT	LIKE	CONCAT('%',#{searchStr},'%')
+		</if>
+		<if test='successYn != "A"'> 
+			AND	A.SUCCESS_YN	=	#{successYn}
+		</if>
+	</select>
+	
+	<select id="selectMsgSendHistList" resultType="MsgSendHistInfoVO" >
+			SELECT B.*
+			FROM (
+			SELECT
+					A.MSG_SEND_HIST_ID
+				,	CONCAT(SUBSTR(MSG_SEND_DTTM,1,4),'.',SUBSTR(MSG_SEND_DTTM,5,2),'.',SUBSTR(MSG_SEND_DTTM,7,2),' ',SUBSTR(MSG_SEND_DTTM,9,2),':',SUBSTR(MSG_SEND_DTTM,11,2),':',SUBSTR(MSG_SEND_DTTM,13,2)) AS MSG_SEND_DTTM
+				,	A.RECV_NUM
+				,	A.MSG_CONTENT
+				,	CASE WHEN A.SUCCESS_YN = '0' THEN '처리중'
+				WHEN A.SUCCESS_YN = '1' THEN '성공'
+				WHEN A.SUCCESS_YN = '9' THEN '실패'
+				ELSE ''
+				END AS SUCCESS_YN
+			FROM
+					TB_MSG_SEND_HIST	A
+			WHERE
+					1=1
+				AND	A.MSG_SEND_DTTM	&gt;= CONCAT(#{startDate},'000000')
+				AND	A.MSG_SEND_DTTM	&lt;= CONCAT(#{endDate},'235959')
+			<if test='searchInd == "N"'>
+				AND	A.RECV_NUM	LIKE	CONCAT('%',#{searchStr},'%')
+			</if>
+			<if test='searchInd == "C"'>
+				AND	A.MSG_CONTENT	LIKE	CONCAT('%',#{searchStr},'%')
+			</if>
+			<if test='successYn != "A"'>
+				AND	A.SUCCESS_YN	=	#{successYn}
+			</if>
+			ORDER BY A.MSG_SEND_DTTM DESC
+			LIMIT #{startIdx} , #{pageSize}
+			) B
+	</select>
+
+	<select id="selectMsgSendHist" resultType="TbMsgSendHistVO" >
+		SELECT
+				A.MSG_SEND_HIST_ID
+			,	A.RECV_NUM
+			,	A.MSG_CONTENT
+		FROM
+				TB_MSG_SEND_HIST	A
+		WHERE
+				1=1
+			AND	A.MSG_SEND_HIST_ID	= #{msgSendHistId}
+	</select>
+	
+	<select id="selectVAccountDayReceiptTot" resultType="VAcntAnalysisTotVO" >
+	<![CDATA[
+		SELECT
+				COUNT(1) AS TOT_CNT
+			,	FORMAT(COUNT(1),0) AS DISP_TOT_CNT
+			,	FORMAT(SUM(T1.ACNT_CNT),0)||'건' AS TOT_RECEIPT_CNT
+			,   FORMAT(SUM(T1.RCPAMT),0)||'원' AS TOT_RECEIPT_AMT
+		FROM
+		(
+			SELECT
+				    COUNT(A.PAYDAY)	AS ACNT_CNT
+				,   SUM(A.RCPAMT)	AS RCPAMT
+				,   A.PAYDAY AS PAYDAY
+			FROM
+				(   
+					SELECT 
+							SUBSTR(PAYDAY,1,8) AS PAYDAY
+						,	RCPAMT
+					FROM 
+							AEGISTRANSMSG
+					WHERE 
+							TRANST = '03'
+						AND	PAYDAY >= CONCAT(#{startDate},'000000')
+						AND	PAYDAY <= CONCAT(#{endDate},'235959')
+				) A
+			GROUP BY A.PAYDAY
+		) T1
+	]]>
+	</select>
+	
+	<select id="selectVAccountDayReceiptList" resultType="VAcntAnalysisVO" >
+			  SELECT B.*
+			  FROM (
+			  		SELECT
+						CONCAT(FORMAT(COUNT(A.PAYDAY),0),'건') AS ACNT_CNT
+					,   CONCAT(FORMAT(SUM(A.RCPAMT),0),'원') AS RCPAMT
+					,   CONCAT(SUBSTR(A.PAYDAY,1,4),'-',SUBSTR(A.PAYDAY,5,2),'-',SUBSTR(A.PAYDAY,7,2)) AS PAYDAY
+					FROM
+						(
+							SELECT
+									SUBSTR(PAYDAY,1,8) AS PAYDAY
+								,	RCPAMT
+							FROM
+									AEGISTRANSMSG
+							WHERE
+									TRANST = '03'
+								AND	PAYDAY &gt;= CONCAT(#{startDate},'000000')
+								AND	PAYDAY &lt;= CONCAT(#{endDate},'235959')
+						) A
+					GROUP BY A.PAYDAY
+					ORDER BY A.PAYDAY DESC
+			  LIMIT #{startIdx} , #{pageSize}
+			  ) B
+	</select>
+	
+	<select id="selectVAccountDayReceiptExcel" resultType="VAcntAnalysisVO" >
+	<![CDATA[
+		SELECT
+			    CONCAT(FORMAT(COUNT(A.PAYDAY),0),'건') AS ACNT_CNT
+			,   CONCAT(FORMAT(SUM(A.RCPAMT),0),'원') AS RCPAMT
+			,   CONCAT(SUBSTR(A.PAYDAY,1,4),'-',SUBSTR(A.PAYDAY,5,2),'-',SUBSTR(A.PAYDAY,7,2)) AS PAYDAY
+		FROM
+			(   
+				SELECT 
+						SUBSTR(PAYDAY,1,8) AS PAYDAY
+					,	RCPAMT
+				FROM 
+						AEGISTRANSMSG
+				WHERE 
+						TRANST = '03'
+					AND	PAYDAY >= CONCAT(#{startDate},'000000')
+					AND	PAYDAY <= CONCAT(#{endDate},'235959')
+			) A
+		GROUP BY A.PAYDAY
+		ORDER BY A.PAYDAY DESC
+	]]>
+	</select>
+	
+	<select id="selectVAccountMonthReceiptTot" resultType="VAcntAnalysisTotVO" >
+	<![CDATA[
+
+		SELECT
+				COUNT(1) AS TOT_CNT
+			,	FORMAT(COUNT(1),0) AS DISP_TOT_CNT
+			,	CONCAT(FORMAT((SUM(TOT_RECEIPT_AMT)/SUM(TOT_CLAIM_AMT))*100,1),'%') AS TOT_AMT_AVG
+			,	CONCAT(FORMAT((SUM(TOT_RECEIPT_CNT)/SUM(TOT_CLAIM_CNT))*100,1),'%') AS TOT_CNT_AVG
+			,	FORMAT(SUM(TOT_CLAIM_AMT),0)	AS TOT_CLAIM_AMT
+			,	FORMAT(SUM(TOT_CLAIM_CNT),0)	AS TOT_CLAIM_CNT
+			,	FORMAT(SUM(TOT_RECEIPT_AMT),0)	AS TOT_RECEIPT_AMT
+			,	FORMAT(SUM(TOT_RECEIPT_CNT),0)	AS TOT_RECEIPT_CNT
+			,	FORMAT(SUM(TOT_DEFAULT_AMT),0)	AS TOT_DEFAULT_AMT
+			,	FORMAT(SUM(TOT_DEFAULT_CNT),0)	AS TOT_DEFAULT_CNT
+		FROM
+		(
+			SELECT
+					A1.TOT_AMT AS TOT_CLAIM_AMT
+				,	A1.TOT_CNT AS TOT_CLAIM_CNT
+				,	IFNULL(A2.TOT_AMT,0) AS TOT_RECEIPT_AMT
+				,	IFNULL(A2.TOT_CNT,0) AS TOT_RECEIPT_CNT
+				,	A3.TOT_AMT AS TOT_DEFAULT_AMT
+				,	A3.TOT_CNT AS TOT_DEFAULT_CNT
+			FROM
+				(
+						SELECT
+								B.REG_MONTH
+							,	SUM(A.TOT_AMT) AS TOT_AMT
+							,   COUNT(B.REG_MONTH) AS TOT_CNT
+						FROM
+								TB_PAYER_INFO A
+							INNER JOIN TB_PAYER_INFO_MASTER B ON A.PAYER_INFO_ID = B.PAYER_INFO_ID
+							LEFT OUTER JOIN (
+								SELECT
+										PAYDAY
+									,	BNKCD
+									,	TRNO
+								FROM
+										AEGISTRANSMSG
+								WHERE
+										TRANST = '03'
+								) C ON A.TRNO = C.TRNO
+						WHERE
+							B.REG_MONTH	>= #{startMonth}
+							AND B.REG_MONTH	<= #{endMonth}
+						GROUP BY B.REG_MONTH
+					) A1
+					LEFT OUTER JOIN (
+						SELECT
+								B.REG_MONTH
+							,	SUM(A.TOT_AMT) AS TOT_AMT
+							,   COUNT(B.REG_MONTH) AS TOT_CNT
+						FROM
+								TB_PAYER_INFO A
+							INNER JOIN	TB_PAYER_INFO_MASTER B ON A.PAYER_INFO_ID = B.PAYER_INFO_ID
+							INNER JOIN	(
+								SELECT
+										PAYDAY
+									,	BNKCD
+									,	TRNO
+								FROM
+										AEGISTRANSMSG
+								WHERE
+										TRANST = '03'
+								) C ON A.TRNO = C.TRNO
+						WHERE
+							B.REG_MONTH	>= #{startMonth}
+							AND B.REG_MONTH	<= #{endMonth}
+						GROUP BY B.REG_MONTH
+					) A2 ON A1.REG_MONTH = A2.REG_MONTH
+					INNER JOIN (
+						SELECT
+								B.REG_MONTH
+							,	SUM(A.TOT_AMT) AS TOT_AMT
+							,   COUNT(B.REG_MONTH) AS TOT_CNT
+						FROM
+								TB_PAYER_INFO A
+							INNER JOIN	TB_PAYER_INFO_MASTER B ON A.PAYER_INFO_ID = B.PAYER_INFO_ID
+							LEFT OUTER JOIN	(
+								SELECT
+										PAYDAY
+									,	BNKCD
+									,	TRNO
+								FROM
+										AEGISTRANSMSG
+								WHERE
+										TRANST = '03'
+								) C ON A.TRNO = C.TRNO
+						WHERE
+							C.PAYDAY IS NULL
+							AND	B.REG_MONTH	>= #{startMonth}
+							AND B.REG_MONTH	<= #{endMonth}
+						GROUP BY B.REG_MONTH
+					) A3 ON A1.REG_MONTH = A3.REG_MONTH
+		) T
+
+		]]>
+	</select>
+	
+	<select id="selectVAccountMonthReceiptList" resultType="VAcntAnalysisVO" >
+			  SELECT B.*
+			  FROM (
+			  		SELECT
+						CONCAT(SUBSTR(A1.REG_MONTH,1,4),'년 ',SUBSTR(A1.REG_MONTH,5,2),'월') AS REG_MONTH
+					,	CONCAT(FORMAT((IFNULL(A2.TOT_AMT,0)/A1.TOT_AMT)*100,1),'%') AS TOT_AMT_AVG
+					,	CONCAT(FORMAT((IFNULL(A2.TOT_CNT,0)/A1.TOT_CNT)*100,1),'%') AS TOT_CNT_AVG
+					,	FORMAT(A1.TOT_AMT,0) AS TOT_CLAIM_AMT
+					,	FORMAT(A1.TOT_CNT,0) AS TOT_CLAIM_CNT
+					,	FORMAT(IFNULL(A2.TOT_AMT,0),0) AS TOT_RECEIPT_AMT
+					,	FORMAT(IFNULL(A2.TOT_CNT,0),0) AS TOT_RECEIPT_CNT
+					,	FORMAT(A3.TOT_AMT,0) AS TOT_DEFAULT_AMT
+					,	FORMAT(A3.TOT_CNT,0) AS TOT_DEFAULT_CNT
+					FROM
+					(
+							SELECT
+									B.REG_MONTH
+								,	SUM(A.TOT_AMT) AS TOT_AMT
+								,   COUNT(B.REG_MONTH) AS TOT_CNT
+							FROM
+									TB_PAYER_INFO A
+								INNER JOIN	TB_PAYER_INFO_MASTER B ON A.PAYER_INFO_ID = B.PAYER_INFO_ID
+								LEFT OUTER JOIN	(
+									SELECT
+											PAYDAY
+										,	BNKCD
+										,	TRNO
+									FROM
+											AEGISTRANSMSG
+									WHERE
+											TRANST = '03'
+									) C ON A.TRNO = C.TRNO
+							WHERE
+								B.REG_MONTH	&gt;= #{startMonth}
+								AND B.REG_MONTH	&lt;= #{endMonth}
+							GROUP BY B.REG_MONTH
+						)A1
+						LEFT OUTER JOIN (
+							SELECT
+									B.REG_MONTH
+								,	SUM(A.TOT_AMT) AS TOT_AMT
+								,   COUNT(B.REG_MONTH) AS TOT_CNT
+							FROM
+									TB_PAYER_INFO A
+								INNER JOIN	TB_PAYER_INFO_MASTER B ON A.PAYER_INFO_ID = B.PAYER_INFO_ID
+								INNER JOIN	(
+									SELECT
+											PAYDAY
+										,	BNKCD
+										,	TRNO
+									FROM
+											AEGISTRANSMSG
+									WHERE
+											TRANST = '03'
+									) C ON A.TRNO = C.TRNO
+							WHERE
+								B.REG_MONTH	&gt;= #{startMonth}
+								AND B.REG_MONTH	&lt;= #{endMonth}
+							GROUP BY B.REG_MONTH
+						)A2 ON A1.REG_MONTH = A2.REG_MONTH
+						INNER JOIN (
+							SELECT
+									B.REG_MONTH
+								,	SUM(A.TOT_AMT) AS TOT_AMT
+								,   COUNT(B.REG_MONTH) AS TOT_CNT
+							FROM
+									TB_PAYER_INFO A
+								INNER JOIN	TB_PAYER_INFO_MASTER B ON A.PAYER_INFO_ID = B.PAYER_INFO_ID
+								LEFT OUTER JOIN	(
+									SELECT
+											PAYDAY
+										,	BNKCD
+										,	TRNO
+									FROM
+											AEGISTRANSMSG
+									WHERE
+											TRANST = '03'
+									) C ON A.TRNO = C.TRNO
+							WHERE
+								C.PAYDAY IS NULL
+								AND	B.REG_MONTH	&gt;= #{startMonth}
+								AND B.REG_MONTH	&lt;= #{endMonth}
+							GROUP BY B.REG_MONTH
+						)A3 ON A1.REG_MONTH = A3.REG_MONTH
+						ORDER BY A1.REG_MONTH DESC
+			  LIMIT #{startIdx} , #{pageSize}
+			  ) B
+	</select>
+	
+	<select id="selectVAccountMonthReceiptExcel" resultType="VAcntAnalysisVO" >
+	<![CDATA[
+		SELECT
+				CONCAT(SUBSTR(A1.REG_MONTH,1,4),'년 ',SUBSTR(A1.REG_MONTH,5,2),'월') AS REG_MONTH
+			,	CONCAT(FORMAT((IFNULL(A2.TOT_AMT,0)/A1.TOT_AMT)*100,1),'%') AS TOT_AMT_AVG
+			,	CONCAT(FORMAT((IFNULL(A2.TOT_CNT,0)/A1.TOT_CNT)*100,1),'%') AS TOT_CNT_AVG
+			,	FORMAT(A1.TOT_AMT,0) AS TOT_CLAIM_AMT
+			,	FORMAT(A1.TOT_CNT,0) AS TOT_CLAIM_CNT
+			,	FORMAT(IFNULL(A2.TOT_AMT,0),0) AS TOT_RECEIPT_AMT
+			,	FORMAT(IFNULL(A2.TOT_CNT,0),0) AS TOT_RECEIPT_CNT
+			,	FORMAT(A3.TOT_AMT,0) AS TOT_DEFAULT_AMT
+			,	FORMAT(A3.TOT_CNT,0) AS TOT_DEFAULT_CNT
+		FROM
+			(
+						SELECT
+								B.REG_MONTH
+							,	SUM(A.TOT_AMT) AS TOT_AMT
+		                    ,   COUNT(B.REG_MONTH) AS TOT_CNT
+						FROM 
+								TB_PAYER_INFO A
+							INNER JOIN	TB_PAYER_INFO_MASTER B ON A.PAYER_INFO_ID = B.PAYER_INFO_ID
+							LEFT OUTER JOIN	(
+							    SELECT
+										PAYDAY
+									,	BNKCD
+									,	TRNO
+								FROM
+							    		AEGISTRANSMSG 
+								WHERE
+										TRANST = '03'
+								) C ON A.TRNO = C.TRNO
+						WHERE
+							1=1
+							AND	B.REG_MONTH	>= #{startMonth}
+		                    AND B.REG_MONTH	<= #{endMonth}
+		                GROUP BY B.REG_MONTH
+				)A1
+				LEFT OUTER JOIN (
+		                SELECT
+								B.REG_MONTH
+							,	SUM(A.TOT_AMT) AS TOT_AMT
+		                    ,   COUNT(B.REG_MONTH) AS TOT_CNT
+						FROM 
+								TB_PAYER_INFO A
+							INNER JOIN	TB_PAYER_INFO_MASTER B ON A.PAYER_INFO_ID = B.PAYER_INFO_ID
+							INNER JOIN	(
+							    SELECT
+										PAYDAY
+									,	BNKCD
+									,	TRNO
+								FROM
+							    		AEGISTRANSMSG 
+								WHERE
+										TRANST = '03'
+								) C ON A.TRNO = C.TRNO
+						WHERE
+							1=1
+							AND	B.REG_MONTH	>= #{startMonth}
+		                    AND B.REG_MONTH	<= #{endMonth}
+		                GROUP BY B.REG_MONTH
+				)A2 ON A1.REG_MONTH = A2.REG_MONTH
+				INNER JOIN (
+						SELECT
+								B.REG_MONTH
+							,	SUM(A.TOT_AMT) AS TOT_AMT
+		                    ,   COUNT(B.REG_MONTH) AS TOT_CNT
+						FROM 
+								TB_PAYER_INFO A
+							INNER JOIN	TB_PAYER_INFO_MASTER B ON A.PAYER_INFO_ID = B.PAYER_INFO_ID
+							LEFT OUTER JOIN	(
+							    SELECT
+										PAYDAY
+									,	BNKCD
+									,	TRNO
+								FROM
+							    		AEGISTRANSMSG 
+								WHERE
+										TRANST = '03'
+								) C ON A.TRNO = C.TRNO
+						WHERE 
+							C.PAYDAY IS NULL
+							AND	B.REG_MONTH	>= #{startMonth}
+		                    AND B.REG_MONTH	<= #{endMonth}
+		                GROUP BY B.REG_MONTH
+				)A3 ON A1.REG_MONTH = A3.REG_MONTH
+		ORDER BY A1.REG_MONTH DESC
+	]]>
+	</select>
+	
+	<select id="selectVAccountUseStateTot" resultType="VAcntAnalysisTotVO" >
+	<![CDATA[
+		SELECT
+				COUNT(1)	AS	TOT_CNT
+			,	FORMAT(COUNT(1),0) AS DISP_TOT_CNT
+			,	CONCAT(FORMAT(SUM(REG_CNT),0),'건')	AS TOT_CLAIM_CNT
+			,	CONCAT(FORMAT(SUM(RECEIPT_CNT),0),'건') AS TOT_RECEIPT_CNT
+			,	CONCAT(FORMAT(SUM(FEE),0),'원') AS TOT_FEE_AMT
+		FROM
+		(
+			SELECT
+					A1.REG_MONTH AS REG_MONTH
+				,	A1.CNT AS REG_CNT
+			    ,	A2.CNT AS RECEIPT_CNT
+			    ,	A2.CNT*100 AS FEE
+			FROM
+				(
+					SELECT
+							COUNT(1) AS CNT
+						,	B.REG_MONTH AS REG_MONTH
+					FROM 
+						TB_PAYER_INFO A
+						INNER JOIN	TB_PAYER_INFO_MASTER B ON A.PAYER_INFO_ID = B.PAYER_INFO_ID
+					WHERE
+							B.REG_MONTH	>= #{startMonth}
+						AND B.REG_MONTH	<= #{endMonth}
+					GROUP BY  B.REG_MONTH
+				) A1
+				INNER JOIN (
+					SELECT
+							COUNT(1) AS CNT
+						,	B.PAY_MONTH AS PAY_MONTH
+					FROM
+					(
+						SELECT 
+								SUBSTR(A.PAYDAY,1,6) AS PAY_MONTH
+						FROM
+								AEGISTRANSMSG A
+						WHERE
+								A.TRANST = '03'
+							AND	A.PAYDAY >= CONCAT(#{startMonth},'01000000')
+							AND	A.PAYDAY <= CONCAT(#{endMonth},'31235959')
+					) B
+					GROUP BY B.PAY_MONTH
+				) A2 ON A1.REG_MONTH = A2.PAY_MONTH
+		) T
+	]]>
+	</select>
+	
+	<select id="selectVAccountUseStateList" resultType="VAcntAnalysisVO" >
+			  SELECT B.*
+			  FROM (
+			  		SELECT
+						CONCAT(SUBSTR(A1.REG_MONTH,1,4),'-',SUBSTR(A1.REG_MONTH,5,2)) AS REG_MONTH
+					,	CASE WHEN A1.REG_MONTH = DATE_FORMAT(NOW(),'%Y%m') THEN '(사용중)' ELSE '' END AS IN_USE_YN
+					,	CONCAT(FORMAT(A1.CNT,0),'건') AS TOT_CLAIM_CNT
+				    ,	CONCAT(FORMAT(A2.CNT,0),'건') AS TOT_RECEIPT_CNT
+				    ,	CONCAT(FORMAT(A2.CNT*100,0),'원') AS TOT_FEE
+					FROM
+					(
+						SELECT
+								COUNT(1) AS CNT
+							,	B.REG_MONTH AS REG_MONTH
+						FROM 
+								TB_PAYER_INFO A
+							INNER JOIN	TB_PAYER_INFO_MASTER B ON A.PAYER_INFO_ID = B.PAYER_INFO_ID
+						WHERE
+							B.REG_MONTH	&gt;= #{startMonth}
+							AND	B.REG_MONTH	&lt;= #{endMonth}
+						GROUP BY  B.REG_MONTH
+					) A1
+					INNER JOIN (
+						SELECT
+								COUNT(1) AS CNT
+							,	B.PAY_MONTH AS PAY_MONTH
+						FROM
+						(
+							SELECT 
+									SUBSTR(A.PAYDAY,1,6) AS PAY_MONTH
+							FROM
+									AEGISTRANSMSG A
+							WHERE
+									A.TRANST = '03'
+								AND	A.PAYDAY &gt;= CONCAT(#{startMonth},'01000000')
+								AND	A.PAYDAY &lt;= CONCAT(#{endMonth},'31235959')
+						) B
+						GROUP BY B.PAY_MONTH
+					) A2 ON A1.REG_MONTH = A2.PAY_MONTH
+				ORDER BY A1.REG_MONTH DESC
+			  LIMIT #{startIdx} , #{pageSize}
+			  ) B
+	</select>
+	
+</mapper>
+

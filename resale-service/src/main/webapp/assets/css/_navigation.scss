@@ -1,0 +1,461 @@
+@charset "UTF-8";
+
+/*
+**
+** _navigation.scss
+** Author : 이영주
+** Create date : 2018.02.26
+** Description : Damoa 서비스에서 사용되는 Navigation 관리하는 파일 damoa.scss 에서 최종으로 compile 됨
+**
+*/
+
+$nav-item-padding-rl: .5rem;
+
+$nav-item-padding-rl-2nd-depth: 1rem;
+
+
+
+
+/* top-bar */
+
+#top-bar {
+    font-size: 0.8rem;
+    padding:.4rem 15px;
+
+    #login-set-in-top-bar {
+        display: inline-block;
+    }
+    .customer-center {
+        display:inline-block;
+    }
+}
+
+@media screen and (max-width:992px) {
+    #top-bar {
+        #login-set-in-top-bar {
+            display:none;
+        }
+        .customer-center {
+            display:none;
+        }
+    }
+}
+
+
+#navbarTogglerSitemap {
+    display:none;
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+
+    max-height:100%;
+
+    background-color: #fff;
+
+    box-shadow: 0 30px 20px rgba(0,0,0,.3);
+
+    z-index: 1000;
+
+    // &::after {
+    //     content: "";
+    //     position: fixed;
+    //
+    //     width: 100%;
+    //     height: 100%;
+    //
+    //     background: rgba(0,0,0,.7);
+    //     z-index: 5;
+    // }
+
+    .container {
+        margin-left:auto;
+        margin-right:auto;
+        // position: relative;
+        // z-index: 1000;
+    }
+
+    .title-area {
+        padding: 1.875rem;
+        border-bottom: 2px solid $blue-color;
+        h2 {
+            margin: 0;
+            padding: 0;
+            font-size: 1.625rem;
+            text-align: center;
+        }
+    }
+
+    .col {
+        min-width: 10rem;
+    }
+
+    .all-links {
+        padding: 1.25rem;
+
+        overflow-y: auto;
+
+        .col {
+            max-width: 16.666666%;
+        }
+
+        ul {
+            padding-left: 0;
+
+            li {
+                margin: 0;
+                padding: 0;
+                max-width: 6.875rem;
+                list-style: none;
+
+                &:first-child {
+                    border-bottom: 1px solid #e6e6e6;
+                    margin-bottom: 1rem;
+                }
+
+                h5 {
+                    color:  $blue-color;
+                    font-size: 1rem;
+                    font-weight: 700;
+                }
+
+                a {
+                    font-size: .875rem;
+                    color:#636363;
+                }
+            }
+        }
+    }
+}
+
+
+#login-set-in-sitemap {
+    display: none;
+}
+
+@media screen and (max-width:768px) {
+    #login-set-in-sitemap {
+        display: block;
+    }
+}
+
+/* nav */
+
+#nav-gnb-damoa {
+    position: relative;
+
+    .container {
+        overflow:visible;
+    }
+
+}
+
+.sub-menu-area {
+    height:3.125rem;
+    border-bottom:1px solid #e5e5e5;
+}
+
+.navbar-brand {
+    img {
+        height: 1.375rem;
+    }
+}
+
+#navbar-menus {
+    display: flex;
+    flex: 1;
+
+    position: relative;
+
+    padding-top:0;
+    padding-bottom:0;
+
+    font-size: 1rem;
+
+    .first-depth {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: row;
+
+        li.nav-item {
+            margin: 0;
+            margin-left: auto;
+            margin-right: auto;
+
+            padding-left: $nav-item-padding-rl;
+            padding-right: $nav-item-padding-rl;
+
+            list-style: none;
+
+            display: flex;
+            flex:1;
+
+            -ms-flex:none;
+
+            font-size: 1rem;
+            text-align: center;
+
+            position: relative;
+
+            a.nav-link {
+                width:100%;
+
+                padding-top:.7rem;
+                padding-bottom:.7rem;
+
+                color:rgba(255,255,255,1);
+            }
+
+            &::after {
+                content:" ";
+                position: absolute;
+                bottom:0;
+                left: 50%;
+                background-color: #ffc470;
+                height:.125rem;
+                width:0%;
+
+                transition: all .3s;
+            }
+
+            &.active {
+
+                &::after {
+                    content:" ";
+                    left: 15%;
+                    width:70%;
+                }
+
+                a.nav-link {
+                    color:rgba(255,196,112,1);
+                }
+            }
+
+            &:hover {
+
+                &::after {
+                    content:" ";
+                    left: 15%;
+                    width:70%;
+
+                    transition: all .3s;
+                }
+
+                a.nav-link {
+                    color:rgba(255,196,112,.6);
+                }
+            }
+
+            .dropdown-toggle::after {
+                content: none;
+            }
+        }
+    }
+
+    &.main-page {
+        flex: none;
+
+        li.nav-item {
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+
+            a.nav-link {
+                color: rgba(100,100,100,1);
+            }
+        }
+    }
+}
+
+.second-depth-menu {
+    display: none;
+    &.for-desktop {
+        position: absolute;
+        top: 100%;
+        left: 16%;
+        margin-left: -17rem;
+
+        min-width: 40rem;
+        text-align: center;
+
+        z-index: 1000;
+
+        ul.second-depth-group {
+            margin-bottom:0;
+            padding:.75rem .3rem;
+
+            background:transparent;
+
+            li.second-depth-item {
+                position: relative;
+                display: inline-block;
+                // float: left;
+                list-style: none;
+
+                &::after {
+                    content:" ";
+                    position: absolute;
+                    right:0;
+                    top: .25rem;
+                    border-right:1px solid rgb(150,150,150);
+                    height:1rem;
+                }
+
+                &:last-child {
+                    &::after {
+                        border-right:0;
+                    }
+                }
+
+                &.active {
+                    a {
+                        color:rgba(255,196,112,1);
+                    }
+                }
+
+                a {
+                    padding: .5rem $nav-item-padding-rl;
+                    // color:#2e5ca9 !important;
+                    color: rgba(100,100,100,1);
+                    font-size:.875rem;
+
+                    &:hover {
+                        color:rgba(255,196,112,.6);
+                        text-decoration: none;
+                    }
+                }
+            }
+        }
+    }
+
+    &.for-mobile {
+        display: none;
+        overflow-x:scroll;
+        word-break: keep-all;
+
+        .second-depth-group {
+            display: flex;
+            flex: 1;
+            top: 0;
+
+            margin: 0;
+            padding: 0 $nav-item-padding-rl;
+            .second-depth-item {
+                display: flex;
+                flex: 1;
+                padding: .7rem $nav-item-padding-rl-2nd-depth;
+
+                &.active {
+                    a {
+                        color:rgba(255,196,112,1);
+                    }
+                }
+
+                a {
+                    color:#fff;
+
+                    &:hover {
+                        color:rgba(255,196,112,1);
+                    }
+                }
+            }
+        }
+    }
+}
+
+#mobile-sub {
+    display: none;
+    background: rgba(0,0,0,.2);
+    // background:#264c8b;
+}
+
+#mobile-nav {
+    margin-top:1.75rem;
+    border-bottom: 1px solid #d3d3d3;
+    padding-bottom: 40px;
+}
+
+
+@media screen and (max-width:780px) {
+    #mobile-nav {
+        padding-bottom: 15px;
+    }
+}
+
+
+
+@media screen and (max-width:992px) {
+    #nav-gnb-damoa {
+        .container {
+            overflow-x: scroll;
+            // overflow-y:hidden;
+        }
+    }
+
+    .sub-menu-area {
+        display:none;
+    }
+
+    #mobile-sub {
+        display: block;
+    }
+
+    #mobile-nav {
+        margin-top:0;
+    }
+
+    .second-depth-menu {
+        display:none;
+        &.for-desktop {
+            display: none;
+            .second-depth-group {
+                .second-depth-item {
+                    a {
+                        &:hover {
+                        }
+                    }
+                }
+            }
+        }
+
+        &.for-mobile {
+            .second-depth-group {
+                .second-depth-item {
+                    a {
+                        color: #fff;
+                    }
+                }
+            }
+        }
+    }
+
+    #navbar-menus {
+        &.main-page {
+            flex:1 1 100%;
+        }
+        ul.first-depth {
+            li.nav-item {
+                padding-left: .5rem;
+                padding-right: .5rem;
+
+                &:hover {
+                    background: rgba(0,0,0,0.2);
+
+                    &::after {
+                        content:none;
+                    }
+
+                    a.nav-link {
+                        color:#fff;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.pagination {
+    margin-bottom:3.125rem;
+}

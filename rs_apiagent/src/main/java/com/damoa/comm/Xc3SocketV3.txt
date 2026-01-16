@@ -1,0 +1,336 @@
+package com.damoa.comm;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.PrintStream;
+import java.net.Socket;
+
+import com.damoa.log.MyLogger;
+import com.sf.xc3.XCUtil;
+import com.sf.xc3.XC_v3;
+@Deprecated
+public class Xc3SocketV3 implements Xc3Socket{
+
+    public Xc3SocketV3() {
+
+        this.hCtx = 0;
+        this.XC = new XC_v3();
+        this.XCU = new XCUtil();
+
+    }
+
+    public void xc3Close() throws Exception {
+        this.dos.close();
+        this.dis.close();
+        this.socket.close();
+        this.XC.close();
+    }
+
+    public void xc3Connect(int i) throws Exception {
+
+        int k = i;
+        byte byte0 = 20;
+        this.socket = new Socket(ClientInfo.SERVER_IP, k);
+        this.socket.setSoTimeout(10 * 60 * 1000);
+        Logger.println("SDSI_SERVER_IP : " + ClientInfo.SERVER_IP + ":intPort : " + k + ":timeout : " + byte0);
+
+
+        this.dis = new DataInputStream(this.socket.getInputStream());
+        this.dos = new DataOutputStream(this.socket.getOutputStream());
+
+        return;
+    }
+
+    public boolean xc3Init() throws Exception {
+
+        xc3LibInit();
+
+        int i = xc3KeyMsgProc();
+        this.msgType = Property.MSGTYPE_CIPHER;
+        return i != 300;
+    }
+
+    public int xc3KeyMsgProc() throws Exception {
+
+        byte abyte0[] = new byte[4096];
+        byte abyte1[] = new byte[4096];
+        int ret = 0;
+
+        byte abyte2[] = this.XC.keyinitBin();
+
+
+        this.msgType = Property.MSGTYPE_SESSION_KEY;
+
+        ret = xc3Write(this.socket, this.dos, abyte2, this.msgType);
+        if (ret < 0) {
+            String strExceptionMsg = ">>KeyInit메시지 쓰기에 실패(ret=" + ret + ")";
+            UserException ue = new UserException(strExceptionMsg);
+            throw ue;
+        }
+
+        abyte0 = xc3Read(this.socket, this.dis);
+
+        ret = abyte0.length;
+
+        if (ret == 1 && abyte0[0] == 0) {
+            return abyte0[0];
+        }
+        if (ret == 1 && abyte0[0] < 0) {
+            String strExceptionMsg = ">>KeyFinal메시지 읽기에 실패(ret="+abyte0[0]+")";
+            UserException ue = new UserException(strExceptionMsg);
+            throw ue;
+        }
+
+        abyte1 = this.XC.keyFinal(abyte0, null);
+        this.hCtx = abyte1.length;
+
+        return this.hCtx;
+    }
+
+    public void xc3LibInit() throws Exception {
+
+        if(this.XC.init("", ClientInfo.XC_CONF_PATH + "xc_conf.txt", 1) < 0) {
+            this.XC.error("");
+            String s = "▶라이브러리 초기화에 실패하였습니다.";
+            UserException userexception = new UserException(s);
+            throw userexception;
+        } else {
+            return;
+        }
+    }
+
+    public int xc3NhReceive(byte[] _rcvByte) throws Exception {
+        byte in[] = null;
+        int inLen = 0;
+        int ret = 0;
+
+        // 전문 수신
+        in = xc3Read(socket, dis);
+
+        ret = in.length;
+
+
+        if (ret == 1 && in[0] < 1) {
+            this.XC.error("");
+            String strExceptionMsg = ">>암호화 전문 수신을 실패했습니다.(ret=" + in[0] + ")";
+            UserException ue = new UserException(strExceptionMsg);
+            throw ue;
+        }
+
+        // XecureConnect API : 복호화
+        try {
+            if (this.msgType == Property.MSGTYPE_CIPHER) {
+                in = this.XC.decode(in);
+            } else if (this.msgType == Property.MSGTYPE_CIPHER_TEXT) {
+                String temp = new String(in, 0, in.length);
+                in = this.XCU.texttoBin(temp);
+                in = this.XC.decode(in);
+            }
+        } catch (Exception e) {
+            XC.error("");
+            xc3WriteErrMsg(socket, dos, Property.MSGTYPE_FAILED);
+            String strExceptionMsg = ">>메시지 복호화에 실패하였습니다.(ret=" + ret + ")";
+            UserException ue = new UserException(strExceptionMsg);
+            throw ue;
+        }
+        inLen = in.length;
+        System.arraycopy(in, 0, _rcvByte, 0, in.length);
+        in = null;
+
+        return inLen;
+    }
+
+    public int xc3NhSend(byte[] _sndByte, int _sndLen) throws Exception {
+        byte out[] = null;
+        int outLen = 0;
+        int ret = 0;
+
+        // 전송메세지 길이첵크
+        if (_sndLen < 1) {
+            this.XC.error("");
+            String strExceptionMsg = ">>전송메시지의 바이트길이가 [0]입니다.";
+            UserException ue = new UserException(strExceptionMsg);
+            throw ue;
+        }
+
+        // XecureConnect API : 전문암호화
+        if (this.msgType == Property.MSGTYPE_CIPHER) {
+            out = this.XC.encode(_sndByte);
+
+            ret = out.length;
+            if (ret < 1) {
+                this.XC.error("");
+                xc3WriteErrMsg(this.socket, this.dos, Property.MSGTYPE_FAILED);
+                String strExceptionMsg = ">>메시지 암호화에 실패하였습니다.(ret=" + ret + ")";
+                UserException ue = new UserException(strExceptionMsg);
+                throw ue;
+            }
+        } else if (this.msgType == Property.MSGTYPE_CIPHER_TEXT) {
+            out = this.XC.encode(_sndByte);
+
+            ret = out.length;
+            if (ret < 1) {
+                this.XC.error("");
+                xc3WriteErrMsg(this.socket, this.dos, Property.MSGTYPE_FAILED);
+                String strExceptionMsg = ">>메시지 암호화에 실패하였습니다.(ret=" + ret + ")";
+                UserException ue = new UserException(strExceptionMsg);
+                throw ue;
+            }
+
+            String temp = this.XCU.bintoText(out);
+            out = temp.getBytes();
+
+            ret = out.length;
+            if (ret < 0) {
+                this.XC.error("");
+                xc3WriteErrMsg(this.socket, this.dos, Property.MSGTYPE_FAILED);
+                String strExceptionMsg = ">>XC.JTEXTTOBIN() 에러.(ret=" + ret + ")";
+                UserException ue = new UserException(strExceptionMsg);
+                throw ue;
+            }
+        }
+
+        ret = xc3Write(this.socket, this.dos, out, this.msgType);
+        // 전문 전송
+        if (ret < 1) {
+            this.XC.error("");
+            String strExceptionMsg = ">>암호화 전문 전송을 실패했습니다.(ret=" + ret + ")";
+            UserException ue = new UserException(strExceptionMsg);
+            throw ue;
+        }
+        outLen = ret;
+
+        out = null;
+
+        return outLen;
+    }
+
+    public byte[] xc3Read(Socket _sockClient, DataInputStream _dis) throws Exception {
+        byte[] head = new byte[3];
+        byte[] buf = null;
+        int ret = 0;
+        int inLen = 0;
+        try {
+            ret = _dis.read(head, 0, 3);
+            int i = 0;
+            while ((3 - ret) > 0) {
+                int tmp=0;
+                tmp = _dis.read(head, ret, 3 - ret);
+
+                if (tmp < 0) break;
+                else ret += tmp;
+                ErrLog.println("Header Length - " + 3 + ", Read Length - " + ret + ", Loop:" + i);
+                i++;
+            }
+        } catch (EOFException eofe) {
+            buf = new byte[1];
+            buf[0] = 0;
+
+            return buf;
+        } catch (Exception e) {
+            ErrLog.println("Read Head - " + e.getMessage());
+
+            buf = new byte[1];
+            buf[0] = -3;
+
+            return buf;
+        }
+
+        this.msgType = (head[0] >= 0) ? (int) head[0] : (int) (head[0] + 256);
+        inLen = (head[1] >= 0) ? (int) head[1] * 256 : (int) (head[1] + 256) * 256;
+        inLen += (head[2] >= 0) ? (int) head[2] : (int) (head[2] + 256);
+
+        buf = new byte[inLen];
+
+        try {
+            _dis.readFully(buf, 0, inLen);
+
+        } catch (Exception e) {
+            ErrLog.println("Read BODY - " + e.getMessage());
+
+            buf = new byte[1];
+            buf[0] = -4;
+
+            return buf;
+        }
+
+        head = null;
+
+        return buf;
+    }
+
+    public int xc3Write(Socket _sockClient, DataOutputStream _dos, byte[] buf, int type) {
+        byte head[] = new byte[3];
+        int len = 0;
+
+        len = buf.length;
+
+        head[0] = (byte) type;
+        head[1] = (byte) (len / 256);
+        head[2] = (byte) (len % 256);
+
+        // 헤더 전송
+        try {
+            _dos.write(head, 0, 3);
+        } catch (Exception e) {
+            return -1;
+        }
+
+        // 본문 전송
+        try {
+            _dos.write(buf, 0, len);
+
+            _dos.flush();
+        } catch (Exception e) {
+            return -2;
+        }
+
+        head = null;
+
+        return len;
+    }
+
+    private int xc3WriteErrMsg(Socket sockClient, DataOutputStream _dos, int type) {
+        byte head[] = new byte[3];
+        int ret;
+
+        head[0] = (byte) type;
+        head[1] = 0;
+        head[2] = 0;
+
+        // 헤더 전송
+        try {
+            _dos.write(head, 0, 3);
+        } catch (Exception e) {
+            return -1;
+        }
+        ret = head.length;
+
+        head = null;
+
+        return ret;
+    }
+
+    private int hCtx;
+    private XC_v3 XC;
+    private XCUtil XCU;
+
+    final int MODE      = 1;
+    private static final PrintStream ErrLog = null;
+    private int msgType = 0;
+
+    Socket socket = null;
+    DataOutputStream dos;
+    DataInputStream dis;
+
+    public int xc3Read(byte[] abyte0) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    public int xc3Write(byte[] abyte0, int i, int j) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+}

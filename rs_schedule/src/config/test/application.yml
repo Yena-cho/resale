@@ -1,0 +1,213 @@
+server:
+  port: 30012
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://20.20.20.205:5432/damoarsdb
+    username: damoarsdb
+    password: damoarsdb2021@
+    tomcat:
+      max-active: 3
+      initialSize: 2
+      minIdle: 1
+      maxIdle: 2
+
+mybatis:
+  configuration:
+    aggressive-lazy-loading: true
+    cache-enabled: false
+    jdbc-type-for-null: varchar
+    call-setters-on-nulls: true
+    default-executor-type: batch
+    database-id: postgres
+    log-impl: kr.co.finger.shinhandamoa.common.MybatisSlf4jLoggingImpl
+  mapper-locations:
+    - classpath:kr/co/finger/damoa/scheduler/dao/SchedulerMapper.xml
+    - classpath:mybatis/mapper/table/*.xml
+    - classpath:mybatis/mapper/domain/*.xml
+
+damoa:
+  contact-no: 027868201
+  email: damoa@finger.co.kr
+
+  # 월 마감
+  monthly-settle-task:
+    #     s m h d m w
+    cron: 0 20 0 1 * ?
+  # 일 마감
+  daily-settle-task:
+    #     s m  h d m w
+    cron: 0 10 0 * * ?
+  # 일 정산
+  daily-va-settle-task:
+    #     s m  h d m w
+    cron: 0 20 0 * * ?
+  messageFactory:
+    cashMessageFilePath: message/cashMessage.xml
+    withdrawalMessageFilePath: message/message.xml
+    corpInfoMessageFilePath: message/corp-message.xml
+    charset: KSC5601
+  # 현금영수증
+  cash:
+    filePath: ./data/send/
+    sftpHost: 210.112.100.98
+    sftpPort: 22
+    sftpUser: finger
+    sftpPassword: finger1!
+    sftpPutRemoteDir: /workspace/rs/send/test
+    sftpGetRemoteDir: /workspace/rs/recv/test
+    sftpGetLocalDir: ./data/recv/
+    corpCd: DAMO
+  # 모니터링 송수신 파일 저장경로
+  monitor:
+    filePutDir: /home/shsftp/rs/monitoring/send/
+    fileGetDir: /home/shsftp/rs/monitoring/recv/
+  scheduler:
+    poolSize: 10
+  # 자동 출금
+  autoWithdrawal:
+    fileDir: ./data/
+    corpCode: 9964238166
+    accountNo: 3011544935051
+    bankCode: '0110835'
+    shinhanCode: '021'
+    dueDay: 10
+  # 고지서 출력 서비스
+  ftpSendPath: /VOL1/Hyosung/thebill/
+  ftpFilePath: /home/centos/app/resources/ftp/
+  ftpUrl: bbtec.ipdisk.co.kr
+  ftpUser: hyosung
+  ftpPassword: hyosung
+  # 가상계좌 채번
+  vanoMsgServerUrl: http://localhost:8081/new/virtualaccount/
+  # 가상계좌 채번
+  vanoIssueTask:
+    fixedDelay: 60000
+  # 다모아 전문 처리?
+  damoaMessageTask:
+    fixedDelay: 60000
+  # 현금영수증 수신
+  cash-receipt-receive-task:
+    cron: 0 0 12 * * ?
+  # 현금영수증 송신
+  cashSenderTask:
+    cron: 0 0 8 * * ?
+  # 모니터링 파일 생성
+  MonthlyMonitoringFileTransferTask:
+    cron: 0 20 8 * * ?
+  # 모니터링 파일 수신
+  MonthlyMonitoringFileReceiveTask:
+    cron: 0 0 6 * * ?
+  # 휴폐업 조회
+  companyStatusTask:
+    cron: 0 0 10 1,11,21 * ?
+  # 고지서 발송
+  billsSendTask:
+    cron: 0 0 8 * * ?
+    # 휴폐업 조회 API
+  companyStatusLookupAPI:
+    ip: 10.10.20.53
+    port: 8080
+  task:
+    # 문자메시지 상태 업데이트 작업
+    instant-message-status-update-task:
+      schedule:
+        # 작업 주기 : 실행 후 1초 (옵저버는 설정 안해도 될 것 같다)
+        delay: 1000
+    virtual-account-issue-task:
+      scheduler:
+        delay: 1000
+    # 알림톡 상태 업데이트 작업
+    alarm-talk-status-update-task:
+      schedule:
+        # 작업 주기 : 실행 후 60초
+        delay: 60000
+
+# 입금취소 상태 반영여부 확인 작업 (작업주기 1시간)
+cancel-ap-status-check-task:
+  schedule:
+    delay: 3600000
+  destination-id: 010-9983-7415
+
+# 현금영수증 파일 수신
+cash-receipt-file-receive-task:
+  schedule:
+    cron: 0 0 8 * * ?
+
+# 현금영수증 파일 임포트
+cash-receipt-file-import-task:
+  schedule:
+    delay: 1000
+
+# 기관 정보 파일 수신
+client-information-receive-task:
+  schedule:
+    cron: 0 20 8 * * ?
+  org-code: DA
+  info-code: MOA
+  user: SHBTEST
+
+# 기관 정보 연동
+client-information-migrate-task:
+  schedule:
+    delay: 1000
+
+# KIS 현금영수증 서버 정보
+kis-cash-receipt:
+  host: 210.112.100.98
+  port: 22
+  username: finger
+  password: finger1!
+
+# 스크래핑 정보
+scrapping:
+  host: 10.10.20.53
+  port: 8080
+
+# 통합 메시징 정보
+fim:
+  server:
+    host: 10.10.20.102
+    port: 8 0
+  host: 10.10.20.102
+  port: 80
+  access-token: DTpF1yuI2hMg8AuUGeU5HxiPYZtxY6gN
+
+# 신한은행 펌뱅킹 서버
+shinhanbank-firmbank:
+    host: 20.20.20.101
+    port: 17010
+
+# 비더빌텍
+bbtec:
+  ftp:
+    host: 20.20.20.101
+    username: damoa
+    password: ^bnU1jP34!
+    workspace: /home/damoa/test-resources/bbtec/test
+
+resources:
+  root-path: /home/fuser01/temp/resources
+
+invoice-apply-submit-task:
+  schedule:
+    delay: 1000
+
+emergency-invoice-apply-start-task:
+  schedule:
+    cron: 0 0 10,11,12,13,14,15 * * ?
+
+normal-invoice-apply-start-task:
+  schedule:
+    cron: 0 0 11 * * ?
+
+normal-invoice-apply-ready-task:
+  schedule:
+    cron: 0 0 10 * * ?
+
+# 알림톡 서버 정보
+at:
+  host: https://talk.fingerservice.co.kr/fat
+  serviceKey: vLVpVAtEK8AHiyN+z86oCfkXI6OdGeuTBBnN4NMTfpg=
+#host: 10.16.20.61/fat

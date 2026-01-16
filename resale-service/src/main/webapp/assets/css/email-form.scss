@@ -1,0 +1,212 @@
+@charset "UTF-8";
+
+/*
+**
+** email-form.min.css
+** Author : 이영주
+** Create date : 2018.04.19
+** Description : 신한 다모아 email-form 용 css , email-form.scss 에서 관리됨
+**
+*/
+
+
+/* 고지서 인쇄 */
+
+
+/*
+email form
+발송되는 이메일의 경우 아래 css 를 해당 페이지에 담아야 함
+*/
+
+
+@media print {
+    .page-break-point {
+        page-break-after: always;
+    }
+}
+
+.email-unit {
+
+}
+
+.email-form {
+    width: 21cm;
+    margin: 0 auto;
+    padding: 14px 17px;
+
+    font-family: "Dotum", sans-serif;
+
+    .logo-area {
+        text-align:right;
+        margin-bottom: 7px;
+    }
+
+    .name-n-date {
+        font-size: 11pt;
+        text-align: center;
+    }
+
+    .bill-title {
+        font-size: 18pt;
+        font-weight: 700;
+        text-align: center;
+    }
+
+    .divider {
+        border:1px dotted rgb(214,214,214);
+        margin: 24px 0;
+    }
+
+    .notice-context {
+        font-size: 9pt;
+
+        p {
+            margin-bottom: 0;
+
+            line-height: 23px;
+        }
+
+        strong.greeting {
+            font-size: 11pt;
+        }
+
+        .sender {
+            text-align:right;
+            margin: 16px 0 24px;
+            strong {
+
+            }
+        }
+    }
+
+    .payment-summary {
+        margin-bottom: 24px;
+        border-top:2px solid rgb(30,32,34);
+        border-bottom:1px solid rgb(186,190,212);
+
+        table {
+            td {
+                padding:16px;
+            }
+            tr {
+                &.first-row {
+                    td {
+                        border-bottom: 1px solid rgb(230,230,230);
+                    }
+                }
+                &.second-row {
+                    font-size: 9pt;
+                    td {
+                        text-align: center;
+                    }
+                }
+            }
+        }
+    }
+
+    .bill-description {
+        .title {
+            font-size: 14pt;
+        }
+        .description-wrapper {
+            border-top:2px solid rgb(55,121,208);
+        }
+        table {
+            font-size: 11pt;
+
+            th, td {
+                padding: 8px;
+            }
+
+            th {
+                background:#f9f9f9;
+                border-right: 1px solid #e6e6e6;
+                border-bottom: 1px solid #e6e6e6;
+                color:rgb(68,68,68);
+
+                &:last-child {
+                    border-right: 0px;
+                }
+            }
+
+            td {
+                border-bottom: 1px solid #e6e6e6;
+                text-align: center;
+                color:rgb(102,102,102);
+            }
+
+            tfoot {
+                td {
+                    background: #f6f9fe;
+                    border-top: 1px solid #babed4;
+                    border-bottom: 1px solid #babed4;
+
+                    color:rgb(68,68,68);
+
+                    font-weight: 700;
+                }
+            }
+        }
+    }
+
+    .notice-mobile-payment {
+        border-top: 1px solid rgb(220,220,220);
+        font-size: 9pt;
+        color:rgb(102,102,102);
+
+
+        td {
+            padding: 19px;
+        }
+        .img-area {
+             text-align: center;
+        }
+        strong {
+            font-size:11pt;
+            font-weight: 700;
+            color:#000;
+        }
+
+        p {
+            margin-bottom: 0;
+
+            &.emphasis {
+                color:#000;
+            }
+        }
+    }
+
+    .footer {
+        background:rgb(244,245,245);
+        padding:.14px 8px;
+
+        color: rgb(102,102,102);
+
+        td {
+            padding: 19px;
+        }
+
+        .logo-area {
+             text-align: center;
+             padding: 19px;
+             border-right: 1px solid rgb(210,210,210);
+        }
+
+        p {
+            margin-bottom: 0;
+            font-size: 9pt;
+            &.emphasis {
+                color:#000;
+            }
+        }
+    }
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-text {
+    font-family: serif;
+}

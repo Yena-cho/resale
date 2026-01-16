@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MsgDao">	
+
+<!--	<resultMap type="LayOutDTO" id="selHp">
+		<result	column="REQHP" property="hp" javaType="encrypt" jdbcType="CLOB"/>
+		<result column="TELNO" property="offTel" javaType="encrypt" jdbcType="CLOB" />
+	</resultMap>-->
+
+	<!-- SMS 전송 가변변수 데이터 영역 -->
+	<!-- 고객명 -->
+	<select id="selCusName" resultType="String">
+		SELECT	CUSNAME AS cusName
+		FROM	XNOTIMAS
+		WHERE	NOTIMASCD   = #{notiMasCd}
+		AND		CHACD		= #{chaCd}
+	</select>
+	
+	<!-- 청구월 -->
+	<select id="selMasMonth" resultType="String">
+		SELECT	TO_CHAR(TO_TIMESTAMP(MASMONTH, 'YYYYMM'), 'YYYY.MM') AS masMonth
+		FROM	XNOTIMAS
+		WHERE   NOTIMASCD 	= #{notiMasCd}
+		AND		CHACD		= #{chaCd}
+	</select>
+	
+	<!-- 청구금액 -->
+	<select id="selPayAmt" resultType="String">
+		SELECT 	TO_CHAR(COALESCE(SUM(PAYITEMAMT), 0), 'FM999,999,999') AS payItemAmt
+		FROM 	XNOTIMAS A
+			, 	XNOTIDET B
+		WHERE 	A.NOTIMASCD = B.NOTIMASCD
+		AND 	A.NOTIMASCD = #{notiMasCd}
+		AND		A.CHACD		= #{chaCd}
+	</select>
+	
+	<!-- 입금가능기간 -->
+	<select id="selInsDate" resultType="String">
+		SELECT 	TO_CHAR(STARTDATE::date, 'YYYY.MM.DD')
+				|| '~' || 
+				TO_CHAR(ENDDATE::date, 'YYYY.MM.DD') 	AS insDate
+		FROM 	XNOTIMAS
+		WHERE   NOTIMASCD 	= #{notiMasCd}
+		AND		CHACD		= #{chaCd}
+	</select>
+	
+	<!-- 납부계좌 -->
+	<select id="selPayVano" resultType="String">
+		SELECT 	VANO 		AS vano
+		FROM 	XNOTIMAS
+		WHERE   NOTIMASCD 	= #{notiMasCd}
+		AND		CHACD		= #{chaCd}
+	</select>
+	
+	<!-- 미납액 -->
+	<select id="selNonPay" resultType="String">
+		SELECT	TO_CHAR(COALESCE((SELECT SUM(PAYITEMAMT) AS payItemAmt
+				 FROM 	XNOTIMAS A
+				    , 	XNOTIDET B
+				 WHERE 	A.NOTIMASCD = B.NOTIMASCD
+				 AND 	A.NOTIMASCD = #{notiMasCd}
+				 AND 	A.CHACD 	= #{chaCd}
+				 GROUP 	BY A.NOTIMASCD), 0)
+				-
+				 COALESCE((SELECT SUM(PAYITEMAMT) AS payItemAmt
+				 FROM 	XRCPMAS  A
+				    , 	XRCPDET B
+				 WHERE 	A.RCPMASCD 	= B.RCPMASCD
+				 AND 	A.RCPMASST 	= 'PA03'
+				 AND 	A.NOTIMASCD = #{notiMasCd}
+				 AND	A.CHACD 	= #{chaCd}
+				 GROUP 	BY A.NOTIMASCD), 0), 'FM999,999,999') AS payItemAmt
+	</select>
+	
+	<!-- 고지서용마감일 -->
+	<select id="selPrintDate" resultType="String">
+		SELECT 	COALESCE(TO_CHAR(PRINTDATE::date, 'YYYY.MM.DD'), ' ') AS printDate
+		FROM 	XNOTIMAS
+		WHERE   NOTIMASCD 	= #{notiMasCd}
+		AND		CHACD		= #{chaCd}
+	</select>
+	
+	<!-- 고객구분 -->
+	<select id="selCusGubn" resultType="String">
+		SELECT (COALESCE(A.CUSGUBN1,'')||' '|| COALESCE(A.CUSGUBN2,'') ||' '|| COALESCE(A.CUSGUBN3,'') ||' '|| COALESCE(A.CUSGUBN4,''))	AS cusGubn
+		FROM 	XCUSMAS A
+        	, 	XNOTIMAS B
+		WHERE 	A.VANO 		= B.VANO	
+        AND 	B.NOTIMASCD = #{notiMasCd}
+		AND 	A.CHACD 	= #{chaCd}
+	</select>
+	
+	<!-- 입금액 -->
+	<select id="selAccPay" resultType="String">
+		SELECT 	TO_CHAR(SUM(COALESCE(PAYITEMAMT, 0)), 'FM999,999,999') AS payItemAmt
+		FROM 	XRCPMAS  	A
+			, 	XRCPDET 	B
+		WHERE 	A.RCPMASCD 	= B.RCPMASCD
+		AND 	A.RCPMASST 	= 'PA03'
+		AND 	A.NOTIMASCD = #{notiMasCd}
+		AND 	A.CHACD 	= #{chaCd}
+	</select>
+
+	<!-- 기관 이름 -->
+	<select id="selChaInfo" resultType="String">
+		SELECT COALESCE(ATCHANAME, CHANAME) AS chaName
+  		FROM XCHALIST
+ 		WHERE CHACD= #{chaCd}
+	</select>
+
+	<!-- 기관전화번호 -->
+	<select id="selChaTel" resultType="String">
+		SELECT OWNERTEL              AS chaTelNo
+  		FROM XCHALIST
+ 		WHERE CHACD= #{chaCd}
+	</select>
+	
+	<!-- 출력의뢰 파일생성 데이터 영역 -->
+	<!-- 출력의뢰 데이터 - 헤더 및 테일 -->
+	<select id="printMsg" resultType="LayOutDTO">
+		SELECT 	RPAD('0', 7, '0') 	AS dummy
+			, 	TO_CHAR(NOW(), 'YYYYMMDD') AS reqDate
+			, 	'H' 				AS header
+			,  	'D'	 				AS bHeader
+			, 	'T' 				AS tHeader
+	</select>
+	
+	<!-- 출력의뢰 기관 조회 -->
+	<select id="selChaCd" resultType="LayOutDTO">
+		SELECT	CHACD		AS chaCd
+			,	MASMONTH	AS masMonth
+			,	BILLGUBN	AS billGubn
+			,	COALESCE(SORT_1_CD, '')	AS sort1Cd
+			,	COALESCE(SORT_2_CD, '')	AS sort2Cd
+		FROM	XNOTIMASREQ
+		WHERE	REQST 		= 'BR01'
+		AND     CHACD IN(
+		<foreach item="item" index="index" collection="list" separator="," >
+			'${item}'
+		</foreach>
+		)
+	</select>
+	
+	<!-- 출력의뢰 데이터 - 메시지 -->
+	<select id="printMsgData" resultType="LayOutDTO">
+		SELECT	RPAD((REGEXP_SPLIT_TO_ARRAY(BILLCONT1, chr(10)))[GENERATE_SERIES(1,10)], 160, ' ') AS msg
+			 ,	CHACD		                AS chaCd
+			 ,	GENERATE_SERIES(1,10)		AS idx
+		FROM 	(SELECT BILLCONT1
+					  ,   CHACD
+				 FROM 	XBILLFORM
+				 WHERE 	CHACD  		= #{chaCd}
+				   AND 	BILLGUBN 	= #{billGubn}
+				) T
+	</select>
+	
+	<!-- 출력의뢰 데이터 - 청구항목 -->
+	<select id="printItemData" resultType="LayOutDTO">
+	SELECT COALESCE(B.CHACD,'')         AS chaCd
+		 , COALESCE(A.NOTIMASCD,'')     AS notiMasCd
+		 , COALESCE(B.VANO,'')          AS vano
+		 , COALESCE(A.PAYITEMNAME,'')   AS item1
+		 , A.PAYITEMAMT    				AS amt1
+		 , COALESCE(A.PTRITEMREMARK,'') AS etc1
+	FROM XNOTIDET A , XNOTIMAS B
+	WHERE A.NOTIMASCD = B.NOTIMASCD
+		AND B.NOTIMASST = 'PA02'
+		AND B.NOTI_CAN_YN = 'N'
+		AND B.CHACD = #{chaCd}
+		AND A.NOTIMASCD = #{notiMasCd}
+		AND B.VANO = #{vaNo}
+	  ORDER BY A.PTRITEMORDER ASC
+	</select>	
+	
+	<!-- 출력의뢰 데이터 생성 -->
+	<select id="printReqData" resultType="LayOutDTO">
+		SELECT 	TB.CHACD 			   AS chaCd 		--코드
+			,	TB.NOTIMASCD           AS notiMasCd
+			,	TB.BILLNAME 	       AS msgTitle 		--타이틀
+			,	TB.RECNAME  	       AS recName
+			,	TB.NOTICHANAME         AS offName 		--학원명
+			,	TB.TELNO               AS offTel 		--학원전화번호
+			,	TB.VANO                AS vano 			--계좌번호
+			,	TB.PAYYEAR             AS payYear 		--납기년
+			,	TB.PAYMONTH            AS payMonth 		--납기월
+			,	TB.PAYDAY              AS payDay 		--납기일
+			,	TB.grpName             AS grpName 		--그룹명
+			,	TB.ZIPCODE             AS zipCd 		--우편번호
+			,	TB.ADDR  			   AS addr 			--주소
+			,	TB.NOTICHANAME 		   AS offName2 		--학원명
+			,	TB.REQHP			   AS hp 			--핸드폰번호
+			,	COALESCE(TB.BILLCONT2, ' ') AS addMsg 	--추가메시지
+			,	TB.OWNERTEL 		   AS ownerTel		--대표번호
+			,	TB.MASMONTH			   AS masMonth
+			,	COALESCE(TB.PAYITEMAMT, '0') AS payItemAmt
+			,   COALESCE(TB.CHAADDRESS1, ' ' ) || COALESCE(TB.CHAADDRESS2, ' ') AS addr2
+		FROM 	(SELECT COALESCE(A.CHACD, ' ') 		AS CHACD
+					,	COALESCE(C.NOTIMASCD, ' ') 	AS NOTIMASCD
+					,	COALESCE(A.BILLNAME, ' ') 	AS BILLNAME
+					, 	C.CUSNAME || ' ' || A.CUSALS 	AS recName --수신자명
+					,	COALESCE(A.NOTICHANAME, ' ')	AS NOTICHANAME
+					,	COALESCE(A.TELNO, ' ')		AS TELNO
+					,   COALESCE(C.VANO, ' ') 			AS VANO
+					,	COALESCE(TO_CHAR(TO_DATE(C.PRINTDATE, 'YYYYMMDD'), 'YYYY'), ' ') AS payYear
+					,	COALESCE(TO_CHAR(TO_DATE(C.PRINTDATE, 'YYYYMMDD'), 'MM'), ' ') 	AS payMonth
+					,	COALESCE(TO_CHAR(TO_DATE(C.PRINTDATE, 'YYYYMMDD'), 'DD'), ' ') 	AS payDay
+					,	CASE   WHEN D.CUSGUBN1 IS NULL THEN  ' '  ELSE D.CUSGUBN1 || ' : ' || C.CUSGUBN1 END || ' ' ||
+						CASE   WHEN D.CUSGUBN2 IS NULL THEN  ' '  ELSE D.CUSGUBN2 || ' : ' || C.CUSGUBN2 END || ' ' ||
+						CASE   WHEN D.CUSGUBN3 IS NULL THEN  ' '  ELSE D.CUSGUBN3 || ' : ' || C.CUSGUBN3 END || ' ' ||
+						CASE   WHEN D.CUSGUBN4 IS NULL THEN  ' '  ELSE D.CUSGUBN4 || ' : ' || C.CUSGUBN4 END AS GRPNAME
+					,	COALESCE(B.ZIPCODE, ' ') 			 AS ZIPCODE
+					,	COALESCE(B.ADDRESS1, ' ') || ADDRESS2 AS addr
+					,   COALESCE(B.REQNAME, ' ') 				 AS REQNAME
+					,	COALESCE(B.REQHP, ' ') 				 AS REQHP
+					,	COALESCE(A.BILLCONT2, ' ') 			 AS BILLCONT2
+					,	COALESCE(D.OWNERTEL, ' ') 			 AS OWNERTEL
+					,	COALESCE(B.MASMONTH, ' ')			 AS MASMONTH
+					,	(SELECT SUM(PAYITEMAMT) FROM XNOTIDET WHERE C.NOTIMASCD = NOTIMASCD AND NOTI_CAN_YN  = 'N') AS PAYITEMAMT
+					,   D.CHAZIPCODE
+          , D.CHAADDRESS1 
+          , D.CHAADDRESS2 
+				 FROM 	XBILLFORM 	A
+					, XNOTIMASREQ B	-- 출력의뢰TABLE
+					, XNOTIMAS 	C
+					, XCHALIST 	D
+				 WHERE 	A.CHACD 		= B.CHACD
+         AND 	A.BILLGUBN 		= B.BILLGUBN
+				 AND 	A.CHACD 		= C.CHACD
+				 AND 	A.CHACD 		= D.CHACD
+				 AND   	B.REQST 		= 'BR01'
+				 AND 	B.MASMONTH 		= C.MASMONTH
+                 AND 	C.NOTIMASST 	= 'PA02'
+				 AND 	C.NOTI_CAN_YN 	= 'N'
+				 AND	A.CHACD			= #{chaCd}
+				 AND	A.BILLGUBN		= #{billGubn}
+				 AND	B.MASMONTH		= #{masMonth}
+				 ORDER 	BY
+				 <choose>
+					 <when test="sort1Cd == 'N00001'">
+						 C.CUSNAME ASC
+					 </when>
+					 <when test="sort1Cd == 'N00002'">
+						 C.CUSGUBN1 ASC
+					 </when>
+					 <when test="sort1Cd == 'N00003'">
+						 C.CUSGUBN2 ASC
+					 </when>
+					 <when test="sort1Cd == 'N00004'">
+						 C.CUSGUBN3 ASC
+					 </when>
+					 <when test="sort1Cd == 'N00005'">
+						 C.CUSGUBN4 ASC
+					 </when>
+					 <otherwise>
+						 C.CUSGUBN1 ASC
+					 </otherwise>
+				 </choose>
+				<choose>
+					<when test="sort2Cd == 'N00001'">
+						, C.CUSNAME ASC
+					</when>
+					<when test="sort2Cd == 'N00002'">
+						, C.CUSGUBN1 ASC
+					</when>
+					<when test="sort2Cd == 'N00003'">
+						, C.CUSGUBN2 ASC
+					</when>
+					<when test="sort2Cd == 'N00004'">
+						, C.CUSGUBN3 ASC
+					</when>
+					<when test="sort2Cd == 'N00005'">
+						, C.CUSGUBN4 ASC
+					</when>
+					<otherwise>
+
+					</otherwise>
+				</choose>
+                        ,C.CUSNAME ASC
+		) TB
+	</select>
+	
+	<!-- 출력의뢰 데이터 - 메시지 -->
+	<select id="remarkMsgData" resultType="LayOutDTO">
+		SELECT	(REGEXP_SPLIT_TO_ARRAY(REMARK, CHR(10)))[GENERATE_SERIES(1,3)] AS msg
+			,	CHACD		AS chaCd
+			,	NOTIMASCD   AS notiMasCd
+			,	GENERATE_SERIES(1,3)		AS idx
+		FROM 	(SELECT REMARK 
+                    ,   CHACD
+                    ,	NOTIMASCD
+				 FROM 	XNOTIMAS
+				 WHERE 	CHACD  		= #{chaCd}
+                 AND 	MASMONTH	= #{masMonth}
+                 AND	NOTIMASCD	= #{notiMasCd}
+				  ) T
+	</select>
+	 
+	<!-- 출력의뢰 ftp 전송 후 상태코드 수정 -->
+	<update id="updateReqSt">
+		UPDATE	XNOTIMASREQ
+		SET		REQST	 = 'BR02', -- 의뢰상태
+		SENDDT = NOW()
+		WHERE	CHACD	 = #{chaCd}
+		AND		MASMONTH = #{masMonth}
+	</update>
+	
+</mapper>

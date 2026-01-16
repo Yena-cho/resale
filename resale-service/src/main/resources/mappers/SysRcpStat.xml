@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SysRcpStat">	
+
+	<!-- 페이징을 위한 header -->
+	<sql id="paging_header">
+		select *
+		from (
+		    select row_number() over() as rn, A.*
+		    from (	
+	</sql>
+	<!-- 페이징을 위한 footer -->
+	<sql id="paging_footer">
+		    ) A
+		) X where rn between #{start} and #{end}
+	</sql>
+	
+	<!-- 월별 전체 수납 리스트 -->
+	<select id="totalCustStCount" resultType="SysRcpStatDTO">
+		SELECT B.CHATRTY as custSt
+        , COALESCE (SUM(B.CHACNT), 0) as totCusCount
+        , COALESCE (SUM(A.RCPAMT), 0) as totRcpAmt
+        , COALESCE (SUM(A.RCPCNT), 0) as totRcpCount
+     FROM (
+            SELECT MASMONTH 
+                 , CHACD	
+                 , COUNT(*) 	AS RCPCNT
+                 , SUM(RCPAMT)	AS RCPAMT
+              FROM XRCPMAS
+             WHERE MASMONTH BETWEEN #{startday} AND #{endday}
+             AND RCPMASST = 'PA03'
+          GROUP BY MASMONTH, CHACD
+           ) A
+        , (
+            SELECT CHACD
+                 , CHATRTY
+                 , COUNT(*) CHACNT
+              FROM XCHALIST
+              WHERE	CHATRTY IN('01','03')
+          GROUP BY CHACD
+                 , CHATRTY
+           ) B
+       WHERE A.CHACD = B.CHACD
+    GROUP BY B.CHATRTY	
+	</select>
+	
+	<!-- 월별 수납 리스트 -->
+	<select id="mothlyRcpList" resultType="SysRcpStatDTO">
+	SELECT 	a AS PAYMETHOD
+			, SUM(A.CHACNT) AS CUSTCOUNT
+			, RCPDAY AS MASMONTH
+			, SUM(RCPCNT) AS RCPCOUNT
+			, SUM(RCPAMT) AS RCPAMT
+		FROM (
+				SELECT * FROM (
+					SELECT 	'1' AS a
+							, CHACD
+							, COUNT(CHACD) AS CHACNT
+							, RCPDAY
+							, COUNT(RCPCNT) AS RCPCNT
+							, SUM(RCPAMT) AS RCPAMT 
+						FROM XDAYSUMRCP 
+							GROUP BY 	CHACD, RCPDAY
+							ORDER BY 	RCPDAY DESC
+				) X
+				UNION ALL
+				SELECT * FROM (
+					SELECT	'2' AS a
+							, CHACD
+							, COUNT(CHACD) AS CHACNT
+							, RCPDAY AS RCPDAY
+							, COUNT(OCDCNT) AS OCDCNT
+							, SUM(OCDAMT) AS OCDAMT 
+						FROM XDAYSUMRCPETC 
+							GROUP BY	CHACD, RCPDAY
+							ORDER BY	RCPDAY DESC
+				) Y
+		)A
+		, (
+				SELECT	CHACD
+						, COUNT(CHACD) AS CHACNT
+						, CHATRTY 
+					FROM XCHALIST 
+					GROUP BY 	CHACD, CHATRTY
+		)B
+		WHERE 	A.CHACD = B.CHACD
+			AND	B.CHATRTY IN('01', '03')
+			AND	A.RCPDAY BETWEEN	#{startday} AND	#{endday}
+		GROUP BY 	a, RCPDAY
+		ORDER BY 	MASMONTH DESC			
+	</select>
+	<!-- 월별 수납 합계  -->	
+	<select id="mothlyRcpListTot" resultType="SysRcpStatDTO"> 
+		select * from (
+			SELECT '201810' masMonth, '가상계좌' payMethod, 5000 ccSum, 900000 raSum, 500 rcSum  union all
+			SELECT '201810' masMonth, '온라인카드' payMethod, 500 ccSum, 500000 raSum, 500 rcSum  union all
+			SELECT '201810' masMonth, 'total' payMethod, 500 ccSum, 500000 raSum, 500 rcSum
+		) A
+	</select>
+	
+	<!-- 일별 전체수납통계 (WEB, API) -->
+	<select id="totalCustStDCount" resultType="SysRcpStatDTO">
+		SELECT COALESCE (SUM(B.CHACNT), 0) as totCusCount
+			, COALESCE (SUM(A.RCPAMT), 0) as totRcpAmt
+			, COALESCE (SUM(A.RCPCNT), 0) as totRcpCount
+		 FROM (
+				SELECT MASMONTH
+					 , CHACD
+					 , COUNT(*) 	AS RCPCNT
+					 , SUM(RCPAMT)	AS RCPAMT
+				  FROM XRCPMAS
+				 WHERE MASMONTH BETWEEN #{startday} AND #{endday}
+				 AND RCPMASST = 'PA03'
+			  GROUP BY MASMONTH, CHACD
+			   ) A
+			, (
+				SELECT CHACD
+					 , CHATRTY
+					 , COUNT(*) CHACNT
+				  FROM XCHALIST
+				  WHERE	CHATRTY IN('01','03')
+			  GROUP BY CHACD
+					 , CHATRTY
+			   ) B
+		WHERE A.CHACD = B.CHACD
+		GROUP BY B.CHATRTY
+	</select>
+	
+	<!-- 일별 수납 리스트 -->
+	<select id="daylyRcpList" resultType="SysRcpStatDTO">
+	SELECT 	a AS PAYMETHOD
+			, SUM(A.CHACNT) AS CUSTCOUNT
+			, RCPDAY AS MASMONTH
+			, SUM(RCPCNT) AS RCPCOUNT
+			, SUM(RCPAMT) AS RCPAMT
+		FROM (
+				SELECT * FROM (
+					SELECT 	'1' AS a
+							, CHACD
+							, COUNT(CHACD) AS CHACNT
+							, RCPDAY
+							, COUNT(RCPCNT) AS RCPCNT
+							, SUM(RCPAMT) AS RCPAMT 
+						FROM XDAYSUMRCP 
+							GROUP BY 	CHACD, RCPDAY
+							ORDER BY 	RCPDAY DESC
+				) X
+				UNION ALL
+				SELECT * FROM (
+					SELECT	'2' AS a
+							, CHACD
+							, COUNT(CHACD) AS CHACNT
+							, RCPDAY AS RCPDAY
+							, COUNT(OCDCNT) AS OCDCNT
+							, SUM(OCDAMT) AS OCDAMT 
+						FROM XDAYSUMRCPETC 
+							GROUP BY	CHACD, RCPDAY
+							ORDER BY	RCPDAY DESC
+				) Y
+		)A
+		, (
+				SELECT	CHACD
+						, COUNT(CHACD) AS CHACNT
+						, CHATRTY 
+					FROM XCHALIST 
+					GROUP BY 	CHACD, CHATRTY
+		)B
+		WHERE 	A.CHACD = B.CHACD
+			AND	B.CHATRTY IN('01', '03')
+			AND	A.RCPDAY BETWEEN	#{startday} AND	#{endday}
+		GROUP BY 	a, RCPDAY
+		ORDER BY 	MASMONTH DESC	
+	</select>
+	
+	<!-- 일별 수납 합계 -->
+	<select id="dalyRcpListTot" resultType="SysRcpStatDTO"> 
+		select * from (
+			SELECT '201810' masMonth, '가상계좌' payMethod, 5000 ccSum, 900000 raSum, 500 rcSum  union all
+			SELECT '201810' masMonth, '온라인카드' payMethod, 500 ccSum, 500000 raSum, 500 rcSum  union all
+			SELECT '201810' masMonth, 'total' payMethod, 500 ccSum, 500000 raSum, 500 rcSum
+		) A
+	</select>
+
+	<select id="sysInvoiceFaCount" resultType="int">
+		select count(90)
+	</select>
+	
+	<select id="sysInvoiceListAll" resultType="SysInvoiceDTO">
+		SELECT A.MASMONTH as useDay
+              , A.CHACD as comCd
+              , B.CHANAME as comNm
+              , A.RCPAMT as price
+              , A.TAX as tax
+              , B.CHRMAIL as email
+              , A.CASHMASSTNM as issueSt
+              , A.CASHMASCD as issueNm
+              , A.PAYDAY as issueDay
+           FROM (
+                  SELECT X.CASHMASCD
+                       , X.MASMONTH
+                       , X.PAYDAY
+                       , X.RCPAMT
+                       , X.CASHMASST
+                       , X.CASHMASSTNM
+                       , X.SVECDNM
+                       , X.CHACD
+                       , X.TAX
+                            FROM (
+                                   SELECT B.CASHMASCD
+                                        , A.MASMONTH
+                                        , A.PAYDAY
+                                        , COALESCE(A.RCPAMT,0) AS RCPAMT
+                                        , B.CASHMASST
+                                        ,case CASHMASST
+                                        when 'ST02' then '미발행'
+                                        when 'ST03' then '발행'
+                                        when 'ST04' then '발행중' end AS CASHMASSTNM
+                                        ,case when A.SVECD is not null then (case A.SVECD
+																			when 'VAS' then '가상계좌'
+																			when 'DCS' then '현금'
+																			when 'DVA' then '현금'
+																			when 'DCD' then '오프라인신용카드'
+																			when 'OCD' then '온라인신용카드' end)
+                                                  else '기타' end AS SVECDNM
+                                              , A.CHACD
+                                , B.TAX
+                                       FROM XRCPMAS A
+                                          , XCASHMAS B
+                                      WHERE A.RCPMASCD = B.RCPMASCD
+                                          AND A.RCPMASST = 'PA03'
+                                          AND B.DISABLED = 'N'
+                                    AND A.MASMONTH = ''
+                                    AND A.SVECD IN('VAS', 'DCS')
+--                                      UNION ALL
+--                                      SELECT B.CASHMASCD
+--                                               , A.MASMONTH
+--                                             , A.PAYDAY
+--                                               , COALESCE(A.RCPAMT,0) AS RCPAMT
+--                                               , B.CASHMASST
+--                                               , case CASHMASST when 'ST02' then '미발행' when 'ST03' then '발행' when 'ST04' then '발행중' end AS CASHMASSTNM
+--                                               , case when A.SVECD is not null then (case A.SVECD
+--                                                   when 'VAS' then '가상계좌'
+--                                                   when 'DCS' then '현금'
+--                                                   when 'DVA' then '현금'
+--                                                   when 'DCD' then '오프라인신용카드'
+--                                                   when 'OCD' then '온라인신용카드' end)
+--                                                   else '기타' end AS SVECDNM
+--                                               , A.CHACD
+--                                 , B.TAX
+--                                        FROM XRCPMASEXPR A
+--                                           , XCASHMAS B
+--                                       WHERE A.RCPMASCD = B.RCPMASCD
+--                                           AND A.RCPMASST = 'PA03'
+--                                           AND B.DISABLED = 'N'
+--                                     AND A.MASMONTH = ''
+--                                     AND A.SVECD IN('VAS', 'DCS')
+                                 ) X
+                ) A, XCHALIST B
+            WHERE A.CHACD = B.CHACD
+	</select>
+
+	<select id="sysSmsUsageListAll" resultType="SysSmsUsageDTO"> <!-- xdaysumsms, xchalist,  -->
+		SELECT * FROM (
+		SELECT '201804' as day, 0000111122  comCd, '기관명1'  comNm, '담당자'  as name, '01'  sendSt, 200 sendcount, 0 failcount, 4000 charge, 1000 fingerCharge  union all
+		SELECT '201804' as day, 0000111122  comCd, '기관명1'  comNm, '담당자'  as name, '01'  sendSt, 200 sendcount, 0 failcount, 4000 charge, 1000 fingerCharge  union all
+		SELECT '201804' as day, 0000111522  comCd, '기관명1'  comNm, '담당자'  as name, '01'  sendSt, 200 sendcount, 0 failcount, 4000 charge, 1000 fingerCharge  union all
+		SELECT '201804' as day, 0000115122  comCd, '기관명1'  comNm, '담당자1' as  name, '01'  sendSt, 200 sendcount, 0 failcount, 4000 charge, 1000 fingerCharge  union all
+		SELECT '201804' as day, 0000111122  comCd, '기관명5'  comNm, '담당자5' as  name, '03'  sendSt, 500 sendcount, 5 failcount, 4000 charge, 1000 fingerCharge  union all
+		SELECT '201805' as day, 0000111152  comCd, '기관명4'  comNm, '담당자4' as  name, '03'  sendSt, 500 sendcount, 50 failcount, 20000 charge, 1000 fingerCharge  union all
+		SELECT '201805' as day, 0000111125  comCd, '기관명7'  comNm, '담당자7' as  name, '03'  sendSt, 500 sendcount, 10 failcount, 4000 charge, 1000 fingerCharge
+		) A
+	</select>
+
+	<select id="sysAutoTransListAll" resultType="SysAutoTransDTO">
+		SELECT * FROM (
+			SELECT '20180405' as day, 123456789 payAccNum, 0000111122 comCd, '기관명1' comNm, '완료' transSt, 20000 payAmount, 0 toPay  union all
+			SELECT '20180405' as day, 123456789 payAccNum, 0000111122 comCd, '기관명1' comNm, '완료' transSt, 20000 payAmount, 0 toPay  union all
+			SELECT '20180405' as day, 123456789 payAccNum, 0000111122 comCd, '기관명1' comNm, '완료' transSt, 2000 payAmount, 2000 toPay  union all
+			SELECT '20180405' as day, 123456789 payAccNum, 0000111122 comCd, '기관명1' comNm, '완료' transSt, 2000 payAmount, 5000 toPay  union all
+			SELECT '20180405' as day, 123456789 payAccNum, 0000111122 comCd, '기관명1' comNm, '완료' transSt, 2000 payAmount, 1000 toPay  union all
+			SELECT '20180405' as day, 123456789 payAccNum, 0000111122 comCd, '기관명1' comNm, '완료' transSt, 2000 payAmount, 100 toPay  union all
+			SELECT '20180405' as day, 123456789 payAccNum, 0000111122 comCd, '기관명1' comNm, '완료' transSt, 20150 payAmount, 0 toPay  union all
+			SELECT '20180405' as day, 123456789 payAccNum, 0000111122 comCd, '기관명1' comNm, '완료' transSt, 200 payAmount, 0 toPay  union all
+			SELECT '20180405' as day, 123456789 payAccNum, 0000111122 comCd, '기관명1' comNm, '완료' transSt, 200 payAmount, 0 toPay
+		
+		) A
+	</select>
+	
+	<select id="sysCommStatTotalCount" resultType="SysCommStatDTO">
+		select * from (
+			SELECT 'web' custSt, 5000 totCusCount, 900000 totRcp, 500 totFGRcp  union all
+			SELECT 'api' custSt, 500 totCusCount, 500000 totRcp, 500 totFGRcp  union all
+			SELECT 'total' custSt, 5500 totCusCount, 500000 totRcp, 500 totFGRcp
+		) a
+	</select>
+		
+	<select id="sysCommStatListAll" resultType="SysCommStatDTO">
+			select * from (
+			SELECT '201810' as day, 5000 custCount, 5000 mgmtFee, 500 mgmtFeeCount, 500 smsFee, 200 smsFeeCount, 4000 bankFee, 400 bankFeeCount, 8400 cardFee, 870 cardFeeCount  union all
+			SELECT '201810' as day, 6000 custCount, 5000 mgmtFee, 200 mgmtFeeCount, 500 smsFee, 10 smsFeeCount, 90000 bankFee, 500 bankFeeCount, 9898 cardFee, 40 cardFeeCount   union all
+			SELECT '201810' as day, 6000 custCount, 5000 mgmtFee, 200 mgmtFeeCount, 500 smsFee, 10 smsFeeCount, 90000 bankFee, 500 bankFeeCount, 9898 cardFee, 40 cardFeeCount   union all
+			SELECT '201810' as day, 6000 custCount, 5000 mgmtFee, 200 mgmtFeeCount, 500 smsFee, 10 smsFeeCount, 90000 bankFee, 500 bankFeeCount, 9898 cardFee, 40 cardFeeCount   union all
+			SELECT '201810' as day, 6000 custCount, 5000 mgmtFee, 200 mgmtFeeCount, 500 smsFee, 10 smsFeeCount, 90000 bankFee, 500 bankFeeCount, 9898 cardFee, 40 cardFeeCount   union all
+			SELECT '201810' as day, 6000 custCount, 5000 mgmtFee, 200 mgmtFeeCount, 500 smsFee, 10 smsFeeCount, 90000 bankFee, 500 bankFeeCount, 9898 cardFee, 40 cardFeeCount
+		) a
+	</select>
+	
+	<select id="sysCommStatListTot" resultType="SysCommStatDTO">
+	SELECT 5000 mfSum, 300000 mfCSum, 1500 sfSum, 2500 sfCSum, 900000 bfSum, 5000 bfCSum, 98980 cfsum, 4000 cfCSum
+	</select>
+	
+		
+	<select id="sysCommStatListFG" resultType="SysCommStatDTO">
+		select * from (
+			SELECT '201810' fgday, 5000 fgcustCount, 5000 fingerIC, 500 fingerICCount, 500 bankIC, 200 bankICCount, 4000 cardIC, 400 cardICCount  union all
+			SELECT '201810' fgday, 5000 fgcustCount, 5000 fingerIC, 500 fingerICCount, 500 bankIC, 200 bankICCount, 4000 cardIC, 400 cardICCount  union all
+			SELECT '201810' fgday, 5000 fgcustCount, 5000 fingerIC, 500 fingerICCount, 500 bankIC, 200 bankICCount, 4000 cardIC, 400 cardICCount  union all
+			SELECT '201810' fgday, 5000 fgcustCount, 5000 fingerIC, 500 fingerICCount, 500 bankIC, 200 bankICCount, 4000 cardIC, 400 cardICCount  union all
+			SELECT '201810' fgday, 57000 fgcustCount, 77000 fingerIC, 7070 fingerICCount, 700 bankIC, 270 bankICCount, 7000 cardIC, 700 cardICCount  union all
+			SELECT '201810' fgday, 5000 fgcustCount, 5000 fingerIC, 500 fingerICCount, 500 bankIC, 500 bankICCount, 5000 cardIC, 500 cardICCount
+		) a
+	</select>
+	
+		<select id="sysCommStatListFGTot" resultType="SysCommStatDTO">
+				SELECT 50000 fingerSum, 5000 fingerCSum, 5000 bankSum, 5000 bankCSum, 50000 cardSum, 5000 cardCSum
+	</select>
+</mapper>

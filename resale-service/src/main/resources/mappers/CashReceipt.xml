@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CashReceipt">	
+	
+	<sql id="paging_header">
+		select *
+		from (
+		    select (ROW_NUMBER() OVER()) as rn, Z.*
+		    from (	
+	</sql>
+
+	<sql id="paging_footer">
+		    ) Z
+		) X where rn between #{start} and #{end}
+	</sql>
+	
+	<sql id="orderBy">
+		<choose>
+			<when test="search_orderBy == 'reqDt'">
+				ORDER BY SENDDT DESC
+			</when>
+			<when test="search_orderBy == 'status'">
+				ORDER BY CASHMASST
+			</when>
+			<otherwise>
+				ORDER BY PAYDAY DESC
+			</otherwise>
+		</choose>
+	</sql>
+	
+<!--	<resultMap id="CashReceiptDTO" type="CashReceiptDTO" autoMapping="true">
+		<result column="CUSOFFNO" property="cusOffNo" javaType="encrypt" jdbcType="CLOB" />
+	</resultMap>-->
+	
+	<!-- 현금영수증 정보조회 -->
+	<select id="cashInfo" parameterType="hashMap" resultType="CashReceiptDTO">
+			SELECT	CUSNAME
+				,	CONFIRM
+				,	CUSTYPE
+				,   CASE CUSTYPE WHEN '1' THEN '소득공제'  WHEN '2' THEN '지출증빙' END AS CUSTYPENM
+				,   CASE CONFIRM WHEN '11' THEN '휴대폰번호'  WHEN '12' THEN '현금영수증카드번호'  WHEN '13' THEN '주민번호'  WHEN '21' THEN '사업자번호' END AS CONFIRMNM
+                ,	CUSOFFNO
+			FROM	XCUSMAS
+			WHERE	CHACD = #{chaCd}
+			AND		VANO = #{vaNo}	
+	</select>
+	
+	<!-- 현금영수증내역 총 갯수 -->
+	<select id="cashReceiptReqListTotalCount" resultType="hashMap">
+			 SELECT COALESCE(MAX(TOTCNT), 0) AS TOTCNT, COALESCE(MAX(APPCNT), 0) AS APPCNT
+	         FROM(SELECT TTA.*, 
+	              	COUNT(CASHMASCD) OVER(PARTITION BY CHACD) AS TOTCNT,
+					SUM(CASE CASHMASST  WHEN 'ST03' THEN  1  ELSE 0 END) OVER(PARTITION BY CHACD) AS APPCNT,
+					SUM(CASE CASHMASST  WHEN 'ST03' THEN  CSHAMT  ELSE 0 END) OVER(PARTITION BY CHACD) AS TOTAMT
+					FROM(SELECT CSH.CASHMASCD,
+	                          RCP.MASMONTH, 
+	                          RCP.PAYDAY, 
+	                          SUBSTR (RCP.PAYTIME, 1, 4) AS PAYTIME, 
+	                          CSH.APPDAY, 
+	                          CSH.APPNO, 
+	                          SUBSTR (CSH.APPTIME, 1, 4) AS APPTIME, 
+	                          RCP.CUSKEY,  
+	                          RCP.CUSNAME, 
+	                          RCP.CUSGUBN1, 
+	                          RCP.CUSGUBN2, 
+	                          RCP.CUSGUBN3, 
+	                          RCP.CUSGUBN4, 
+	                          CSH.CUSOFFNO, 
+	                          CSH.CUSOFFNO2, 
+	                          RCP.RCPAMT AS RCPAMT, 
+	                          CSH.RCPAMT AS CSHAMT, 
+	                          CSH.RCPAMT2 AS CSHAMT2, 
+	                          CSH.CASHMASST, 
+							  CASE CASHMASST WHEN 'ST03' THEN '완료'  WHEN 'ST04' THEN '처리중' WHEN 'ST02' THEN '미신청'  WHEN 'ST05' THEN  '요청' END AS CASHMASSTNM,
+	                          CSH.APPMSG, 
+	                          CSH.DISABLED, 
+	                          CSH.JOB,
+	                          RCP.SVECD, 
+	                          RCP.CHACD,
+	                          CSH.SENDDT
+	                    FROM   XRCPMAS RCP, XCASHMAS CSH 
+	                    WHERE  RCP.RCPMASCD = CSH.RCPMASCD  
+	                    AND RCP.RCPMASST = 'PA03'
+	                    AND RCP.SVECD IN ('VAS', 'DCS','DVA')
+	                    AND RCP.CHACD = #{chaCd}
+	                    AND RCP.VANO = #{vaNo} 
+	                    AND RCP.PAYDAY BETWEEN #{fmasMonth} AND #{tmasMonth}
+	                    <if test='status != "" and status != null'>
+			           		<if test='status == "fin"'>
+			           		AND  CSH.CASHMASST = 'ST03'
+			           		</if>
+			           		<if test='status == "ing"'>
+			           		AND  CSH.CASHMASST = 'ST04'
+			           		</if>
+			           		<if test='status == "not"'>
+			           		AND  CSH.CASHMASST = 'ST02'
+			           		</if>
+                            <if test='status == "req"'>
+                                AND  CSH.CASHMASST = 'ST05'
+                            </if>
+		           		</if>
+				        <!-- UNION ALL 
+				        SELECT CSH.CASHMASCD, 
+				               RCP.MASMONTH, 
+				               RCP.PAYDAY, 
+				               SUBSTR (RCP.PAYTIME, 1, 4) AS PAYTIME, 
+				               CSH.APPDAY, 
+				               CSH.APPNO, 
+				               SUBSTR (CSH.APPTIME, 1, 4) AS APPTIME, 
+				               RCP.CUSKEY, 
+				               RCP.CUSNAME, 
+				               RCP.CUSGUBN1, 
+				               RCP.CUSGUBN2, 
+				               RCP.CUSGUBN3, 
+				               RCP.CUSGUBN4, 
+				               CSH.CUSOFFNO, 
+				               CSH.CUSOFFNO2, 
+				               RCP.RCPAMT AS RCPAMT, 
+				               CSH.RCPAMT AS CSHAMT, 
+				               CSH.RCPAMT2 AS CSHAMT2, 
+				               CSH.CASHMASST, 
+				               CASE CASHMASST WHEN 'ST03' THEN '완료'  WHEN 'ST04' THEN '처리중' WHEN 'ST02' THEN '미신청' END AS CASHMASSTNM,
+				               CSH.APPMSG, 
+				               CSH.DISABLED, 
+				               CSH.JOB,
+				               RCP.SVECD, 
+				               RCP.CHACD,
+				               CSH.SENDDT
+				        FROM   XRCPMASEXPR RCP, XCASHMAS CSH 
+				        WHERE  RCP.RCPMASCD = CSH.RCPMASCD  
+				        AND RCP.RCPMASST = 'PA03' 
+				        AND RCP.CHACD = #{chaCd}
+				        AND RCP.VANO = #{vaNo}
+				        AND SUBSTR(RCP.PAYDAY, 1, 6) BETWEEN #{fmasMonth} AND #{tmasMonth} 
+				        <if test='status != "" and status != null'>
+			           		<if test='status == "fin"'>
+			           		AND  CSH.CASHMASST = 'ST03'
+			           		</if>
+			           		<if test='status == "ing"'>
+			           		AND  CSH.CASHMASST = 'ST04'
+			           		</if>
+			           		<if test='status == "not"'>
+			           		AND  CSH.CASHMASST = 'ST02'
+			           		</if>
+		           		</if> -->
+					) TTA
+			         ORDER BY PAYDAY DESC, PAYTIME DESC 
+				 ) TA
+	</select>
+	
+	<!-- 현금영수증내역 리스트 -->
+	<select id="cashReceiptReqList" resultType="CashReceiptDTO">
+			SELECT *
+			FROM(SELECT TA.*,
+						(ROW_NUMBER() OVER()) AS RN
+		         FROM(	SELECT 	TTA.*,
+		              			COUNT(CASHMASCD) OVER(PARTITION BY CHACD) AS TOTCNT,
+								SUM(CASE CASHMASST  WHEN 'ST03' THEN  1  ELSE 0 END) OVER(PARTITION BY CHACD) AS APPCNT,
+								SUM(CASE CASHMASST  WHEN 'ST03' THEN  CSHAMT  ELSE 0 END) OVER(PARTITION BY CHACD) AS TOTAMT
+						FROM	(SELECT CSH.CASHMASCD,
+										RCP.MASMONTH,
+										RCP.PAYDAY,
+										SUBSTR (RCP.PAYTIME, 1, 4) AS PAYTIME,
+										CSH.APPDAY,
+										CSH.APPNO,
+										SUBSTR (CSH.APPTIME, 1, 4) AS APPTIME,
+										RCP.CUSKEY,
+										RCP.CUSNAME,
+										RCP.CUSGUBN1,
+										RCP.CUSGUBN2,
+										RCP.CUSGUBN3,
+										RCP.CUSGUBN4,
+										CSH.CUSOFFNO,
+										CSH.CUSOFFNO2,
+										RCP.RCPAMT AS RCPAMT,
+										CSH.RCPAMT AS CSHAMT,
+										CSH.RCPAMT2 AS CSHAMT2,
+										CSH.CASHMASST,
+										CASE CASHMASST WHEN 'ST02' THEN '미발행'  WHEN 'ST03' THEN '발행' WHEN 'ST04' THEN '발행중'  WHEN 'ST05' THEN  '요청' END AS CASHMASSTNM,
+										CSH.APPMSG,
+										CSH.DISABLED,
+										CSH.JOB,
+										RCP.SVECD,
+										RCP.CHACD,
+										CSH.SENDDT
+								FROM   XRCPMAS RCP, XCASHMAS CSH
+								WHERE  	RCP.RCPMASCD = CSH.RCPMASCD
+									AND RCP.RCPMASST = 'PA03'
+									AND RCP.SVECD IN ('VAS', 'DCS','DVA')
+									AND RCP.CHACD = #{chaCd}
+									AND RCP.VANO = #{vaNo}
+									AND RCP.PAYDAY BETWEEN #{fmasMonth} AND #{tmasMonth}
+									<if test='status != "" and status != null'>
+										<if test='status == "fin"'>
+										AND  CSH.CASHMASST = 'ST03'
+										</if>
+										<if test='status == "ing"'>
+										AND  CSH.CASHMASST = 'ST04'
+										</if>
+										<if test='status == "not"'>
+										AND  CSH.CASHMASST = 'ST02'
+										</if>
+										<if test='status == "req"'>
+										AND  CSH.CASHMASST = 'ST05'
+										</if>
+									</if>
+								<!-- UNION ALL
+								SELECT CSH.CASHMASCD,
+									   RCP.MASMONTH,
+									   RCP.PAYDAY,
+									   SUBSTR (RCP.PAYTIME, 1, 4) AS PAYTIME,
+									   CSH.APPDAY,
+									   CSH.APPNO,
+									   SUBSTR (CSH.APPTIME, 1, 4) AS APPTIME,
+									   RCP.CUSKEY,
+									   RCP.CUSNAME,
+									   RCP.CUSGUBN1,
+									   RCP.CUSGUBN2,
+									   RCP.CUSGUBN3,
+									   RCP.CUSGUBN4,
+									   CSH.CUSOFFNO,
+									   CSH.CUSOFFNO2,
+									   RCP.RCPAMT AS RCPAMT,
+									   CSH.RCPAMT AS CSHAMT,
+									   CSH.RCPAMT2 AS CSHAMT2,
+									   CSH.CASHMASST,
+									   CASE CASHMASST WHEN 'ST02' THEN '미발행'  WHEN 'ST03' THEN '발행' WHEN 'ST04' THEN '발행중' END AS CASHMASSTNM,
+									   CSH.APPMSG,
+									   CSH.DISABLED,
+									   CSH.JOB,
+									   RCP.SVECD,
+									   RCP.CHACD,
+									   CSH.SENDDT
+								FROM   XRCPMASEXPR RCP, XCASHMAS CSH
+								WHERE  RCP.RCPMASCD = CSH.RCPMASCD
+								AND RCP.RCPMASST = 'PA03'
+								AND RCP.CHACD = #{chaCd}
+								AND RCP.VANO = #{vaNo}
+								AND SUBSTR(RCP.PAYDAY, 1, 6) BETWEEN #{fmasMonth} AND #{tmasMonth}
+								<if test='status != "" and status != null'>
+									<if test='status == "fin"'>
+									AND  CSH.CASHMASST = 'ST03'
+									</if>
+									<if test='status == "ing"'>
+									AND  CSH.CASHMASST = 'ST04'
+									</if>
+									<if test='status == "not"'>
+									AND  CSH.CASHMASST = 'ST02'
+									</if>
+								</if> -->
+						) TTA
+				         ORDER BY PAYDAY DESC, PAYTIME DESC
+					 ) TA
+				)  T
+			WHERE  RN BETWEEN #{start} AND #{end}
+			<include refid="orderBy" />
+	</select>
+</mapper>

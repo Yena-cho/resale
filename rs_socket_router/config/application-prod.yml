@@ -1,0 +1,29 @@
+#다모아
+damoa-origin:
+  local:
+    port: 19060
+  remote:
+    host: 127.0.0.1
+    port: 19050
+    wait-time-to-poll: 30000
+    partner-code: 20007481
+#재판매
+damoa-resell:
+  local:
+    port: 19080
+  # 재판매 전문서버
+  remote:
+    host: 10.10.10.204
+    port: 19070
+    wait-time-to-poll: 30000
+    partner-code: 20007481
+#remote = client에서 사용하는 외부연결
+#local = server에서 사용하는 내부연결
+finger-va:
+  local:
+    port: 31375
+  remote:
+    host: 211.202.165.130
+    port: 31375
+    wait-time-to-poll: 30000
+

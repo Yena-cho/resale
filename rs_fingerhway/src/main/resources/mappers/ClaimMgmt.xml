@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="claimMgmtDao">
+	<select id="selectPayerInfoMasterListCnt" resultType="Integer" >
+	<![CDATA[
+		SELECT
+				COUNT(1) 
+		FROM
+				TB_PAYER_INFO_MASTER	A
+		WHERE
+				1=1
+			AND	A.REG_MONTH	>= #{startMonth}
+			AND	A.REG_MONTH	<= #{endMonth}
+		
+	]]>
+	</select>
+	
+	<select id="selectPayerInfoMasterList" resultType="PayerInfoMasterInfoVO" >
+			  SELECT B.*
+			  FROM (
+			  		SELECT
+			  				A.PAYER_INFO_ID
+			  			,	CONCAT(SUBSTR(A.REG_DTTM,1,4),'.',SUBSTR(A.REG_DTTM,5,2),'.',SUBSTR(A.REG_DTTM,7,2),' ',SUBSTR(A.REG_DTTM,9,2),':',SUBSTR(A.REG_DTTM,11,2),':',SUBSTR(A.REG_DTTM,13,2)) AS REG_DTTM
+			  			,	A.REG_MONTH
+			  			,	A.REG_USER_ID
+			  			,	(SELECT USER_NM FROM TB_USER WHERE USER_ID = A.REG_USER_ID) AS REG_USER_NM
+			  			,	CASE WHEN A.STATUS = '0' THEN '파일생성중'
+			  			WHEN A.STATUS = '1' THEN 'download'
+			  			WHEN A.STATUS = '9' THEN '오류'
+			  			ELSE ''
+			  			END		AS	STATUS_NM
+			  			,	A.STATUS
+			  			,	CONCAT(FORMAT(A.CLAIM_CNT,0),'건')				AS	CLAIM_CNT
+			  			,	CONCAT(FORMAT(A.CLAIM_AMT_SUM,0),'원')		AS	CLAIM_AMT_SUM
+			  		FROM
+			  				TB_PAYER_INFO_MASTER	A
+			  		WHERE
+			  				1=1
+			  				<![CDATA[
+			  			AND	A.REG_MONTH	>= #{startMonth}
+			  			AND	A.REG_MONTH	<= #{endMonth}
+			  				]]>
+			  		ORDER BY A.REG_DTTM DESC
+			  LIMIT #{startIdx} , #{pageSize}
+			  ) B
+	</select>
+
+	<select id="selectSeqPayerInfoId" resultType="String" useCache="false" flushCache="true">
+		SELECT
+			CONCAT(DATE_FORMAT(NOW(), '%Y%m%d'),LPAD(NEXTVAL(SEQ_PAYER_INFO_ID), 3,'0') )
+		FROM 
+			DUAL
+	</select>
+
+	<select id="selectSeqTrno" resultType="String" useCache="false" flushCache="true">
+		SELECT
+			CONCAT(DATE_FORMAT(NOW(), '%Y%m%d'),LPAD(NEXTVAL(SEQ_TRNO), 5,'0') )
+		FROM 
+			DUAL
+	</select>
+	
+	<select id="selectRegSeq" resultType="BigDecimal" useCache="false" flushCache="true">
+		SELECT
+			NEXTVAL(AEGISTRANSMSG_SEQ)
+		FROM 
+			DUAL
+	</select>
+	
+	<select id="selectAvailAcntCnt" resultType="Integer" >
+		SELECT
+			COUNT(1)
+		FROM
+    		TB_VIRTUAL_ACNT A
+		WHERE
+    		A.USE_YN = 'N'
+	</select>
+	
+	<insert id="insertTbPayerInfoMaster">
+		INSERT INTO TB_PAYER_INFO_MASTER(
+		    PAYER_INFO_ID
+		  , REG_DTTM
+		  , REG_MONTH
+		  , CLAIM_CNT
+		  , CLAIM_AMT_SUM
+		  , STATUS
+		  , REG_USER_ID
+		) VALUES (
+		    #{payerInfoId}
+		  , DATE_FORMAT(NOW(), '%Y%m%d%H%i%s')
+		  , DATE_FORMAT(NOW(), '%Y%m')
+		  , #{claimCnt}
+		  , 0
+		  , '0'
+		  , #{regUserId}
+		)
+	</insert>
+	
+	<update id="updateTbPayerInfoMaster">
+		UPDATE TB_PAYER_INFO_MASTER
+		SET
+				CLAIM_AMT_SUM = (SELECT SUM(TOT_AMT) FROM TB_PAYER_INFO WHERE PAYER_INFO_ID = #{payerInfoId})
+			,	STATUS = #{status}
+		WHERE
+				PAYER_INFO_ID = #{payerInfoId}
+	</update>
+	
+	<select id="selectVirtualAcntNotUsed" resultType="TbVirtualAcntVO" fetchSize="1000">
+			SELECT B.*
+			FROM (
+				SELECT
+				 A.VIRTUAL_ACNT_NUM
+				FROM TB_VIRTUAL_ACNT A
+				WHERE A.USE_YN = 'N'
+                ORDER BY A.PAY_DUE_DT DESC, A.VIRTUAL_ACNT_NUM DESC
+			LIMIT 0 , #{pageSize}
+			) B
+	</select>
+	
+	<update id="updateTbVirtualAcnt">
+		UPDATE TB_VIRTUAL_ACNT
+		SET
+		    USE_YN = #{useYn}
+		  , PAY_DUE_DT = #{payDueDt}
+		WHERE
+		    VIRTUAL_ACNT_NUM = #{virtualAcntNum}
+	</update>
+	
+	<insert id="insertTbPayerInfo">
+		INSERT INTO TB_PAYER_INFO (
+		    CAR_NUM
+		  , CAR_OWNER_NM
+		  , PAY_DUE_DT
+		  , CAR_OWNER_ADDR
+		  , GIRO_NUM
+		  , CUST_INQ_NUM
+		  , TOT_AMT
+		  , NOTI_AMT_CD
+		  , GIRO_CD
+		  , OCCUR_DTTM1
+		  , OCCUR_REASON1
+		  , PASS_PLACE1
+		  , PASS_AMT1
+		  , OCCUR_DTTM2
+		  , OCCUR_REASON2
+		  , PASS_PLACE2
+		  , PASS_AMT2
+		  , OCCUR_DTTM3
+		  , OCCUR_REASON3
+		  , PASS_PLACE3
+		  , PASS_AMT3
+		  , OCCUR_DTTM4
+		  , OCCUR_REASON4
+		  , PASS_PLACE4
+		  , PASS_AMT4
+		  , OCCUR_DTTM5
+		  , OCCUR_REASON5
+		  , PASS_PLACE5
+		  , PASS_AMT5
+		  , OCCUR_DTTM6
+		  , OCCUR_REASON6
+		  , PASS_PLACE6
+		  , PASS_AMT6
+		  , OCCUR_DTTM7
+		  , OCCUR_REASON7
+		  , PASS_PLACE7
+		  , PASS_AMT7
+		  , OCCUR_DTTM8
+		  , OCCUR_REASON8
+		  , PASS_PLACE8
+		  , PASS_AMT8
+		  , OCCUR_DTTM9
+		  , OCCUR_REASON9
+		  , PASS_PLACE9
+		  , PASS_AMT9
+		  , OCCUR_DTTM10
+		  , OCCUR_REASON10
+		  , PASS_PLACE10
+		  , PASS_AMT10
+		  ,	PAYER_INFO_ID
+		  , RUN_DT
+		  , VIRTUAL_ACNT_NUM
+		  , TRNO
+		) VALUES (
+		  	#{carNum}
+		  , #{carOwnerNm}
+		  , #{payDueDt}
+		  , #{carOwnerAddr}
+		  , #{giroNum}
+		  , #{custInqNum}
+		  , #{totAmt}
+		  , #{notiAmtCd}
+		  , #{giroCd}
+		  , #{occurDttm1}
+		  , #{occurReason1}
+		  , #{passPlace1}
+		  , #{passAmt1}
+		  , #{occurDttm2}
+		  , #{occurReason2}
+		  , #{passPlace2}
+		  , #{passAmt2}
+		  , #{occurDttm3}
+		  , #{occurReason3}
+		  , #{passPlace3}
+		  , #{passAmt3}
+		  , #{occurDttm4}
+		  , #{occurReason4}
+		  , #{passPlace4}
+		  , #{passAmt4}
+		  , #{occurDttm5}
+		  , #{occurReason5}
+		  , #{passPlace5}
+		  , #{passAmt5}
+		  , #{occurDttm6}
+		  , #{occurReason6}
+		  , #{passPlace6}
+		  , #{passAmt6}
+		  , #{occurDttm7}
+		  , #{occurReason7}
+		  , #{passPlace7}
+		  , #{passAmt7}
+		  , #{occurDttm8}
+		  , #{occurReason8}
+		  , #{passPlace8}
+		  , #{passAmt8}
+		  , #{occurDttm9}
+		  , #{occurReason9}
+		  , #{passPlace9}
+		  , #{passAmt9}
+		  , #{occurDttm10}
+		  , #{occurReason10}
+		  , #{passPlace10}
+		  , #{passAmt10}
+		  ,	#{payerInfoId}
+		  , #{runDt}
+		  , #{virtualAcntNum}
+		  , #{trno}
+		)
+	</insert>
+	
+	<insert id="insertAEGISTRANSMSG">
+		INSERT INTO AEGISTRANSMSG (
+		    RECORDTYPE
+		  , SERVICEID
+		  , WORKFIELD
+		  , SUCCESSYN
+		  , RESULTCD
+		  , RESULTMSG
+		  , TRNO
+		  , VANO
+		  , PAYMASMONTH
+		  , PAYMASDT
+		  , RCPSTARTDT
+		  , RCPSTARTTM
+		  , RCPENDDT
+		  , RCPENDTM
+		  , RCPPRTENDDT
+		  , RCPPRTENDTM
+		  , CUSNM
+		  , SMSYN
+		  , MOBILENO
+		  , EMAILYN
+		  , EMAIL
+		  , CONTENT1
+		  , CONTENT2
+		  , CONTENT3
+		  , CONTENT4
+		  , CHATRNO
+		  , ADJFIGRPCD
+		  , PAYITEMNM
+		  , PAYITEMAMT
+		  , PAYITEMYN
+		  , RCPITEMYN
+		  , RCPBUSINESSNO
+		  , RCPPERSONNO
+		  , PRTPAYITEMNM
+		  , PRTCONTENT1
+		  , PRTSEQ
+		  , TRANST
+		  , REGSEQ
+		  , REGDT
+		  , PAYDAY
+		  , RCPUSRNAME
+		  , BNKCD
+		  , BCHCD
+		  , MDGUBN
+		  , TRNDAY
+		  , RCPAMT
+		  , VANOBNKCD
+		  , SVECD
+		) VALUES (
+		    #{recordtype} /*RECORDTYPE*/
+		  , #{serviceid}  /*SERVICEID*/
+		  , 'N'           /*WORKFIELD*/
+		  , 'Y'           /*SUCCESSYN*/
+		  , 'D000'        /*RESULTCD*/
+		  , '정상'        /*RESULTMSG*/
+		  , #{trno}       /*TRNO*/
+		  , #{vano}       /*VANO*/
+		  , DATE_FORMAT(NOW(), '%Y%m')    /*PAYMASMONTH*/
+		  , DATE_FORMAT(NOW(), '%Y%m%d')    /*PAYMASDT*/
+		  , DATE_FORMAT(NOW(), '%Y%m%d')    /*RCPSTARTDT*/
+		  , '0000'    /*RCPSTARTTM*/
+		  , #{rcpenddt}    /*RCPENDDT*/
+		  , '2359'    /*RCPENDTM*/
+		  , #{rcpprtenddt}    /*RCPPRTENDDT*/
+		  , '2359'    /*RCPPRTENDTM*/
+		  , #{cusnm}    /*CUSNM*/
+		  , 'N'    /*SMSYN*/
+		  , ''    /*MOBILENO*/
+		  , 'N'    /*EMAILYN*/
+		  , ''    /*EMAIL*/
+		  , #{content1}    /*CONTENT1*/
+		  , #{content2}    /*CONTENT2*/
+		  , ''    /*CONTENT3*/
+		  , ''    /*CONTENT4*/
+		  , #{chatrno}    /*CHATRNO*/
+		  , #{adjfigrpcd}    /*ADJFIGRPCD*/
+		  , #{payitemnm}    /*PAYITEMNM*/
+		  , #{payitemamt}    /*PAYITEMAMT*/
+		  , 'N'    /*PAYITEMYN*/
+		  , 'N'    /*RCPITEMYN*/
+		  , ''    /*RCPBUSINESSNO*/
+		  , ''    /*RCPPERSONNO*/
+		  , ''    /*PRTPAYITEMNM*/
+		  , ''    /*PRTCONTENT1*/
+		  , ''    /*PRTSEQ*/
+		  , '01'    /*TRANST*/
+		  , #{regseq}    /*REGSEQ*/
+		  , NOW()   /*REGDT*/
+		  , ''    /*PAYDAY*/
+		  , ''    /*RCPUSRNAME*/
+		  , ''    /*BNKCD*/
+		  , ''    /*BCHCD*/
+		  , ''    /*MDGUBN*/
+		  , ''    /*TRNDAY*/
+		  , ''    /*RCPAMT*/
+		  , ''    /*VANOBNKCD*/
+		  , ''    /*SVECD*/
+		)
+	</insert>
+	
+	<select id="selectPayerInfoList" resultType="PayerInfoVO">
+		SELECT
+			    A.CAR_NUM
+			  , A.CAR_OWNER_NM
+			  , CONCAT(SUBSTR(A.PAY_DUE_DT,1,4),'.',SUBSTR(A.PAY_DUE_DT,5,2),'.',SUBSTR(A.PAY_DUE_DT,7,2)) AS PAY_DUE_DT
+			  , A.CAR_OWNER_ADDR
+			  , A.GIRO_NUM
+			  , A.CUST_INQ_NUM
+			  , FORMAT(A.TOT_AMT,0) AS TOT_AMT
+			  , A.NOTI_AMT_CD
+			  , A.GIRO_CD
+			  , A.OCCUR_DTTM1
+			  , A.OCCUR_REASON1
+			  , A.PASS_PLACE1
+			  , FORMAT(A.PASS_AMT1,0) AS PASS_AMT1
+			  , A.OCCUR_DTTM2
+			  , A.OCCUR_REASON2
+			  , A.PASS_PLACE2
+			  , CASE WHEN A.PASS_AMT2 = 0 THEN '' ELSE FORMAT(A.PASS_AMT2,0) END AS PASS_AMT2
+			  , A.OCCUR_DTTM3
+			  , A.OCCUR_REASON3
+			  , A.PASS_PLACE3
+			  , CASE WHEN A.PASS_AMT3 = 0 THEN '' ELSE FORMAT(A.PASS_AMT3,0) END AS PASS_AMT3
+			  , A.OCCUR_DTTM4
+			  , A.OCCUR_REASON4
+			  , A.PASS_PLACE4
+			  , CASE WHEN A.PASS_AMT4 = 0 THEN '' ELSE FORMAT(A.PASS_AMT4,0) END AS PASS_AMT4
+			  , A.OCCUR_DTTM5
+			  , A.OCCUR_REASON5
+			  , A.PASS_PLACE5
+			  , CASE WHEN A.PASS_AMT5 = 0 THEN '' ELSE FORMAT(A.PASS_AMT5,0) END AS PASS_AMT5
+			  , A.OCCUR_DTTM6
+			  , A.OCCUR_REASON6
+			  , A.PASS_PLACE6
+			  , CASE WHEN A.PASS_AMT6 = 0 THEN '' ELSE FORMAT(A.PASS_AMT6,0) END AS PASS_AMT6
+			  , A.OCCUR_DTTM7
+			  , A.OCCUR_REASON7
+			  , A.PASS_PLACE7
+			  , CASE WHEN A.PASS_AMT7 = 0 THEN '' ELSE FORMAT(A.PASS_AMT7,0) END AS PASS_AMT7
+			  , A.OCCUR_DTTM8
+			  , A.OCCUR_REASON8
+			  , A.PASS_PLACE8
+			  , CASE WHEN A.PASS_AMT8 = 0 THEN '' ELSE FORMAT(A.PASS_AMT8,0) END AS PASS_AMT8
+			  , A.OCCUR_DTTM9
+			  , A.OCCUR_REASON9
+			  , A.PASS_PLACE9
+			  , CASE WHEN A.PASS_AMT9 = 0 THEN '' ELSE FORMAT(A.PASS_AMT2,0) END AS PASS_AMT9
+			  , A.OCCUR_DTTM10
+			  , A.OCCUR_REASON10
+			  , A.PASS_PLACE10
+			  , CASE WHEN A.PASS_AMT10 = 0 THEN '' ELSE FORMAT(A.PASS_AMT10,0) END AS PASS_AMT10
+			  ,	A.PAYER_INFO_ID
+			  , A.RUN_DT
+			  , A.VIRTUAL_ACNT_NUM
+		FROM	
+				TB_PAYER_INFO	A
+		WHERE
+				A.PAYER_INFO_ID = #{payerInfoId}
+		ORDER BY A.OCCUR_DTTM1 ASC
+	</select> 
+	
+	<select id="selectPayerInfo" resultType="Integer">
+		SELECT
+			    COUNT(1)
+		FROM	
+				TB_PAYER_INFO	A
+		WHERE
+				A.CUST_INQ_NUM = #{custInqNum}
+			AND	A.OCCUR_DTTM1 = #{occurDttm1}
+			AND A.PAY_DUE_DT = #{payDueDt}
+	</select> 
+	
+</mapper>

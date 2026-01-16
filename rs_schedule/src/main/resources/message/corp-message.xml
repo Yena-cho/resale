@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<messages charset="UTF-8">
+    <message id="Head" msgType="kr.co.finger.msgio.corpinfo.Head" desc="헤더">
+        <field id="kubun" length="1" type="AN" desc="Head구분 H"/>
+        <field id="corpCode" length="8" type="AN" desc="가상계좌 기관코드"/>
+        <field id="dealDate" length="8" type="AN" desc="거래일자"/>
+        <field id="filler" length="438" type="AN" desc="filler"/>
+    </message>
+
+    <message id="Data"  msgType="kr.co.finger.msgio.corpinfo.Data" desc="데이터">
+        <field id="kubun" length="1" type="AN" desc="Data구분 D"/>
+        <field id="corpCode" length="8" type="AN" desc="기관코드"/>
+        <field id="corpName" length="30" type="AH" desc="기관(업체)명"/>
+        <field id="deleteYn" length="1" type="AH" desc="삭제여부"/>
+        <field id="relayCorpCode" length="8" type="AN" desc="중곅기관코드"/>
+        <field id="createDt" length="8" type="AN" desc="기관 신규일자"/>
+        <field id="bizNo" length="13" type="AN" desc="사업자번호"/>
+        <field id="corpStatus" length="1" type="AN" desc="기관상태여부"/>
+
+        <field id="agencyCode1" length="5" type="AN" desc="대리점1 코드"/>
+        <field id="agencyName1" length="30" type="AH" desc="대리점1 이름"/>
+        <field id="agencyStatus1" length="1" type="AN" desc="대리점1 상태"/>
+        
+        <field id="agencyCode2" length="5" type="AN" desc="대리점2 코드"/>
+        <field id="agencyName2" length="30" type="AH" desc="대리점2 이름"/>
+        <field id="agencyStatus2" length="1" type="AN" desc="대리점2 상태"/>
+        
+        <field id="agencyCode3" length="5" type="AN" desc="대리점3 코드"/>
+        <field id="agencyName3" length="30" type="AH" desc="대리점3 이름"/>
+        <field id="agencyStatus3" length="1" type="AN" desc="대리점3 상태"/>
+        
+        <field id="agencyCode4" length="5" type="AN" desc="대리점4 코드"/>
+        <field id="agencyName4" length="30" type="AH" desc="대리점4 이름"/>
+        <field id="agencyStatus4" length="1" type="AN" desc="대리점4 상태"/>
+        
+        <field id="agencyCode5" length="5" type="AN" desc="대리점5 코드"/>
+        <field id="agencyName5" length="30" type="AH" desc="대리점5 이름"/>
+        <field id="agencyStatus5" length="1" type="AN" desc="대리점5 상태"/>
+        
+        <field id="agencyCode6" length="5" type="AN" desc="대리점6 코드"/>
+        <field id="agencyName6" length="30" type="AH" desc="대리점6 이름"/>
+        <field id="agencyStatus6" length="1" type="AN" desc="대리점6 상태"/>
+        
+        <field id="agencyCode7" length="5" type="AN" desc="대리점7 코드"/>
+        <field id="agencyName7" length="30" type="AH" desc="대리점7 이름"/>
+        <field id="agencyStatus7" length="1" type="AN" desc="대리점7 상태"/>
+        
+        <field id="agencyCode8" length="5" type="AN" desc="대리점8 코드"/>
+        <field id="agencyName8" length="30" type="AH" desc="대리점8 이름"/>
+        <field id="agencyStatus8" length="1" type="AN" desc="대리점8 상태"/>
+        
+        <field id="agencyCode9" length="5" type="AN" desc="대리점9 코드"/>
+        <field id="agencyName9" length="30" type="AH" desc="대리점9 이름"/>
+        <field id="agencyStatus9" length="1" type="AN" desc="대리점9 상태"/>
+        
+        <field id="agencyCode10" length="5" type="AN" desc="대리점10 코드"/>
+        <field id="agencyName10" length="30" type="AH" desc="대리점10 이름"/>
+        <field id="agencyStatus10" length="1" type="AN" desc="대리점10 상태"/>
+        
+        <field id="feeAmount" length="18" type="AN" desc="입금수수료"/>
+        <field id="feeRate" length="3" type="AN" desc="수수료배분율"/>
+
+        <field id="branchCode" length="4" type="AN" desc="관리점 지점번호"/>
+    </message>
+    <message id="Trailer"  msgType="kr.co.finger.msgio.corpinfo.Trailer" desc="트레일러">
+        <field id="kubun" length="1" type="AN" desc="Trailer 구분 T"/>
+        <field id="totalCount" length="10" type="N" desc="총건수"/>
+        <field id="filler" length="444" type="AN" desc="filler"/>
+    </message>
+</messages>

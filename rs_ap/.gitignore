@@ -1,0 +1,9 @@
+#.*
+target
+*.iml
+*.ipr
+!.gitignore
+!.mvn/wrapper/maven-wrapper.jar
+*.idea
+logs/debug.log
+logs/default.log

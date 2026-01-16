@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SysMainDao">	
+
+	<!-- 이용기관현황 대시보드 -->
+	<select id="getSysMainInfo01"  resultType="com.finger.shinhandamoa.org.main.dto.XmontSumDTO">
+		<![CDATA[
+		SELECT AA.*
+				, BB.*
+				, CC.*
+				, DD.*
+				, FF.*
+				, GG.*
+				FROM ( SELECT SUM(CASE WHEN CHAST = 'ST06' THEN 1 ELSE 0 END)-2 AS TOTCHACNT --전체이용기관
+								, SUM(CASE WHEN CHAST = 'ST06' AND SUBSTR(CHA_NEW_REG_DT, 1, 6) = TO_CHAR(now() - interval '1 month', 'YYYYMM') THEN 1 ELSE 0 END) AS LASTMONREGCNT   --신규기관 전월
+								, SUM(CASE WHEN CHAST = 'ST06' AND SUBSTR(CHA_NEW_REG_DT, 1, 6) = TO_CHAR(now() , 'YYYYMM') THEN 1 ELSE 0 END) AS THISMONREGCNT   --신규기관 당월
+								, SUM(CASE WHEN CHAST = 'ST02' AND SUBSTR(CHA_CLOSE_DT, 1, 6) = TO_CHAR(now() - interval '1 month', 'YYYYMM') THEN 1 ELSE 0 END) AS LASTMONRESIGNCNT -- 해지기관 전월
+								, SUM(CASE WHEN CHAST = 'ST02' AND SUBSTR(CHA_CLOSE_DT, 1, 6) = TO_CHAR(now() , 'YYYYMM') THEN 1 ELSE 0 END) AS THISMONRESIGNCNT -- 해지기관 당월
+								, SUM(CASE WHEN CHAST = 'ST01' AND TO_CHAR(MAKEDT, 'YYYYMM') >= TO_CHAR( now() - interval '1 month', 'YYYYMM') THEN 1 ELSE 0 END ) AS THISMONREADYCNT   -- 가입대기기관
+						  FROM XCHALIST ) AA
+						, ( SELECT SUM( CASE WHEN MONTH = TO_CHAR( now() - interval '1 month', 'YYYYMM') THEN SMSCNT ELSE 0 END ) AS LASTMONSMSCNT -- SMS 문자메세지 전월
+									, SUM( CASE WHEN MONTH =  TO_CHAR( now() , 'YYYYMM') THEN SMSCNT ELSE 0 END ) AS THISMONSMSCNT -- SMS 문자메세지 당월
+									, SUM( CASE WHEN MONTH = TO_CHAR( now() - interval '1 month', 'YYYYMM') THEN LMSCNT ELSE 0 END ) AS LASTMONLMSCNT -- lMS 문자메세지 전월
+									, SUM( CASE WHEN MONTH = TO_CHAR( now() , 'YYYYMM') THEN LMSCNT ELSE 0 END ) AS THISMONLMSCNT -- lMS 문자메세지 당월
+							  FROM XMONTHSUM ) BB
+						, ( SELECT SUM( CASE WHEN B.BBS = '9' AND B.FROMNO IS NULL AND B.DATA4 ='1' THEN 1 ELSE 0 END ) AS PHONEBOOKINGCNT -- 전화상담예약
+							  FROM BOARD B) CC
+						, ( SELECT SUM( CASE WHEN B.BBS = '10' THEN 1 ELSE 0 END ) AS USESMSAPLCNT       --문자서비스신청
+							  FROM BOARD B, XCHALIST CH
+							 WHERE B.ID    = CH.CHACD
+							   AND B.BBS    = '10'
+							   AND CH.USESMSYN = 'W') DD
+						, ( SELECT SUM( CASE WHEN B.BBS = '10' THEN 1 ELSE 0 END ) AS SERVICEASKCNT      --서비스문의
+							  FROM BOARD B, XCHALIST CH
+							 WHERE B.CODE    = CH.CHACD
+							   AND B.BBS    = '10'
+							   AND B.FROMNO IS NULL
+							   AND TITLE    != '통신서비스 이용증명원 신청'
+							   AND ( SELECT COUNT(*) FROM BOARD WHERE FROMNO = B.NO) = 0 ) FF
+						, ( SELECT SUM(CASE WHEN G.STATUS_CD <> 'C10004' THEN 1 ELSE 0 END) AS CHANGECHACNT
+							  FROM DAMOA_CLIENT_INFO_PULL_HIST G ) GG
+	]]>
+    </select>					  
+
+	<!-- 수수료 증감현황 -->
+	<select id="selectPaymentRatioList"  resultType="com.finger.shinhandamoa.org.main.dto.XmontSumDTO">
+		SELECT	A.MONTH      	AS mon
+            ,   SUBSTR(TO_CHAR(TO_DATE(A.MONTH|| '01', 'YYYYMMDD') , 'month'),0,3) AS month
+			, 	SUM(A.NOTIFEE)  AS notifee
+			, 	SUM(A.RCPFEE)   AS rcpfee
+		FROM 	XMONTHSUM 	A
+       	WHERE   A.MONTH  &gt; TO_CHAR(now() - interval '7 month' , 'YYYYMM')
+       	GROUP 	BY  A.MONTH
+       	ORDER	BY  A.MONTH 
+	</select>	
+			
+	<!-- 미납기관내역 -->
+	<select id="selectPaymentSummary"  resultType="com.finger.shinhandamoa.org.main.dto.XmontSumDTO">
+		SELECT 	A.* ,
+		       	B.CHANAME
+		FROM 	(SELECT MONTH
+		            ,	CHACD
+		            ,	COALESCE (NOTIFEE, 0) AS notifee
+		            ,	COALESCE (SMSFEE, 0)  AS smsfee
+		            ,	COALESCE (LMSFEE, 0)  AS lmsfee
+					,	(COALESCE (NOTIFEE, 0) + COALESCE (SMSFEE, 0) + COALESCE (LMSFEE, 0)) AS  totsumfee
+         		 FROM 	XMONTHSUM
+        		 WHERE 	MONTH = (SELECT MAX(MONTH) FROM XMONTHSUM)
+        		 ORDER  BY totsumfee DESC ) A 
+			,	XCHALIST B
+		WHERE 	A.CHACD = B.CHACD
+   		LIMIT #{pageScale}
+	</select>
+		
+</mapper>

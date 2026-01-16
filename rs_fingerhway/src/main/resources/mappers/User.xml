@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="UserMgmtDao">	
+
+	<select id="selectUserInfoListCnt" resultType="Integer" >
+		SELECT
+			COUNT(1)
+		FROM
+				TB_USER	A
+		WHERE
+				1=1
+			AND	AUTH_GRP_CD	LIKE CONCAT(#{authGrpCd},'%')
+		<if test='searchInd == "N"'> 
+			AND	A.USER_NM	LIKE	CONCAT('%',#{searchStr},'%')
+		</if>
+		<if test='searchInd == "I"'> 
+			AND	A.USER_ID	LIKE	CONCAT('%',#{searchStr},'%')
+		</if>
+		<if test='searchInd == "B"'> 
+			AND	A.BELONG	LIKE	CONCAT('%',#{searchStr},'%')
+		</if>
+		<if test='useYn != "A"'> 
+			AND	A.USE_YN	=	#{useYn}
+		</if>
+	</select>
+	
+	<select id="selectUserInfoList" resultType="UserInfoVO" >
+				SELECT  B.*
+				FROM (
+				SELECT
+						A.USER_ID
+					,	A.USER_NM
+					,	A.USER_PSWD
+					,	A.POSITION
+					,	(SELECT BELONG_NM FROM TB_BELONG_INFO WHERE BELONG_ID = A.BELONG_ID) AS BELONG
+					,	A.BELONG_ID
+					,	A.DEPT
+					,	A.PHONE_NUM1
+					,	A.PHONE_NUM2
+					,	A.PHONE_NUM3
+					,	A.MOBILE_NUM1
+					,	A.MOBILE_NUM2
+					,	A.MOBILE_NUM3
+					,	A.EMAIL_ADDR
+					,	A.MEMO
+					,	A.REG_DT
+					,	A.AUTH_GRP_CD
+					,	(SELECT AUTH_GRP_NM FROM TB_AUTH_GRP WHERE AUTH_GRP_CD = A.AUTH_GRP_CD) AS AUTH_GRP_CD_NM
+					,	A.USE_YN
+					,	CASE WHEN A.USE_YN = 'Y' THEN '정상'
+					         WHEN A.USE_YN = 'N' THEN '중지'
+					         ELSE ''
+					         END AS USE_YN_NM
+					,	A.LAST_CONN_DTTM
+				FROM
+						TB_USER	A
+				WHERE
+						1=1
+					AND	AUTH_GRP_CD	LIKE CONCAT(#{authGrpCd},'%')
+				<if test='searchInd == "N"'> 
+					AND	A.USER_NM	LIKE	CONCAT('%',#{searchStr},'%')
+				</if>
+				<if test='searchInd == "I"'> 
+					AND	A.USER_ID	LIKE	CONCAT('%',#{searchStr},'%')
+				</if>
+				<if test='searchInd == "B"'> 
+					AND	A.BELONG	LIKE	CONCAT('%',#{searchStr},'%')
+				</if>
+				<if test='useYn != "A"'> 
+					AND	A.USE_YN	=	#{useYn}
+				</if>
+				ORDER BY A.REG_DT DESC
+				LIMIT #{startIdx} , #{pageSize}
+				) B
+	</select>
+	
+	<select id="selectUserInfo" resultType="UserInfoVO">
+		SELECT
+				A.USER_ID
+			,	A.USER_NM
+			,	A.USER_PSWD
+			,	A.POSITION
+			,	(SELECT BELONG_NM FROM TB_BELONG_INFO WHERE BELONG_ID = A.BELONG_ID) AS BELONG
+			,	A.BELONG_ID
+			,	A.DEPT
+			,	A.PHONE_NUM1
+			,	A.PHONE_NUM2
+			,	A.PHONE_NUM3
+			,	A.MOBILE_NUM1
+			,	A.MOBILE_NUM2
+			,	A.MOBILE_NUM3
+			,	A.EMAIL_ADDR
+			,	A.MEMO
+			,	CONCAT(SUBSTR(A.REG_DT, 1, 4),'.',SUBSTR(A.REG_DT, 5, 2),'.',SUBSTR(A.REG_DT, 7, 2)) AS REG_DT
+			,	A.AUTH_GRP_CD
+			,	(SELECT AUTH_GRP_NM FROM TB_AUTH_GRP WHERE AUTH_GRP_CD = A.AUTH_GRP_CD) AS AUTH_GRP_CD_NM
+			,	A.USE_YN
+			,	CASE WHEN A.USE_YN = 'Y' THEN '정상'
+				WHEN A.USE_YN = 'N' THEN '중지'
+				ELSE ''
+				END AS USE_YN_NM
+			,	A.LAST_CONN_DTTM
+		FROM
+				TB_USER	A
+		WHERE
+				A.USER_ID	= #{userId}
+	</select>
+	
+	<update id="updateUserUseYn">
+		UPDATE	TB_USER
+		SET
+				USE_YN	= #{useYn}
+		WHERE
+				USER_ID	= #{userId}
+	</update>
+	
+	<insert id="insertUserInfo">
+		INSERT INTO TB_USER (
+				USER_ID
+			,	USER_NM
+			,	USER_PSWD
+			,	POSITION
+			,	BELONG_ID
+			,	DEPT
+			,	PHONE_NUM1
+			,	PHONE_NUM2
+			,	PHONE_NUM3
+			,	MOBILE_NUM1
+			,	MOBILE_NUM2
+			,	MOBILE_NUM3
+			,	EMAIL_ADDR
+			,	MEMO
+			,	REG_DT
+			,	AUTH_GRP_CD
+			,	USE_YN
+		) VALUES (
+				#{userId}
+			,	#{userNm}
+			,	#{userPswd}
+			,	#{position}
+			,	#{belongId}
+			,	#{dept}
+			,	#{phoneNum1}
+			,	#{phoneNum2}
+			,	#{phoneNum3}
+			,	#{mobileNum1}
+			,	#{mobileNum2}
+			,	#{mobileNum3}
+			,	#{emailAddr}
+			,	#{memo}
+			,	DATE_FORMAT(now(),'%Y%m%d')
+			,	#{authGrpCd}
+			,	#{useYn}
+		)
+	</insert>
+	
+	<delete id="deleteUserInfo">
+		DELETE	TB_USER
+		WHERE
+				USER_ID	= #{userId}
+	</delete>
+	
+	<update id="updateUserInfo">
+		UPDATE	TB_USER
+		SET
+				USER_NM			= #{userNm}
+			,	USER_PSWD		= #{userPswd}
+			,	POSITION		= #{position}
+			,	BELONG_ID		= #{belongId}
+			,	DEPT			= #{dept}
+			,	PHONE_NUM1		= #{phoneNum1}
+			,	PHONE_NUM2		= #{phoneNum2}
+			,	PHONE_NUM3		= #{phoneNum3}
+			,	MOBILE_NUM1		= #{mobileNum1}
+			,	MOBILE_NUM2		= #{mobileNum2}
+			,	MOBILE_NUM3		= #{mobileNum3}
+			,	EMAIL_ADDR		= #{emailAddr}
+			,	MEMO			= #{memo}
+			,	AUTH_GRP_CD		= #{authGrpCd}
+			,	USE_YN			= #{useYn}
+		WHERE
+				USER_ID	= #{userId}
+	</update>
+	
+	<select id="selectBelongInfoList" resultType="TbBelongInfoVO">
+		SELECT
+				BELONG_ID
+			,	BELONG_NM
+		FROM
+				TB_BELONG_INFO
+		ORDER BY BELONG_ID
+	</select>
+
+</mapper>

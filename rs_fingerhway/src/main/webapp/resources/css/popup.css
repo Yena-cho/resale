@@ -1,0 +1,51 @@
+﻿@charset "utf-8";
+
+html, body {margin:0; height:100%; overflow-x:hidden; overflow-y:auto;}
+
+/* 윈도우팝업 */	
+.winpop {width:100%; text-align:center; background-color:#fff;}
+.winpop_wrap {margin:0 auto; text-align:left; border:1px solid #fff; background-color:#fff;}
+.winpop .winpop_top {height:38px; padding:12px 10px 0; background-color:#0056b9; overflow:hidden; }
+.winpop .winpop_top h3 {float:left; width:auto; color:#fff; font-size:18px; font-weight:bold; line-height:24px; height:24px;}
+.winpop .winpop_top a {float:right; margin-top:3px; width:18px; height:18px; color:#fff; line-height:14px; overflow:hidden; background:transparent url(../images/btn_close2.png) no-repeat center center;}
+.winpop .winpop_top a span {display:block; font-size:0; overflow:hidden; height:0; width:0; position:relative; z-index:-1;} /* 글씨 안보이게 */	
+.winpop .winpop_data {padding:15px;}
+.winpop .winpop_data h4 {color:#333; font-size:14px; margin-bottom:10px;}
+.winpop .wrap_btn {clear:both; text-align:center; width:100%; height:45px;}
+
+/* 문자보내기 팝업 */
+.wrap_sms {width:550px; padding:15px 15px 10px 15px; overflow:hidden;}
+.wrap_sms .sms_col1 {float:left; width:260px; background-color:#e6e8ed; border:1px solid #bbc1cc; overflow:hidden; -moz-border-radius:8px; -webkit-border-radius:8px; border-radius:8px;}
+.wrap_sms .sms_col2 {position:relative; float:right; width:230px; }
+.wrap_sms .sms_col1 .top_tit {width:240px;  padding:15px 10px 0; overflow:hidden;}
+.wrap_sms .sms_col1 .top_tit h4 {float:left; width:45%;; font-size:15px; font-weight:bold;}
+.wrap_sms .sms_col1 .top_tit span {float:right; width:45%; text-align:right; font-size:12px; color:#0056b9;}
+.wrap_sms .sms_col1 .input_textarea {width:227px; margin-left:10px; line-height:1.7em; font-size:13px; height:275px;}
+.wrap_sms .sms_col1 .wrap_sbtn { padding:10px 10px 15px; overflow:hidden;}
+.wrap_sms .sms_col1 .wrap_sbtn .sbtn3 a,
+.wrap_sms .sms_col1 .wrap_sbtn .sbtn4 a  {width:100px; margin:0; font-weight:bold;}
+.wrap_sms .sms_col1 .wrap_sbtn .sbtn3.left,
+.wrap_sms .sms_col1 .wrap_sbtn .sbtn4.left {float:left; width:49%;}
+.wrap_sms .sms_col1 .wrap_sbtn .sbtn3.right,
+.wrap_sms .sms_col1 .wrap_sbtn .sbtn4.right {float:right; width:49%;}
+.wrap_sms .sms_col2 .top_tit {margin-bottom:50px; }
+.wrap_sms .sms_col2 .top_tit li {border-bottom:1px solid #0bc3d5; padding:10px 0 0; margin-bottom:10px; overflow:hidden;}
+.wrap_sms .sms_col2 .top_tit li h4 {float:left; width:35%; padding-top:4px; font-size:13px; font-weight:bold;}
+.wrap_sms .sms_col2 .top_tit li span,
+.wrap_sms .sms_col2 .top_tit li input {float:right; width:63%; font-size:18px; color:#0096a7; font-weight:bold; letter-spacing:-0.05em; } 
+.wrap_sms .sms_col2 .top_tit li input {padding:0; line-height:20px; height:18px; border:1px solid #fff; }
+.wrap_sms .sms_col2 ul.mesg {margin-bottom:110px;}
+.wrap_sms .sms_col2 ul.mesg li {padding:0 0 10px 10px; font-size:12px; background:transparent url(../images/ico_arrow2.png) no-repeat 0 3px;}
+.wrap_sms .sms_col2 .btn1 a {position:absolute; top:342px; width:180px;}
+
+/* 발송내용 팝업 */
+.wrap_sms2 {width:248px; padding:10px; overflow:hidden;}
+.wrap_sms2 .top_tit {height:20px; overflow:hidden;}
+.wrap_sms2 .top_tit span {float:right; width:auto; text-align:right; font-size:12px; color:#0056b9;}
+.wrap_sms2 .sms_input {width:230px; background-color:#e6e8ed; border:1px solid #bbc1cc; padding:8px; margin-bottom:10px; -moz-border-radius:8px; -webkit-border-radius:8px; border-radius:8px;}
+.wrap_sms2 .sms_input .input_textarea {width:218px; line-height:1.7em; font-size:13px; height:245px;}
+.wrap_sms2 .sms_phone {border-bottom:1px solid #0bc3d5; padding:10px 0 8px; margin-bottom:15px; overflow:hidden;}
+.wrap_sms2 .sms_phone span {float:left; width:35%; padding-top:4px; font-size:13px; font-weight:bold;}
+.wrap_sms2 .sms_phone input {float:right; width:63%; font-size:18px; color:#0096a7; font-weight:bold; letter-spacing:-0.05em; } 
+.wrap_sms2 .sms_phone input {padding:0; line-height:20px; height:18px; border:1px solid #fff; }
+.wrap_sms2 .btn1 a {width:230px;}

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="DataCrypt">	
+
+	<resultMap type="NoticeDTO" id="CryptMap">
+		<result column="email" property="email" javaType="encrypt" jdbcType="VARCHAR" />	  <!--작성자 // 기관명 // 신청자? -->
+		<result column="data1" property="data1" javaType="String" jdbcType="VARCHAR" />	  <!--상담예약사유코드 -->
+	</resultMap>
+	
+	<resultMap type="ClaimDTO" id="CryptInsertMap">
+		<result column="ownerTel" property="ownerTel" javaType="encrypt" jdbcType="VARCHAR" />
+		<result column="chaCd" property="chaCd" javaType="String" jdbcType="VARCHAR" />
+		<result column="chaName" property="chaName" javaType="String" jdbcType="VARCHAR" />
+		<result column="chrTelNo" property="chrTelNo" javaType="String" jdbcType="VARCHAR" />
+		<result column="chrMail" property="chrMail" javaType="String" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<parameterMap type="ClaimDTO" id="CryptInsertMap2">
+		<parameter property="chaCd" javaType="String" jdbcType="VARCHAR" />
+		<parameter  property="chaName" javaType="String" jdbcType="VARCHAR" />
+		<parameter property="ownerTel" javaType="encrypt" jdbcType="VARCHAR" />
+		<parameter  property="chrTelNo" javaType="String" jdbcType="VARCHAR" />
+		<parameter  property="chrMail" javaType="String" jdbcType="VARCHAR" />
+	</parameterMap>
+	
+<!--	<select id="selChaList" resultMap="CryptMap">
+		SELECT	CHANAME as data1
+			,	OWNERTEL as email
+		FROM	XCHALIST_TEST
+	</select>
+	
+	<update id="update">
+        <![CDATA[
+        UPDATE XCHALIST_TEST
+        SET OWNERTEL=#{email, javaType=encrypt, jdbcType=VARCHAR}
+        WHERE CHACD = '20007389'
+        ]]> 
+	</update>
+	
+	<insert id="insertCrypt" parameterMap="CryptInsertMap2">
+		INSERT INTO XCHALIST_TEST(CHACD,CHANAME,OWNERTEL,CHRTELNO,CHRMAIL)
+		SELECT 	CHACD		AS chaCd 
+			,	CHANAME		AS chaName
+			,	OWNERTEL	AS ownerTel
+			,	CHRTELNO	AS chrTelNo
+			,	CHRMAIL		AS chrMail
+		FROM XCHALIST_REQ
+	</insert>
+	-->
+			
+</mapper>

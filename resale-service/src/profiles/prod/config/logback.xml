@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="10 seconds">
+    <contextName>${HOSTNAME}</contextName>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %-5level %logger{36} - %msg%n</Pattern>
+        </layout>
+    </appender>
+
+    <logger name="com.finger.shinhandamoa" level="TRACE"/>
+    <logger name="kr.co.finger.shinhandamoa" level="TRACE"/>
+    <logger name="org.springframework" level="DEBUG"/>
+
+    <root level="DEBUG">
+        <appender-ref ref="STDOUT"/>
+        <!--<appender-ref ref="default"/>-->
+    </root>
+
+<!--    <contextName>${HOSTNAME}</contextName>-->
+
+<!--    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">-->
+<!--        <layout class="ch.qos.logback.classic.PatternLayout">-->
+<!--            <Pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %-5level %logger{36} - %msg%n</Pattern>-->
+<!--        </layout>-->
+<!--    </appender>-->
+
+<!--    <appender name="default" class="ch.qos.logback.core.rolling.RollingFileAppender">-->
+<!--        <Append>true</Append>-->
+<!--        <File>../logs/damoa-service.out</File>-->
+<!--        <encoder>-->
+<!--            <pattern>[%d{yyyy-MM-dd HH:mm:ss}] [%-5.5p] [%-20.20t] %-40.40logger{40} - %m%n</pattern>-->
+<!--        </encoder>-->
+<!--        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">-->
+<!--            <fileNamePattern>/mnt/disk1/logs/damoa-service.%d{yyyyMMdd}.${HOSTNAME}.log</fileNamePattern>-->
+<!--        </rollingPolicy>-->
+<!--    </appender>-->
+<!--    -->
+<!--    <logger name="org.springframework.scheduling.annotation.ScheduledAnnotationBeanPostProcessor" level="INFO"/>-->
+
+<!--    <logger name="com.finger.shinhandamoa" level="DEBUG"/>-->
+
+<!--    <root level="WARN">-->
+<!--        <appender-ref ref="STDOUT"/>-->
+<!--        <appender-ref ref="default"/>-->
+<!--    </root>-->
+</configuration>

@@ -1,0 +1,671 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MainDao">
+	<!--관리자 어드민 기록 -->
+	<insert id="insertAdminLoginHist"  parameterType="java.lang.String">
+		INSERT INTO ADMIN_LOGIN_HIST (ADMIN_ID)
+		VALUES (  #{adminID})
+	</insert>
+
+	<!--
+        <resultMap type="java.util.Map" id="infoMap">
+            <result column="password" property="PASSWORD" javaType="String" jdbcType="CLOB" />
+        </resultMap>
+
+        <resultMap type="java.util.Map" id="payInfoMap">
+            <result column="TEL" 	  property="TEL" 	  javaType="encrypt" jdbcType="CLOB" />
+        </resultMap>
+
+        <resultMap type="java.util.Map" id="adminInfoMap">
+            <result column="password" property="PASSWORD" javaType="String" jdbcType="CLOB" />
+            <result column="TEL"   property="TEL" 	  javaType="String" jdbcType="CLOB" />
+        </resultMap>
+
+        <resultMap type="java.util.Map" id="cusInfoMap">
+            <result column="CUSHP" property="password" javaType="encrypt" jdbcType="CLOB" />
+            <result column="CUSHP"   property="tel" 	  javaType="encrypt" jdbcType="CLOB" />
+        </resultMap>
+
+        <resultMap type="CashReceiptDTO" id="selCashResultMap">
+            <result column="cusOffNo"  property="cusOffNo"  javaType="encrypt" jdbcType="CLOB" />
+            <result column="cusOffNo2" property="cusOffNo2" javaType="encrypt" jdbcType="CLOB" />
+        </resultMap>
+
+        <resultMap type="LoginDTO" id="selChrHp">
+            <result column="chrHp"  property="chrHp"  javaType="encrypt" jdbcType="CLOB" />
+        </resultMap>-->
+	
+
+	<!-- 기업담당자 로그인 -->
+	<select id="selectByOrgInfo" resultType="java.util.Map">
+		SELECT TRIM(A.CHACD)                   					AS userName
+				, A.LOGINPW                     				AS password
+				, CASE A.IDST  WHEN 'ST02' THEN  0  ELSE 1 END	AS enabled 			 	 -- 해지여부
+				, CASE A.IDST  WHEN 'ST08' THEN  0  ELSE 1 END 	AS accountNonExpired 	 -- 서비스이용제한(수수료미납)
+				, 1                             				AS credentialsNonExpired
+				, CASE WHEN A.FAILCNT > 4
+						THEN 0
+						ELSE 1 END             					AS accountNonLocked
+				, CASE WHEN IDTYPE = '03'                                                                         							THEN 'ROLE_GROUP_ADMIN'
+						WHEN IDTYPE = '01' AND B.CHASVCYN = 'Y' AND B.FINGER_FEE_AGREE_STATUS != 'A00001'         							THEN 'ROLE_ADMIN'
+						WHEN IDTYPE = '01' AND B.CHASVCYN = 'N'                                                   							THEN 'ROLE_CHASVC'
+						WHEN IDTYPE = '01' AND B.CHASVCYN = 'Y' AND B.FINGER_FEE_AGREE_STATUS = 'A00001' AND B.FINGER_FEE_PAYTY = 'CUR'		THEN 'ROLE_ADMIN'
+						WHEN IDTYPE = '01' AND B.CHASVCYN = 'Y' AND B.FINGER_FEE_AGREE_STATUS = 'A00001'          							THEN 'ROLE_CHACMS'
+						END                      				AS authority
+				, COALESCE(B.CHANAME, A.LOGINNAME)    			AS name
+				, A.LOGINPW                      				AS userCheck
+				, COALESCE(B.CHRMAIL, '1')              		AS email
+				, COALESCE(B.OWNERTEL, '1')             		AS tel
+				, 1                              				AS vano
+				, A.LOGINID                      				AS loginId
+				, COALESCE(B.CHAOFFNO, '1')             		AS chaOffNo
+				, B.FINGER_FEE_ACCOUNT_NO        				AS feeVano
+        		, B.FINGER_FEE_BANK_CODE         				AS feeBankCd
+		FROM WEBUSER A LEFT OUTER JOIN XCHALIST B ON A.CHACD = B.CHACD
+		WHERE A.LOGINID = #{username}
+	</select>
+	
+	<select id="selectByGroupInfo" resultType="java.util.Map">
+		SELECT 	TRIM(A.CHACD) 									AS userName 			 -- 기관코드
+		    , 	A.LOGINPW 										AS password
+		    , 	CASE A.IDST  WHEN 'ST06' THEN  1  ELSE 0 END	AS enabled 			 	 -- 해지여부
+            ,   1 AS accountNonExpired 	 -- 서비스이용제한(수수료미납) 사용안함.
+		    , 	1 												AS credentialsNonExpired -- 권한만료
+		    , 	CASE WHEN A.FAILCNT > 4 
+		             THEN 0 ELSE 1 END							AS accountNonLocked  	 -- locked
+		    ,   'ROLE_GROUP_USER' 								AS authority
+		    ,	COALESCE(B.CHANAME, A.LOGINNAME)				AS name					 -- 사용자이름
+		    , 	A.LOGINPW										AS userCheck
+		    ,	COALESCE(B.CHRMAIL, '1')						AS email
+		    ,	COALESCE(B.OWNERTEL, '1') 						AS tel
+		    ,	1												AS vano
+		    ,	A.LOGINID										AS loginId
+		    ,	COALESCE(B.CHAOFFNO, '1')						AS chaOffNo
+		FROM 	WEBUSER A LEFT OUTER JOIN XCHALIST B ON A.CHACD = B.CHACD
+		WHERE 	A.LOGINID 	= #{username}
+	</select>
+	
+	<!-- 납부자(납부계좌번호) 로그인 -->
+	<select id="selectByPayNumInfo" resultType="java.util.Map">
+		SELECT 	A.CHACD 					AS userName
+			, 	A.VANO 						AS password
+			,   1							AS enabled
+			,	1							AS accountNonExpired
+			,	CASE A.DISABLED  WHEN 'N' THEN  1  ELSE 0 END AS credentialsNonExpired
+			,	1							AS accountNonLocked
+			,	'ROLE_USER'					AS authority
+			,	A.CUSNAME					AS name
+			, 	A.PASS_VANO					AS userCheck
+			,	COALESCE(A.CUSMAIL, '1')	AS email
+			,	COALESCE(A.CUSHP, '1')		AS tel
+		    ,	A.VANO						AS vano
+		    ,   A.CUSNAME					AS loginId
+		    ,	B.CHAOFFNO					AS chaOffNo
+		FROM 	XCUSMAS  A
+		    ,	XCHALIST B
+		WHERE  	A.CHACD   = B.CHACD
+		AND		A.VANO 	  = #{vano}
+	</select>
+	<!-- 납부자(납부계좌번호) 로그인 (고객정보없음) -->
+	<select id="selectByPayNumInfoVal" resultType="java.util.Map">
+		SELECT 	A.CHACD 			AS userName
+			, 	A.VANO 				AS password
+			,   1					AS enabled
+			,	1					AS accountNonExpired
+			,	CASE WHEN A.USEYN = 'Y' THEN 1 ELSE 0 END	 AS credentialsNonExpired
+			,	1					AS accountNonLocked
+			,	'ROLE_USER'			AS authority
+			,	'납부자'				AS name
+			, 	''					AS userCheck
+			,	''					AS email
+			,	''					AS tel
+		    ,	A.VANO				AS vano
+		    ,   A.VANO				AS loginId
+		    ,	B.CHAOFFNO			AS chaOffNo
+		FROM 	VALIST  A
+		    ,	XCHALIST B
+		WHERE  	A.CHACD   = B.CHACD
+		AND		A.VANO 	  = #{vano}
+	</select>
+	
+	<!-- 납부자(고객정보) 로그인 -->
+	<select id="selectByPayCusInfo" resultType="java.util.Map">
+		SELECT 	A.CHACD 					AS userName
+			, 	A.CUSHP 					AS password
+			,   1							AS enabled
+			,	1							AS accountNonExpired
+			,	CASE A.DISABLED  WHEN 'N' THEN  1  ELSE 0 END AS credentialsNonExpired
+			,	1							AS accountNonLocked
+			,	'ROLE_USER'					AS authority
+			,	A.CUSNAME					AS name
+			, 	A.PASS_VANO					AS userCheck
+			,	COALESCE(A.CUSMAIL, '1')	AS email
+			,	COALESCE(A.CUSHP, '1') 		AS tel
+		    ,	A.VANO						AS vano
+		    ,   A.CUSNAME					AS loginId
+		    ,	B.CHAOFFNO					AS chaOffNo
+		FROM 	XCUSMAS  A
+		    ,	XCHALIST B
+		WHERE  	A.CHACD   		= B.CHACD
+		AND    	A.CUSNAME 		= #{username}
+		AND    	REPLACE(TRIM(B.CHANAME), ' ', '') = REPLACE(TRIM(#{orgname}), ' ', '')
+		AND    	A.CUSHP = #{cushp}
+		AND     A.DISABLED = 'N'
+		LIMIT 1
+	</select>
+	 
+	<!-- 로그인 실패횟수 수정 -->
+	<update id="failCountUpdate">
+		UPDATE 	WEBUSER
+		SET 	MAKEDT 	=  NOW()
+			, 	MAKER 	= #{username}
+			<if test="stat != null and stat == 'success'">
+			,	FAILCNT = 0
+			</if>
+			<if test="stat != null and stat == 'fail'">
+			,	FAILCNT = (SELECT MAX(FAILCNT) + 1 FROM WEBUSER WHERE LOGINID = #{username})
+			</if>
+		WHERE 	LOGINID = #{username}
+	 </update>
+	
+	<!-- 권한별 조회조건 달리 해야할 필요.. -->
+	<!-- 공지사항 -->
+	<select id="noticeList" resultType="NoticeDTO">
+		SELECT	no, title, day, filesize, (ROW_NUMBER() OVER()) as rn
+		FROM(
+			SELECT	NO
+				,	TITLE
+				,	DAY
+				,	FILESIZE
+			FROM	BOARD
+			WHERE	1 = 1
+			<include refid="noticeSearchByRole"></include>
+			ORDER BY day DESC
+		) T
+		LIMIT 5
+	</select>
+	
+	<!-- 자주하는 질문 -->
+	<select id="faqList" resultType="NoticeDTO">
+		SELECT	no, title, day, filesize, (ROW_NUMBER() OVER()) as rn
+		FROM(
+			SELECT	NO
+				,	TITLE
+				,	DAY
+				,	FILESIZE
+			FROM	BOARD
+			WHERE	1 = 1
+			<include refid="faqSearchByRole"></include>
+			ORDER BY day DESC    
+		) T
+		LIMIT 5
+	</select>
+	
+	<!-- 서비스 문의 -->
+	<select id="qnaList" resultType="NoticeDTO">
+		SELECT	no, title, day, filesize, (ROW_NUMBER() OVER()) as rn
+		FROM(
+			SELECT	NO
+				,	TITLE
+				,	DAY
+				,	FILESIZE
+			FROM	BOARD
+			WHERE	1 = 1
+			AND BBS = 10
+			AND CODE = #{chaCd}
+			AND TITLE != '통신서비스 이용증명원 신청'
+			ORDER BY day DESC    
+		) T
+		LIMIT 5
+	</select>
+	
+	<!-- 팝업 리스트 -->
+	<select id="popupList" resultType="PopupDTO">
+		SELECT A.*
+		     , CASE   WHEN A.URL IS NULL THEN  'X'  ELSE 'O' END AS URLYN
+		FROM ( SELECT *
+			   FROM POPUP
+			   WHERE EXPOSYN = 'Y'
+			   AND TO_CHAR(NOW(), 'yyyymmdd') BETWEEN start_dt AND end_dt
+			   UNION ALL
+			   SELECT *
+			   FROM POPUP
+			   WHERE EXPOSYN = 'Y'
+			   AND DXPSTYPE = 'C') A
+	    ORDER BY REG_DT DESC
+	</select>
+
+	<!--PC용 배너 리스트 -->
+	<select id="pcBannerList" resultType="BannerDTO">
+		SELECT  B.ID,
+				B.NAME,
+				B.TITLE,
+				B.CONTENT,
+				B.FILE_ID      AS "fileId",
+				B.SHOW_YN      AS "showYn",
+				B.VIEW_TYPE_CD AS "viewTypeCd",
+				B.ORDER_NO     AS "orderNo",
+				F.BUCKET       AS "bucket",
+				F.NAME         AS "fileName"
+		FROM BANNER B LEFT OUTER JOIN FW_FILE F ON B.FILE_ID = F.ID
+		WHERE B.SHOW_YN = 'Y'
+		AND B.VIEW_TYPE_CD = 'S10001'
+		ORDER BY B.ORDER_NO ASC
+	</select>
+
+	<!--모바일용 배너 리스트 -->
+	<select id="mobileBannerList" resultType="BannerDTO">
+		SELECT  B.ID,
+				B.NAME,
+				B.TITLE,
+				B.CONTENT,
+				B.FILE_ID      AS "fileId",
+				B.SHOW_YN      AS "showYn",
+				B.VIEW_TYPE_CD AS "viewTypeCd",
+				B.ORDER_NO     AS "orderNo",
+				F.BUCKET       AS "bucket",
+				F.NAME         AS "fileName"
+	    FROM BANNER B LEFT OUTER JOIN FW_FILE F ON B.FILE_ID = F.ID
+	    WHERE B.SHOW_YN = 'Y'
+		AND B.VIEW_TYPE_CD = 'S10002'
+		ORDER BY B.ORDER_NO ASC
+	</select>
+	
+	<!-- 전화상담예약 -->
+	<insert id="telReservation">
+		INSERT 	INTO 
+		BOARD	(NO
+			,	BBS
+			,	NUM 
+			,	STEP
+			,	ID
+			,	WRITER
+			,	TITLE
+			,	CONTENTS
+			,	ISHTML
+			,	ISFIX
+			,	COUNT
+			,	DAY
+			,	ISSEND
+			,	code
+			,	DATA1
+			,	DATA2
+			,	DATA3
+			,	DATA4)
+		VALUES (NEXTVAL('board_seq')
+			,	#{bbs}
+			,	(SELECT COALESCE(MAX(NUM) + 1, 1) FROM BOARD WHERE BBS = #{bbs})
+			,	0
+			,	#{id}
+			,	#{writer}
+			,	#{title}
+			,	#{contents}
+			,	0
+			,	0
+			,	0
+			,	NOW()
+			,	0
+			,	#{code}
+			,	#{data1}
+			,	#{data2}
+			,	#{data3}
+			,	#{data4})
+	</insert>
+	
+	<!-- 로그인 권한에따른 공지사항 테이블 구분값  -->
+	<sql id="noticeSearchByRole">
+		<choose>
+			<when test="role == 'ROLE_ADMIN'">
+				AND BBS = 8
+			</when>
+			<when test="role == 'ROLE_USER'">
+				AND BBS = 6
+			</when>
+			<otherwise>
+				AND BBS = 7
+			</otherwise>
+		</choose>
+	</sql>
+	
+	<!-- 로그인 권한에따른 자주하는질문 테이블 구분값  -->
+	<sql id="faqSearchByRole">
+		<choose>
+			<when test="role == 'ROLE_ADMIN'">
+				AND BBS BETWEEN 61 AND 67
+			</when>
+			<when test="role == 'ROLE_USER'">
+				AND BBS BETWEEN 71 AND 77
+			</when>
+			<otherwise>
+				AND BBS BETWEEN 51 AND 57
+			</otherwise>
+		</choose>
+	</sql>
+	
+	<!-- id 찾기 -->
+	<select id="idSearch" resultType="LoginDTO">
+		SELECT 	A.LOGINID	AS loginId
+			, 	A.LOGINNAME AS loginName
+		FROM 	WEBUSER 	A
+		   , 	XCHALIST 	B
+		WHERE 	A.CHACD 	= B.CHACD 
+		AND 	B.CHAOFFNO 	= #{chaOffNo}
+		AND 	B.FEEACCNO	= #{feeAccNo}
+	</select>
+	
+	<!-- 비밀번호 찾기 -->
+	<select id="passwordSearch" resultType="LoginDTO">
+		SELECT 	A.LOGINID	AS loginId
+			, 	A.LOGINNAME AS loginName
+			,	B.CHRHP		AS chrHp
+		FROM 	WEBUSER 	A
+		   , 	XCHALIST 	B
+		WHERE 	A.CHACD 	= B.CHACD 
+		AND		A.LOGINID   = #{loginId}
+		AND 	B.CHAOFFNO 	= #{chaOffNo}
+		AND 	B.FEEACCNO	= #{feeAccNo}
+	</select>
+	
+	<!-- id 중복확인 -->
+	<select id="selIdOverlap" resultType="String">
+		SELECT 	LOGINID  AS loginId
+		FROM 	WEBUSER
+		WHERE 	LOGINID = #{loginId}
+	</select>
+	
+	<!-- 아이디, 비밀번호 변경 -->
+	<update id="idPasswordUpdate">
+		UPDATE	WEBUSER
+		SET		LOGINID = #{loginId}
+			,	LOGINPW = #{loginPw}
+			,	MAKEDT	= NOW()
+			,	MAKER	= #{chaCd}
+		WHERE	LOGINID = #{userId}
+	</update>
+	
+	<!-- 비밀번호 재설정 - 인증번호 -->
+	<insert id="mergeOtpNo">
+		WITH upsert AS (
+		    UPDATE WEBUSEROTP A
+			SET HPNO     = #{hpNo}
+			,	OTPNO	 = #{otpNo}
+			,	ISSUEDT  = NOW()
+			,	EXPIREDT = NOW() + interval '3 min'
+			,	LOGINYN  = #{loginYn}
+			WHERE A.LOGINID = #{loginId}
+		    RETURNING*)
+		INSERT INTO WEBUSEROTP (LOGINID
+								 ,	OTPTYPE
+								 ,	HPNO
+								 ,	OTPNO
+								 ,	ISSUEDT
+								 ,	EXPIREDT
+								 ,	LOGINYN)
+		SELECT #{loginId}
+				,	'M'
+				,	#{hpNo}
+				,	#{otpNo}
+				,	NOW()
+				,	NOW() + interval '3 min'
+				,	#{loginYn}
+		WHERE NOT EXISTS (SELECT * FROM upsert)
+	</insert>
+
+	<!-- 비밀번호 재설정 -->
+	<update id="updatePassword">
+		UPDATE	WEBUSER
+		SET		LOGINPW = #{loginPw}
+			,	FAILCNT = 0
+			,	MAKEDT  = NOW()
+			,	MAKER	= #{loginId}
+		WHERE	LOGINID = #{loginId}
+	
+	</update>
+	
+	
+	<!-- 납부집계 -->
+	<select id="selectPaymentSummary" resultType="PaymentDTO">
+		SELECT * 
+		FROM   (
+			    SELECT A.*
+			         , (ROW_NUMBER() OVER()) AS RN
+			    FROM   (
+					    SELECT R.PAYDAY
+						      ,R.PAYTIME
+						      ,R.CUSNAME
+						      ,CASE R.SVECD  WHEN 'VAS' THEN  '가상계좌'  WHEN 'DCS' THEN  '현금'  WHEN 'DCD' THEN  '신용카드 오프라인'  WHEN 'DVA' THEN  '무통장입금' WHEN 'OCD' THEN '신용카드 온라인' END AS SVECD
+						      ,R.RCPAMT
+						      ,CASE R.RCPMASST  WHEN 'PA03' THEN  '수납' ELSE '취소' END AS RCPMASST
+							<choose>
+								<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(noCus)">
+									FROM XRCPMAS R RIGHT OUTER JOIN XNOTIMAS N ON R.VANO = N.VANO
+									WHERE 1=1
+								</when>
+								<otherwise>
+									FROM XRCPMAS R RIGHT OUTER JOIN XNOTIMAS N ON R.VANO = N.VANO
+									WHERE N.NOTIMASST   IN ('PA03', 'PA04', 'PA05', 'PA06')
+								</otherwise>
+							</choose>
+                        AND    N.NOTI_CAN_YN  = 'N'
+                        AND    R.RCPMASST     = 'PA03'
+						AND    R.CHACD        = #{chaCd}
+						AND    R.VANO         = #{vaNo}
+					    ORDER BY R.PAYDAY DESC, R.PAYTIME DESC
+					) A
+		) T
+		WHERE RN &lt; 6
+	</select>
+		
+	<!-- 관리자 로그인 -->
+	<select id="selectByAdminInfo" resultType="java.util.Map" >
+		SELECT 	ADM_ID 						AS userName 			 -- 기관코드
+		    , 	ADM_PW 						AS password
+		    , 	1 							AS enabled 			 	 -- 해지여부
+		    ,   CASE ADM_STATUS  WHEN 'ST01' THEN  1  ELSE 0 END
+		    								AS accountNonExpired 	 -- 서비스이용제한(수수료미납)
+		    , 	1 							AS credentialsNonExpired -- 권한만료
+		    , 	CASE WHEN LOGIN_FAIL_CNT > 4 
+		             THEN 0 ELSE 1 END		AS accountNonLocked  	 -- locked
+		    ,	CASE #{admGroup} WHEN 'BA' THEN 'ROLE_BANKADMIN'
+		        				 WHEN 'DA' THEN 'ROLE_SYSADMIN' END AS authority
+		    ,	ADM_NAME					AS name					 -- 사용자이름
+		    , 	1							AS userCheck
+		    ,	COALESCE(ADM_EMAIL, '1')	AS email
+		    ,	COALESCE(ADM_HP, '1')		AS tel
+		    ,	1							AS vano
+		    ,	ADM_ID						AS loginId
+		    ,	1							AS chaOffNo
+			, OTP_SECRET                    AS otpSecret
+		FROM 	ADMIN_INFO
+		WHERE 	ADM_ID 		= #{username}
+		AND		ADM_GROUP 	= #{admGroup}
+	</select>
+
+	<!-- 약관동의  -->
+	<update id="updateOtp">
+		UPDATE ADMIN_INFO
+		SET OTP_SECRET = #{otpSecret}
+		  , MAKEDT   = NOW()
+		WHERE ADM_ID = #{username}
+		  AND ADM_GROUP = #{admGroup}
+	</update>
+	
+	<!-- 약관동의  -->
+	<update id="updateChaSvcYn">
+		UPDATE	XCHALIST
+		SET		CHASVCYN = 'Y'
+			,	CHASVCDT = NOW()
+			,	MAKEDT	 = NOW()
+			,	MAKER	 = #{chaCd}
+		WHERE	CHACD    = #{chaCd}
+	</update>
+	
+	<!-- 고지분 조회 -->
+	<select id="getNotification" resultType="NotificationDTO">
+		SELECT	COALESCE(SUM(SUBTOT), 0)                                          			AS SUBTOT
+				, COALESCE(SUM(COALESCE(SUBTOT, 0)) - SUM(COALESCE(RCPAMT, 0)), 0)          AS UNSUBTOT
+		FROM ( SELECT MAS.NOTIMASCD,
+						( SELECT SUM(COALESCE(PAYITEMAMT, 0))
+						  FROM XNOTIDET
+						  WHERE NOTIMASCD = MAS.NOTIMASCD )       AS SUBTOT,
+						( SELECT SUM(COALESCE(RCPAMT, 0))
+						  FROM XRCPMAS
+						  WHERE NOTIMASCD = MAS.NOTIMASCD
+						  AND RCPMASST = 'PA03' )                 AS RCPAMT
+				FROM XNOTIMAS MAS
+				WHERE DISABLED != 'Y'
+				AND NOTI_CAN_YN = 'N'
+				AND CHACD = #{chaCd}
+				AND VANO = #{vaNo}
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(maxMonth)'>
+				AND MASMONTH = #{maxMonth}
+		</if>
+			) T
+	</select>
+	
+	<!-- 자동완성을 위한 납부자명 검색 -->
+	<select id="selAutoChaName" resultType="LoginDTO">
+		SELECT	CHANAME		AS loginName
+		FROM	XCHALIST
+		WHERE  	CHANAME 	LIKE CONCAT('%', CONCAT(UPPER(#{username}),'%'))
+	</select>
+
+	<!-- 고지분 조회 -->
+	<select id="getCashReceipt" resultType="CashReceiptDTO">
+			SELECT COUNT(CASHMASCD) AS TOTCNT,
+                   COALESCE(MAX(SENDDT), '0') AS SENDDT
+		    FROM(SELECT CSH.CASHMASCD, 
+		                RCP.MASMONTH, 
+		                RCP.PAYDAY, 
+		                SUBSTR (RCP.PAYTIME, 1, 4) AS PAYTIME, 
+		                CSH.APPDAY, 
+		                CSH.APPNO, 
+		                SUBSTR (CSH.APPTIME, 1, 4) AS APPTIME, 
+		                RCP.CUSKEY,  
+		                RCP.CUSNAME, 
+		                RCP.CUSGUBN1, 
+		                RCP.CUSGUBN2, 
+		                RCP.CUSGUBN3, 
+		                RCP.CUSGUBN4, 
+		                CSH.CUSOFFNO, 
+		                CSH.CUSOFFNO2, 
+		                RCP.RCPAMT AS RCPAMT, 
+		                CSH.RCPAMT AS CSHAMT, 
+		                CSH.RCPAMT2 AS CSHAMT2, 
+		                CSH.CASHMASST, 
+		                CASE CASHMASST WHEN 'ST03' THEN '완료'  WHEN 'ST04' THEN '처리중' WHEN 'ST02' THEN '미신청' END AS CASHMASSTNM,
+		                CSH.APPMSG, 
+		                CSH.DISABLED, 
+		                CSH.JOB,
+		                RCP.SVECD, 
+		                RCP.CHACD,
+		                CSH.SENDDT
+		         FROM   XRCPMAS RCP, XCASHMAS CSH 
+		         WHERE  RCP.RCPMASCD = CSH.RCPMASCD  
+		         AND 	RCP.RCPMASST = 'PA03' 
+		         AND 	RCP.CHACD = #{chaCd}
+		         AND 	RCP.VANO = #{vaNo}
+		         AND 	RCP.PAYDAY BETWEEN TO_CHAR((NOW() - interval '12 months'),'YYYYMMDD') AND TO_CHAR(NOW(), 'YYYYMMDD')
+                 AND 	CSH.CASHMASST = 'ST03'
+			) T
+	</select>	
+	
+	<!-- 로그인 실패시 입력값 체크 -->
+	<select id="selLoginOrgCheck" resultType="int">
+		SELECT	COUNT(*)  	AS cnt
+		FROM	WEBUSER
+		WHERE	LOGINID 	= #{username}
+	</select>
+	
+	<select id="selLoginVanoCheck" resultType="int">
+		SELECT	COUNT(*) 	AS cnt
+		FROM	XCUSMAS
+		WHERE	VANO 		= #{username}
+	</select>
+	
+	<select id="selLoginCusCheck" resultType="int">
+		SELECT	COUNT(*) 	AS cnt
+		FROM	XCUSMAS	A
+			,	XCHALIST B
+		WHERE	A.CHACD 	= B.CHACD
+		AND		A.CUSNAME 	= #{username}
+		AND		REPLACE(TRIM(B.CHANAME), ' ', '') = REPLACE(TRIM(#{orgname}), ' ', '')
+	</select>
+	
+	<select id="selLoginAdminCheck" resultType="int">
+		SELECT 	COUNT(*)	AS cnt
+		FROM 	ADMIN_INFO
+		WHERE 	ADM_ID 		= #{username}
+		AND		ADM_GROUP 	= #{admGroup}
+	</select>
+	
+	<select id="selLoginItem" resultType="int">
+		SELECT 	FN_PASSWORD_SEARCH(#{loginId}, #{chaOffNo})
+	</select>
+	
+	<!-- 관리자 로그인 실패횟수 수정 -->
+	<update id="adminFailCountUpdate">
+		UPDATE 	ADMIN_INFO
+		SET 	MAKEDT 			=  NOW()
+			, 	MAKER 			= #{username}
+			<if test="stat != null and stat == 'success'">
+			,	LOGIN_FAIL_CNT 	= 0
+			</if>
+			<if test="stat != null and stat == 'fail'">
+			,	LOGIN_FAIL_CNT 	= (SELECT MAX(LOGIN_FAIL_CNT) + 1 FROM ADMIN_INFO WHERE ADM_ID = #{username})
+			</if>
+		WHERE 	ADM_ID 			= #{username}
+	 </update>
+	 
+	 <!-- 로그인 후 약관확인 -->
+	 <select id="selChaSvcYn" resultType="String">
+	 	SELECT	CHASVCYN	AS chaSvcYn
+	 	FROM	XCHALIST
+	 	WHERE	CHACD 		= #{username}
+	 </select>
+
+	<select id="reciptCnt" resultType="int">
+		SELECT COUNT(*) CNT
+		FROM (
+			SELECT NOTIMASCD
+			FROM XNOTIMAS
+			WHERE NOTIMASST = 'PA02'
+			AND VANO = #{vano}
+		) T
+	</select>
+
+	<select id="selCmsChaInfo" resultType="LoginDTO">
+		SELECT	A.CHANAME
+				, A.CHAOFFNO
+				, A.CHRHP
+				, B.VALUE               			AS FeeBankCd
+				, A.FINGER_FEE_ACCOUNT_NO			AS FeeVano
+		FROM XCHALIST A LEFT JOIN KFTC_CODE B ON A.FINGER_FEE_BANK_CODE = B.CODE
+		WHERE CHACD = #{chaCd}
+	</select>
+
+	<!-- 로그인시 중복로그인 블록 설정이 되어있는지 확인 일단 BILLCONT1 컬럼(사용하지않던) 사용 -->
+	<select id="concurrentBlockYn" resultType="java.util.Map">
+		SELECT CHACD AS chacd
+		     , COALESCE(BILLCONT1, 'Y') AS concurrentBlockYn
+		FROM XCHALIST
+		WHERE CHACD = #{username}
+	</select>
+
+	<!-- 중복로그인블록설정이 되어있는경우 로그인시 해당 세션을 제외한 나머지를 삭제 lockyn은 기본적으로 N (Y인경우는 내부관리자의 화면이동의 경우)-->
+	<select id="deleteOtherSession" resultType="int">
+		DELETE FROM SPRING_SESSION
+		WHERE PRINCIPAL_NAME = #{username}
+		AND SESSION_ID &lt;&gt; #{sessionId}
+		AND LOCKYN &lt;&gt; 'Y'
+	</select>
+
+	<update id="updateSessionMax" parameterType="map">
+		UPDATE	SPRING_SESSION
+		SET		LOCKYN = 'Y'
+		WHERE	SESSION_ID = #{sessionId}
+	</update>
+
+</mapper>

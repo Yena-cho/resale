@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.finger.shinhandamoa.data.table.mapper.HighwayMapper">
+
+	<!-- 페이징을 위한 header -->
+	<sql id="paging_header">
+		select *
+		from (
+				 select row_number() over() as rn, C.*
+				 from (
+	</sql>
+	<!-- 페이징을 위한 footer -->
+	<sql id="paging_footer">
+		) C
+		) X  where rn between #{start} and #{end}
+	</sql>
+
+	<select id="sysHighwayRcpLoseListCnt" parameterType="java.util.HashMap" resultType="int">
+
+		SELECT COUNT(*)
+		FROM HIGHWAY_TRANS_CHECK
+		WHERE 1 = 1
+
+		<if test='startDate != null and startDate != ""'>
+			AND TO_CHAR(REGDT, 'YYYYMMDD')  <![CDATA[ >= ]]> #{startDate}
+		</if>
+		<if test='endDate != null and endDate != ""'>
+			AND TO_CHAR(REGDT, 'YYYYMMDD')  <![CDATA[ <= ]]> #{endDate}
+		</if>
+
+
+	</select>
+
+	<select id="sysHighwayRcpLoseList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		<include refid="paging_header"/>
+		SELECT A.HIGHWAY_TRANS_CHECK_ID,
+			   A.RCPMASCD,
+			   A.NOTIMASCD,
+			   A.CHACD,
+			   B.CHANAME,
+			   A.VANO,
+			   A.MASMONTH,
+			   A.MASDAY,
+			   A.CUSNAME,
+			   A.PAYDAY,
+			   A.PAYTIME,
+			   A.RCPUSRNAME,
+			   A.RCPAMT,
+			   A.RCPMASST,
+			   A.MAKEDT,
+			   A.MAKER,
+			   A.REGDT,
+			   A.CHECKYN
+		FROM HIGHWAY_TRANS_CHECK A
+		inner join XCHALIST B on B.CHACD = A.CHACD
+		WHERE 1 = 1
+		<if test='startDate != null and startDate != ""'>
+			AND TO_CHAR(A.REGDT, 'YYYYMMDD')  <![CDATA[ >= ]]> #{startDate}
+		</if>
+		<if test='endDate != null and endDate != ""'>
+			AND TO_CHAR(A.REGDT, 'YYYYMMDD')  <![CDATA[ <= ]]> #{endDate}
+		</if>
+
+		<include refid="paging_footer"/>
+	</select>
+
+	<select id="sysHighwaySendVanoListCnt" parameterType="java.util.HashMap" resultType="int">
+		SELECT COUNT(*)
+		FROM TRANS_VANO_HIST
+		WHERE 1 = 1
+		<if test='startDate != null and startDate != ""'>
+			AND TO_CHAR(REGDT, 'YYYYMMDD')  <![CDATA[ >= ]]> #{startDate}
+		</if>
+		<if test='endDate != null and endDate != ""'>
+			AND TO_CHAR(REGDT, 'YYYYMMDD')  <![CDATA[ <= ]]> #{endDate}
+		</if>
+	</select>
+
+	<select id="sysHighwaySendVanoList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		<include refid="paging_header"/>
+		SELECT A.TRANS_VANO_HIST_ID,
+		A.CHACD,
+		B.CHANAME,
+		A.VANO_COUNT,
+		A.ASSIGN_DT,
+		A.REMARK,
+		TO_CHAR(A.REGDT, 'YYYYMMDD') AS REGDT ,
+		A.CHECKYN,
+		A.SEND_DT,
+		A.RESULT_MSG
+		FROM TRANS_VANO_HIST A
+		inner join XCHALIST B on B.CHACD = A.CHACD
+		WHERE 1 = 1
+		<if test='startDate != null and startDate != ""'>
+			AND TO_CHAR(A.REGDT, 'YYYYMMDD')  <![CDATA[ >= ]]> #{startDate}
+		</if>
+		<if test='endDate != null and endDate != ""'>
+			AND TO_CHAR(A.REGDT, 'YYYYMMDD')  <![CDATA[ <= ]]> #{endDate}
+		</if>
+
+		<include refid="paging_footer"/>
+	</select>
+
+
+
+	<update id="vanoSend" parameterType="hashmap">
+		UPDATE TRANS_VANO_HIST
+		SET CHECKYN = 'R'
+		WHERE TRANS_VANO_HIST_ID = #{trnVanoId}
+	</update>
+
+
+	<select id="highwayUsedCnt" parameterType="com.finger.shinhandamoa.sys.highwayManager.dto.SysHighwayListDTO" resultType="int">
+		/*청구를 한번이라도 한 가상계좌*/
+		select count(distinct(vano)) as highwayUsedCnt
+		from xnotimas
+		where masday >= #{masStDay}
+		and masday <![CDATA[ <= ]]> #{masDtDay}
+		and chacd = #{chaCd}
+	</select>
+
+	<select id="highwayUsedTotalCnt" parameterType="com.finger.shinhandamoa.sys.highwayManager.dto.SysHighwayListDTO" resultType="int">
+		select count(*) as highwayUsedTotalCnt
+		from valist
+		where chacd= #{chaCd}
+	</select>
+	<select id="highwayAssignTotalCnt" parameterType="com.finger.shinhandamoa.sys.highwayManager.dto.SysHighwayListDTO" resultType="int">
+		select count(*) as highwayAssignTotalCnt
+		from valist
+		where to_char(assigndt,'yyyymmdd') >= #{assignStDay}
+		and to_char(assigndt,'yyyymmdd') <![CDATA[ <= ]]> #{assignDtDay}
+		and chacd=#{chaCd}
+	</select>
+
+</mapper>

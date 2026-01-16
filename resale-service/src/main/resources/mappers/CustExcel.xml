@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CustExcelDao">
+<!--
+    <resultMap type="CustReg01DTO" id="selCusMas">
+        <result column="cusHp" property="cusHp" javaType="encrypt" jdbcType="CLOB"/>
+        <result column="cusOffNo" property="cusOffNo" javaType="encrypt" jdbcType="CLOB"/>
+    </resultMap>-->
+
+    <!-- 대량고객대상 목록 -->
+    <select id="selectExcelSaveCustReg" resultType="CustReg01DTO">
+        SELECT CUSNAME AS cusName
+				, TO_CHAR(REGDT, 'YYYY.MM.DD') AS regDt
+				, CUSKEY AS cusKey
+				, RCPGUBN AS rcpGubn
+				, CUSGUBN1 AS cusGubn1
+				, CUSGUBN2 AS cusGubn2
+				, CUSGUBN3 AS cusGubn3
+				, CUSGUBN4 AS cusGubn4
+				, VANO AS vano
+				, CUSHP AS cusHp
+				, CUSMAIL AS cusMail
+				, RCPREQTY AS rcpReqTy
+				, CUSTYPE AS cusType
+				, CONFIRM AS confirm
+				, CUSOFFNO AS cusOffNo
+				, DISABLED AS disabled
+			 	,	MEMO		AS memo
+        FROM XCUSMAS
+        WHERE CHACD = #{chaCd}
+        <include refid="search"/>
+        <include refid="custList01ListOrderBy"/>
+    </select>
+
+    <sql id="search">
+        <choose>
+            <when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(disabled) ">
+                AND DISABLED = #{disabled}
+            </when>
+            <otherwise>
+                <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDate)">
+                    AND TO_CHAR(REGDT, 'YYYYMMDD') BETWEEN #{startDate} AND #{endDate}
+                </if>
+
+				<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchValue)'>
+					<if test='searchGb == "cusname"'>
+						AND
+						<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+							CUSNAME LIKE '%' || #{list} || '%'
+						</foreach>
+					</if>
+					<if test='searchGb == "regGb"'>
+						AND
+						<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+							CUSKEY LIKE '%' || #{list} || '%'
+						</foreach>
+					</if>
+					<if test='searchGb == "vano"'>
+						AND
+						<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+							VANO LIKE '%' || #{list} || '%'
+						</foreach>
+					</if>
+					<if test='searchGb == "hpno"'>
+						AND
+						<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+							CUSHP LIKE '%' || #{list} || '%'
+						</foreach>
+					</if>
+				</if>
+
+				<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusGubnValue)'>
+					<if test='cusGubn == "all"'>
+						AND
+						<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+							( CUSGUBN1 LIKE '%' || #{list} || '%' OR CUSGUBN2 LIKE '%' || #{list} || '%' OR CUSGUBN3 LIKE '%' || #{list} || '%' OR CUSGUBN4 LIKE '%' || #{list} || '%' )
+						</foreach>
+					</if>
+					<if test='cusGubn == "CUSGUBN1"'>
+						AND
+						<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+							CUSGUBN1 LIKE '%' || #{list} || '%'
+						</foreach>
+					</if>
+					<if test='cusGubn == "CUSGUBN2"'>
+						AND
+						<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+							CUSGUBN2 LIKE '%' || #{list} || '%'
+						</foreach>
+					</if>
+					<if test='cusGubn == "CUSGUBN3"'>
+						AND
+						<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+							CUSGUBN3 LIKE '%' || #{list} || '%'
+						</foreach>
+					</if>
+					<if test='cusGubn == "CUSGUBN4"'>
+						AND
+						<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+							CUSGUBN4 LIKE '%' || #{list} || '%'
+						</foreach>
+					</if>
+				</if>
+
+                <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(payList) ">
+                    AND RCPGUBN IN
+                    <foreach collection="payList" item="list" index="index" open="(" close=")" separator=",">
+                        #{list}
+                    </foreach>
+                </if>
+                <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusList) ">
+                    AND DISABLED IN
+                    <foreach collection="cusList" item="list" index="index" open="(" close=")" separator=",">
+                        #{list}
+                    </foreach>
+                </if>
+                <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(monList) ">
+                    AND RCPREQTY IN
+                    <foreach collection="monList" item="list" index="index" open="(" close=")" separator=",">
+                        #{list}
+                    </foreach>
+                </if>
+            </otherwise>
+        </choose>
+    </sql>
+
+    <sql id="custList01ListOrderBy">
+        <choose>
+            <when test="searchOrderBy == 'regDt' ">
+                ORDER BY REGDT DESC, CUSNAME ASC
+            </when>
+            <when test="searchOrderBy == 'cusName' ">
+                ORDER BY CUSNAME ASC, REGDT DESC
+            </when>
+            <when test="searchOrderBy == 'state' ">
+                ORDER BY DISABLED ASC, CUSNAME ASC, REGDT DESC
+            </when>
+        </choose>
+    </sql>
+
+    <!-- 고객 대량 등록 헤더 및 데이터 추출 -->
+    <select id="selExcelItemSample" resultType="CustReg01DTO">
+		SELECT	'납부자명(필수)'               		AS cusName
+			, 	'납부자전용계좌(필수)'        		AS vano
+	        ,  	'구분1'                    			AS cusGubn1
+			,  	'구분2'                    			AS cusGubn2
+			,  	'구분3'                    			AS cusGubn3
+			,  	'구분4'                   			AS cusGubn4
+			, 	'휴대폰번호(필수)'	           		AS cusHp
+			, 	'사용자이메일(필수)'  				AS cusMail
+			, 	'납부대상여부(필수Y/N)'				AS rcpGubn
+			, 	'현금영수증자동발행여부(필수A/M)'		AS rcpReqTy
+			, 	'현금영수증납부번호'            		AS cusOffNo
+	</select>
+
+    <!-- 고객 등록 중복 확인 -->
+    <select id="selCustDupYN" resultType="String">
+		SELECT  CASE WHEN COUNT(*) > 0 THEN 'Y' ELSE 'N' END AS conYN
+		FROM	XCUSMAS 	A 									
+		WHERE 	1=1
+		AND 	A.CHACD   = #{chaCd}
+		AND		A.VANO	  = #{vano}
+	</select>
+
+    <!-- 고객 대량 등록 -->
+    <insert id="custExcelInsert">
+		INSERT	INTO 
+		XCUSMAS (NOTIMASCD
+				,	CHACD
+				,	VANO
+				,	MASKEY
+				,	CUSKEY
+				,	CUSGUBN1
+				,	CUSGUBN2
+				,	CUSGUBN3
+				,	CUSGUBN4
+				,	CUSNAME
+				,	CUSHP
+				,	CUSMAIL
+				,	SMSYN
+				,	MAILYN
+				,	CUSTYPE
+				,	CONFIRM
+				,	CUSOFFNO
+				,	MAKEDT
+				,	MAKER
+				,	REGDT
+				,	DISABLED
+				,	RCPGUBN
+				,	RCPREQTY
+				,	MEMO
+				,	PASS_VANO
+				,	PASS_CUSHP)
+		VALUES	(#{notiMasCd}
+				, 	#{chaCd}
+				, 	#{vano}
+				, 	#{masKey}
+				, 	COALESCE(#{cusKey}, #{vano})
+				, 	#{cusGubn1}
+				, 	#{cusGubn2}
+				, 	#{cusGubn3}
+				, 	#{cusGubn4}
+				, 	#{cusName}
+				, 	#{cusHp, javaType=encrypt, jdbcType=CLOB}
+				, 	#{cusMail}
+				, 	#{smsYn}
+				, 	#{mailYn}
+				,	#{cusType}
+				,	#{confirm}
+				, 	#{cusOffNo, javaType=encrypt, jdbcType=CLOB}
+				, 	NOW()
+				, 	#{maker}
+				, 	NOW()
+				, 	#{disabled}
+				, 	#{rcpGubn}
+				, 	#{rcpReqTy}
+				, 	#{memo}
+				, 	#{passVano}
+				, 	#{passCushp})
+	</insert>
+
+    <!-- 청구 대량 등록 실패 테이블 delete -->
+    <delete id="custFailDelete">
+		DELETE	FROM XCUSMASFAIL
+		WHERE	CHACD = #{chaCd}
+	</delete>
+
+    <!-- 청구 대량 등록 실패 -->
+    <insert id="custExcelFailInsert">
+		INSERT	INTO
+		XCUSMASFAIL( CHACD,
+					XROW,
+					MASKEY,
+					CUSKEY,
+					CUSGUBN1,
+					CUSGUBN2,
+					CUSGUBN3,
+					CUSGUBN4,
+					CUSNAME,
+					CUSHP,
+					CUSMAIL,
+					SMSYN,
+					MAILYN,
+					CUSOFFNO,
+					RCPGUBN,
+					RCPREQTY,
+					RESULT,
+					MAKEDT,
+					MAKER,
+					REGDT,
+					MEMO,
+					VANO
+					)
+		VALUES		( #{chaCd}
+					, #{xRow}
+					, #{masKey}
+					, #{cusKey}
+					, #{cusGubn1}
+					, #{cusGubn2}
+					, #{cusGubn3}
+					, #{cusGubn4}
+					, #{cusName}
+					, #{cusHp, javaType=encrypt, jdbcType=CLOB}
+					, #{cusMail}
+					, #{smsYn}
+					, #{mailYn}
+					, #{cusOffNo, javaType=encrypt, jdbcType=CLOB}
+					, #{rcpGubn}
+					, #{rcpReqTy}
+					, #{result}
+					, NOW()
+					, #{maker}
+					, NOW()
+					, #{memo}
+					, #{vano}
+					)
+	</insert>
+
+    <!-- 페이징을 위한 header -->
+    <sql id="paging_header">
+		select *
+		from (
+		    select (ROW_NUMBER() OVER()) as rn, C.*
+		    from (	
+	</sql>
+
+    <!-- 페이징을 위한 footer -->
+    <sql id="paging_footer">
+		    ) C
+		) X where rn between #{start} and #{end}
+	</sql>
+
+    <!-- 대량등록 실패내역 -->
+    <select id="selectFailList" resultType="CustReg01DTO">
+        <include refid="paging_header"/>
+        SELECT A.CHACD AS chaCd
+				, A.XROW AS xRow
+				, A.CUSKEY AS cusKey
+				, A.CUSNAME AS cusName
+				, A.CUSHP AS cusHp
+				, A.CUSGUBN1 AS cusGubn1
+				, A.CUSGUBN2 AS cusGubn2
+				, A.RESULT AS result
+				, A.CUSOFFNO AS cusOffNo
+				, TO_CHAR(A.MAKEDT, 'YYYY.MM.DD') AS makeDt
+				, TO_CHAR(A.REGDT, 'YYYY.MM.DD') AS regDt
+        FROM XCUSMASFAIL A
+        WHERE 1=1
+        AND A.CHACD = #{chaCd}
+        ORDER BY A.XROW::integer
+        <include refid="paging_footer"/>
+    </select>
+
+    <!-- 대량등록 실패 내역 total count -->
+    <select id="failTotalCount" resultType="int">
+		SELECT	COUNT(*)
+		FROM	XCUSMASFAIL
+		WHERE	CHACD 		= #{chaCd}
+	</select>
+
+    <!-- 청구 대량 실패 내역 헤더 및 데이터 추출 -->
+    <select id="selExcelFailData" resultType="CustReg01DTO">
+		SELECT 	CUSNAME		AS cusName
+				, 	VANO		AS vano
+				, 	CUSKEY		AS cusKey
+				, 	RCPGUBN		AS rcpGubn
+				, 	CUSHP		AS cusHp
+				, 	CUSMAIL		AS cusMail
+				, 	CUSGUBN1	AS cusGubn1
+				, 	CUSGUBN2	AS cusGubn2
+				, 	CUSGUBN3	AS cusGubn3
+				, 	CUSGUBN4	AS cusGubn4
+				,	CUSOFFNO	AS cusOffNo
+				, 	MEMO		AS memo
+				, 	RESULT		AS result
+		FROM 	XCUSMASFAIL
+		WHERE 	CHACD = #{chaCd}
+		ORDER	BY CUSNAME
+	</select>
+
+    <!-- 고객 등록 시 중복 확인 -->
+    <select id="selDupCusInfo" resultType="int">
+        SELECT COUNT(*) AS CNT
+        FROM XCUSMAS
+        WHERE CHACD = #{chaCd}
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(vano) ">
+            AND VANO=#{vano}
+        </if>
+    </select>
+
+	<!-- 고객 등록 시 가상계좌번호 중복일 시 고객정보 수정 -->
+	<update id="updateCust">
+		UPDATE XCUSMAS
+			SET CUSNAME			= #{cusName}
+				, CUSKEY		= #{cusKey}
+				, RCPGUBN		= #{rcpGubn}
+				, CUSHP			= #{cusHp}
+				, CUSMAIL		= #{cusMail}
+				, CUSGUBN1		= #{cusGubn1}
+				, CUSGUBN2		= #{cusGubn2}
+				, CUSGUBN3		= #{cusGubn3}
+				, CUSGUBN4		= #{cusGubn4}
+				, CUSTYPE		= #{cusType}
+				, CONFIRM		= #{confirm}
+				, CUSOFFNO		= #{cusOffNo}
+				, MEMO			= #{memo}
+				, CHACD			= #{chaCd}
+		WHERE VANO				= #{vano}
+	</update>
+</mapper>

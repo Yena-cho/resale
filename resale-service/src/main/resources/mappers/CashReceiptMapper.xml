@@ -1,0 +1,468 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.finger.shinhandamoa.sys.cashreceipt.mapper.CashReceiptMapper">
+    <!-- 현금영수증 정보조회 -->
+    <select id="getClientWithCashReceiptStatusList" parameterType="map" resultType="ClientWithCashReceiptStatusDTO">
+        SELECT DISTINCT
+            A.CHACD AS "id",
+            A.CHANAME AS "name",
+            A.CHAST AS "statusCode",
+            D.VALUE AS "statusName",
+            A.RCPREQYN AS "enableCashReceipt",
+            CASE A.RCPREQTY  WHEN 'A' THEN  'Y'  ELSE 'N' END AS "enableAutomaticCashReceipt",
+            SUM(CASE B.SVECD  WHEN 'VAS' THEN  CASE   WHEN C.CASHMASST IS NULL THEN  1  ELSE 0 END  ELSE 0 END) OVER (PARTITION BY A.CHACD) AS "vasNoCashReceiptCount",
+            SUM(CASE B.SVECD  WHEN 'VAS' THEN  CASE C.CASHMASST  WHEN 'ST02' THEN  1  ELSE 0 END  ELSE 0 END) OVER (PARTITION BY A.CHACD) AS "vasReadyCashReceiptCount",
+            SUM(CASE B.SVECD  WHEN 'VAS' THEN  CASE C.CASHMASST  WHEN 'ST04' THEN  1  ELSE 0 END  ELSE 0 END) OVER (PARTITION BY A.CHACD) AS "vasRequestCashReceiptCount",
+            SUM(CASE B.SVECD  WHEN 'VAS' THEN  CASE C.CASHMASST  WHEN 'ST03' THEN  1  ELSE 0 END  ELSE 0 END) OVER (PARTITION BY A.CHACD) AS "vasIssueCashReceiptCount",
+            SUM(CASE B.SVECD  WHEN 'DCS' THEN  CASE   WHEN C.CASHMASST IS NULL THEN  1  ELSE 0 END  ELSE 0 END) OVER (PARTITION BY A.CHACD) AS "dcsNoCashReceiptCount",
+            SUM(CASE B.SVECD  WHEN 'DCS' THEN  CASE C.CASHMASST  WHEN 'ST02' THEN  1  ELSE 0 END  ELSE 0 END) OVER (PARTITION BY A.CHACD) AS "dcsReadyCashReceiptCount",
+            SUM(CASE B.SVECD  WHEN 'DCS' THEN  CASE C.CASHMASST  WHEN 'ST04' THEN  1  ELSE 0 END  ELSE 0 END) OVER (PARTITION BY A.CHACD) AS "dcsRequestCashReceiptCount",
+            SUM(CASE B.SVECD  WHEN 'DCS' THEN  CASE C.CASHMASST  WHEN 'ST03' THEN  1  ELSE 0 END  ELSE 0 END) OVER (PARTITION BY A.CHACD) AS "dcsIssueCashReceiptCount",
+            SUM(CASE B.SVECD  WHEN 'DVA' THEN  CASE   WHEN C.CASHMASST IS NULL THEN  1  ELSE 0 END  ELSE 0 END) OVER (PARTITION BY A.CHACD) AS "dvaNoCashReceiptCount",
+            SUM(CASE B.SVECD  WHEN 'DVA' THEN  CASE C.CASHMASST  WHEN 'ST02' THEN  1  ELSE 0 END  ELSE 0 END) OVER (PARTITION BY A.CHACD) AS "dvaReadyCashReceiptCount",
+            SUM(CASE B.SVECD  WHEN 'DVA' THEN  CASE C.CASHMASST  WHEN 'ST04' THEN  1  ELSE 0 END  ELSE 0 END) OVER (PARTITION BY A.CHACD) AS "dvaRequestCashReceiptCount",
+            SUM(CASE B.SVECD  WHEN 'DVA' THEN  CASE C.CASHMASST  WHEN 'ST03' THEN  1  ELSE 0 END  ELSE 0 END) OVER (PARTITION BY A.CHACD) AS "dvaIssueCashReceiptCount",
+            A.MAND_RCP_YN AS "mandRcpYn"
+        FROM XCHALIST A
+            LEFT OUTER JOIN XRCPMAS B ON B.CHACD=A.CHACD
+            AND B.RCPMASST = 'PA03'
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(startDate)">
+                AND B.PAYDAY &gt;= #{startDate}
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(endDate)">
+                AND B.PAYDAY &lt;= #{endDate}
+            </if>
+            LEFT OUTER JOIN XCASHMAS C ON C.CHACD=A.CHACD AND C.RCPMASCD=B.RCPMASCD
+            INNER JOIN FW_TABLE_CODE D ON D.KEY=A.CHAST AND D.TABLE_NAME='XCHALIST' AND D.COLUMN_NAME='CHAST'
+        <where>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(chaCd)">
+                AND A.CHACD LIKE '%' || #{chaCd} || '%'
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(chaName)">
+                AND A.CHANAME LIKE '%' || #{chaName} || '%'
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(chaSt)">
+                AND A.CHAST=#{chaSt}
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(enableCashReceipt)">
+                AND A.RCPREQYN=#{enableCashReceipt}
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(enableAutomaticCashReceipt)">
+                AND A.RCPREQTY = CASE #{enableAutomaticCashReceipt} WHEN 'Y' THEN  'A'  ELSE 'M' END
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(mandRcpYn)">
+                AND A.MAND_RCP_YN = #{mandRcpYn}
+            </if>
+        </where>
+        <choose>
+            <when test="@org.apache.commons.lang3.StringUtils@isNotBlank(orderBy)">
+                ORDER BY ${orderBy}
+            </when>
+            <otherwise>
+                ORDER BY A.CHACD ASC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 현금영수증내역 총 갯수 -->
+    <select id="countClientWithCashReceiptStatus" parameterType="map" resultType="long">
+        SELECT COUNT(DISTINCT A.CHACD)
+        FROM XCHALIST A
+            LEFT OUTER JOIN XRCPMAS B ON B.CHACD=A.CHACD
+            AND B.RCPMASST = 'PA03'
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(startDate)">
+                AND B.PAYDAY &gt;= #{startDate}
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(endDate)">
+                AND B.PAYDAY &lt;= #{endDate}
+            </if>
+            LEFT OUTER JOIN XCASHMAS C ON C.CHACD=A.CHACD AND C.RCPMASCD=B.RCPMASCD
+            INNER JOIN FW_TABLE_CODE D ON D.KEY=A.CHAST AND D.TABLE_NAME='XCHALIST' AND D.COLUMN_NAME='CHAST'
+        <where>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(chaCd)">
+                AND A.CHACD LIKE '%' || #{chaCd} || '%'
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(chaName)">
+                AND A.CHANAME LIKE '%' || #{chaName} || '%'
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(chaSt)">
+                AND A.CHAST=#{chaSt}
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(enableCashReceipt)">
+                AND A.RCPREQYN=#{enableCashReceipt}
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(enableAutomaticCashReceipt)">
+                AND A.RCPREQTY = CASE #{enableAutomaticCashReceipt}  WHEN 'Y' THEN  'A'  ELSE 'M' END
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(mandRcpYn)">
+                AND A.MAND_RCP_YN = #{mandRcpYn}
+            </if>
+        </where>
+    </select>
+
+    <select id="getReceiptWithCashReceiptStatusList" parameterType="map" resultType="ReceiptWithCashReceiptStatusDTO">
+        SELECT B.CHACD,
+                B.CHANAME,
+                A.RCPMASCD,
+                A.REGDT,
+                A.PAYDAY,
+                B.RCPREQYN,
+                B.RCPREQTY,
+                B.RCPREQSVETY,
+                B.MNLRCPREQTY,
+                B.NOTAXYN,
+                C.CASHMASCD,
+                C.CASHMASST,
+                C.APPDAY,
+                C.APPNO,
+                C.RCPAMT,
+                C.TAX,
+                C.TIP,
+                C.CUSOFFNO,
+                C.CONFIRM,
+                C.CUSTYPE,
+                C.MAKER,
+                C.MAKEDT,
+                A.SVECD,
+                A.RCPMASST
+        FROM XRCPMAS A
+               INNER JOIN XCHALIST B ON B.CHACD = A.CHACD
+               LEFT OUTER JOIN XCASHMAS C ON C.RCPMASCD = A.RCPMASCD
+        <where>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(chaCd)">
+                AND B.CHACD LIKE '%' || #{chaCd} || '%'
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(chaName)">
+                AND B.CHANAME LIKE '%' || #{chaName} || '%'
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(startDate) and @org.apache.commons.lang3.StringUtils@isNotBlank(endDate)">
+                AND A.PAYDAY BETWEEN #{startDate} AND #{endDate}
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(startDate2) and @org.apache.commons.lang3.StringUtils@isNotBlank(endDate2)">
+                AND A.REGDT BETWEEN #{startDate2} AND #{endDate2}
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(sveCd)">
+                AND A.SVECD = #{sveCd}
+            </if>
+            <if test='@org.apache.commons.lang3.StringUtils@isNotBlank(createCashReceipt) and createCashReceipt == "Y"'>
+                AND C.CASHMASCD IS NOT NULL
+            </if>
+            <if test='@org.apache.commons.lang3.StringUtils@isNotBlank(createCashReceipt) and createCashReceipt == "N"'>
+                AND C.CASHMASCD IS NULL
+            </if>
+            <if test='@org.apache.commons.lang3.StringUtils@isNotBlank(notIssuedErrorCashReceipt) and notIssuedErrorCashReceipt == "Y"'>
+                AND NOT ((B.RCPREQYN = 'Y' AND C.CASHMASCD IS NULL) OR (B.RCPREQYN = 'Y' AND C.CASHMASCD IS NOT NULL AND A.SVECD IN ('DCD', 'OCD')))
+            </if>
+            <if test='@org.apache.commons.lang3.StringUtils@isNotBlank(notIssuedErrorCashReceipt) and notIssuedErrorCashReceipt == "N"'>
+                AND ((B.RCPREQYN = 'Y' AND C.CASHMASCD IS NULL) OR (B.RCPREQYN = 'Y' AND C.CASHMASCD IS NOT NULL AND A.SVECD IN ('DCD', 'OCD')))
+            </if>
+        </where>
+        <choose>
+            <when test="@org.apache.commons.lang3.StringUtils@isNotBlank(orderBy)">
+                ORDER BY ${orderBy}
+            </when>
+            <otherwise>
+                ORDER BY A.REGDT DESC, B.CHACD ASC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="countReceiptWithCashReceiptStatus" parameterType="map" resultType="long">
+        SELECT COUNT(1)
+        FROM XRCPMAS A
+               INNER JOIN XCHALIST B ON B.CHACD = A.CHACD
+               LEFT OUTER JOIN XCASHMAS C ON C.RCPMASCD = A.RCPMASCD
+        <where>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(chaCd)">
+                AND B.CHACD LIKE '%' || #{chaCd} || '%'
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(chaName)">
+                AND B.CHANAME LIKE '%' || #{chaName} || '%'
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(startDate) and @org.apache.commons.lang3.StringUtils@isNotBlank(endDate)">
+                AND A.PAYDAY BETWEEN #{startDate} AND #{endDate}
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(startDate2) and @org.apache.commons.lang3.StringUtils@isNotBlank(endDate2)">
+                AND A.REGDT BETWEEN #{startDate2} AND #{endDate2}
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(sveCd)">
+                AND A.SVECD = #{sveCd}
+            </if>
+            <if test='@org.apache.commons.lang3.StringUtils@isNotBlank(createCashReceipt) and createCashReceipt == "Y"'>
+                AND C.CASHMASCD IS NOT NULL
+            </if>
+            <if test='@org.apache.commons.lang3.StringUtils@isNotBlank(createCashReceipt) and createCashReceipt == "N"'>
+                AND C.CASHMASCD IS NULL
+            </if>
+            <if test='@org.apache.commons.lang3.StringUtils@isNotBlank(notIssuedErrorCashReceipt) and notIssuedErrorCashReceipt == "Y"'>
+                AND NOT ((B.RCPREQYN = 'Y' AND C.CASHMASCD IS NULL) OR (B.RCPREQYN = 'Y' AND C.CASHMASCD IS NOT NULL AND A.SVECD IN ('DCD', 'OCD')))
+            </if>
+            <if test='@org.apache.commons.lang3.StringUtils@isNotBlank(notIssuedErrorCashReceipt) and notIssuedErrorCashReceipt == "N"'>
+                AND ((B.RCPREQYN = 'Y' AND C.CASHMASCD IS NULL) OR (B.RCPREQYN = 'Y' AND C.CASHMASCD IS NOT NULL AND A.SVECD IN ('DCD', 'OCD')))
+            </if>
+        </where>
+    </select>
+
+    <select id="getIssueWithCashReceiptStatusList" parameterType="map" resultType="IssueWithCashReceiptStatusDTO">
+        SELECT  A.CASHMASCD,
+                A.CHACD,
+                C.CHANAME,
+                B.CUSNAME,
+                A.REGDT,
+                C.RCPREQYN,
+                C.RCPREQTY,
+                C.RCPREQSVETY,
+                C.MNLRCPREQTY,
+                C.NOTAXYN,
+                A.SENDDT,
+                A.RCPAMT,
+                A.TAX,
+                A.CUSOFFNO,
+                A.CONFIRM,
+                A.CUSTYPE,
+                A.APPDAY,
+                A.APPNO,
+                A.APPCD,
+                A.MAKER,
+                A.CASHMASST,
+                CASE A.JOB  WHEN 'I' THEN  '신규'  WHEN 'D' THEN  '취소'  WHEN 'U' THEN  '재발행' END,
+                D.VALUE,
+                A.RCPMASCD
+        FROM XCASHMAS A
+        INNER JOIN XRCPMAS B ON A.RCPMASCD = B.RCPMASCD
+        INNER JOIN XCHALIST C ON B.CHACD = C.CHACD
+        INNER JOIN FW_TABLE_CODE D ON D.TABLE_NAME = 'FW_CASH_RECEIPT_MASTER' AND D.COLUMN_NAME = 'RESPONSE_CODE'
+        <where>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(chaCd)">
+                AND A.CHACD LIKE '%' || #{chaCd} || '%'
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(chaName)">
+                AND C.CHANAME LIKE '%' || #{chaName} || '%'
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(startDate) and @org.apache.commons.lang3.StringUtils@isNotBlank(endDate)">
+                AND B.PAYDAY BETWEEN #{startDate} AND #{endDate}
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(startDate2) and @org.apache.commons.lang3.StringUtils@isNotBlank(endDate2)">
+                AND A.REGDT BETWEEN #{startDate2} AND #{endDate2}
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(sendDt) and @org.apache.commons.lang3.StringUtils@isNotBlank(sendDt)">
+                AND A.SENDDT BETWEEN #{sendDt} AND #{sendDt}
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(sveCd)">
+                AND B.SVECD = #{sveCd}
+            </if>
+            <if test='@org.apache.commons.lang3.StringUtils@isNotBlank(createErrorCashReceipt) and createErrorCashReceipt == "Y"'>
+                AND A.CASHMASST = 'ST04'
+                AND
+                ((LENGTH(A.CUSOFFNO) = 10 AND SUBSTR(A.CUSOFFNO, 1, 1) != '0' AND CUSTYPE = '2' AND CONFIRM = '21')
+                OR (LENGTH(A.CUSOFFNO) = 18 AND A.CUSTYPE = '1' AND A.CONFIRM = '12')
+                OR (((LENGTH(A.CUSOFFNO) = 10 OR LENGTH(A.CUSOFFNO) = 11) AND SUBSTR(A.CUSOFFNO, 1, 2) = '01' AND A.CUSTYPE = '1' AND A.CONFIRM = '11')))
+                AND A.JOB IS NOT NULL
+                AND A.CUSOFFNO IS NOT NULL
+            </if>
+            <if test='@org.apache.commons.lang3.StringUtils@isNotBlank(createErrorCashReceipt) and createErrorCashReceipt == "N"'>
+                AND NOT (A.CASHMASST = 'ST04'
+                AND
+                ((LENGTH(A.CUSOFFNO) = 10 AND SUBSTR(A.CUSOFFNO, 1, 1) != '0' AND CUSTYPE = '2' AND CONFIRM = '21')
+                OR (LENGTH(A.CUSOFFNO) = 18 AND A.CUSTYPE = '1' AND A.CONFIRM = '12')
+                OR (((LENGTH(A.CUSOFFNO) = 10 OR LENGTH(A.CUSOFFNO) = 11) AND SUBSTR(A.CUSOFFNO, 1, 2) = '01' AND A.CUSTYPE = '1' AND A.CONFIRM = '11')))
+                AND A.JOB IS NOT NULL
+                AND A.CUSOFFNO IS NOT NULL)
+            </if>
+            <if test='@org.apache.commons.lang3.StringUtils@isNotBlank(notIssuedErrorCashReceipt) and notIssuedErrorCashReceipt == "Y"'>
+                AND NOT ((C.RCPREQYN = 'Y' AND A.CASHMASCD IS NULL) OR (C.RCPREQYN = 'Y' AND A.CASHMASCD IS NOT NULL AND B.SVECD IN ('DCD', 'OCD')))
+            </if>
+            <if test='@org.apache.commons.lang3.StringUtils@isNotBlank(notIssuedErrorCashReceipt) and notIssuedErrorCashReceipt == "N"'>
+                AND ((C.RCPREQYN = 'Y' AND A.CASHMASCD IS NULL) OR (C.RCPREQYN = 'Y' AND A.CASHMASCD IS NOT NULL AND B.SVECD IN ('DCD', 'OCD')))
+            </if>
+            <if test='@org.apache.commons.lang3.StringUtils@isNotBlank(duplicationIssuedErrorCashReceipt) and duplicationIssuedErrorCashReceipt == "Y"'>
+                AND ( SELECT SUM(CASE TX_TYPE_CODE  WHEN '0' THEN  1  ELSE -1 END)
+                  FROM FW_CASH_RECEIPT_MASTER
+                  WHERE USER_DEFINE LIKE (A.CASHMASCD || '%')
+                ) IN (0, 1)
+            </if>
+            <if test='@org.apache.commons.lang3.StringUtils@isNotBlank(duplicationIssuedErrorCashReceipt) and duplicationIssuedErrorCashReceipt == "N"'>
+                AND ( SELECT SUM(CASE TX_TYPE_CODE  WHEN '0' THEN  1  ELSE -1 END)
+                FROM FW_CASH_RECEIPT_MASTER
+                WHERE USER_DEFINE LIKE (A.CASHMASCD || '%')
+                ) NOT IN (0, 1)
+            </if>
+        </where>
+        <choose>
+            <when test="@org.apache.commons.lang3.StringUtils@isNotBlank(orderBy)">
+                ORDER BY ${orderBy}
+            </when>
+            <otherwise>
+                ORDER BY A.REGDT DESC, B.CHACD ASC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="datailPopUpCashmasCd" parameterType="map" resultType="DetailPopUpCashmasCdDTO">
+        SELECT CUSOFFNO,
+                CUSTYPE,
+                CONFIRM,
+                RCPAMT,
+                TAX,
+                TIP,
+                APPDAY,
+                APPNO,
+                CASHMASST,
+                MAKER,
+                MAKEDT
+        FROM XCASHMAS
+        <where>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(cashmasCd)">
+                AND CASHMASCD = #{cashmasCd}
+            </if>
+        </where>
+    </select>
+
+    <select id="datailPopUpChaName" parameterType="map" resultType="DetailPopUpChaNameDTO">
+        SELECT RCPREQYN,
+                RCPREQTY,
+                RCPREQSVETY,
+                MNLRCPREQTY,
+                NOTAXYN
+        FROM XCHALIST
+        <where>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(chaCd)">
+                AND CHACD = #{chaCd}
+            </if>
+        </where>
+    </select>
+
+    <select id="datailPopUpRegDt" parameterType="map" resultType="DetailPopUpRegDtDTO">
+        SELECT RCPMASCD,
+                REGDT,
+                PAYDAY,
+                RCPAMT
+        FROM XRCPMAS
+        <where>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(rcpmasCd)">
+                AND RCPMASCD = #{rcpmasCd}
+            </if>
+        </where>
+    </select>
+
+    <select id="countIssueWithCashReceiptStatus" parameterType="map" resultType="long">
+        SELECT COUNT(1)
+        FROM XCASHMAS A
+        INNER JOIN XRCPMAS B ON A.RCPMASCD = B.RCPMASCD
+        INNER JOIN XCHALIST C ON B.CHACD = C.CHACD
+        INNER JOIN FW_TABLE_CODE D ON D.TABLE_NAME = 'FW_CASH_RECEIPT_MASTER' AND D.COLUMN_NAME = 'RESPONSE_CODE'
+        <where>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(chaCd)">
+                AND A.CHACD LIKE '%' || #{chaCd} || '%'
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(chaName)">
+                AND C.CHANAME LIKE '%' || #{chaName} || '%'
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(startDate) and @org.apache.commons.lang3.StringUtils@isNotBlank(endDate)">
+                AND B.PAYDAY BETWEEN #{startDate} AND #{endDate}
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(startDate2) and @org.apache.commons.lang3.StringUtils@isNotBlank(endDate2)">
+                AND A.REGDT BETWEEN #{startDate2} AND #{endDate2}
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(sendDt) and @org.apache.commons.lang3.StringUtils@isNotBlank(sendDt)">
+                AND A.SENDDT BETWEEN #{sendDt} AND #{sendDt}
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isNotBlank(sveCd)">
+                AND B.SVECD = #{sveCd}
+            </if>
+            <if test='@org.apache.commons.lang3.StringUtils@isNotBlank(createErrorCashReceipt) and createErrorCashReceipt == "Y"'>
+                AND A.CASHMASST = 'ST04'
+                AND
+                ((LENGTH(A.CUSOFFNO) = 10 AND SUBSTR(A.CUSOFFNO, 1, 1) != '0' AND CUSTYPE = '2' AND CONFIRM = '21')
+                OR (LENGTH(A.CUSOFFNO) = 18 AND A.CUSTYPE = '1' AND A.CONFIRM = '12')
+                OR (((LENGTH(A.CUSOFFNO) = 10 OR LENGTH(A.CUSOFFNO) = 11) AND SUBSTR(A.CUSOFFNO, 1, 2) = '01' AND A.CUSTYPE = '1' AND A.CONFIRM = '11')))
+                AND A.JOB IS NOT NULL
+                AND A.CUSOFFNO IS NOT NULL
+            </if>
+            <if test='@org.apache.commons.lang3.StringUtils@isNotBlank(createErrorCashReceipt) and createErrorCashReceipt == "N"'>
+                AND NOT (A.CASHMASST = 'ST04'
+                AND
+                ((LENGTH(A.CUSOFFNO) = 10 AND SUBSTR(A.CUSOFFNO, 1, 1) != '0' AND CUSTYPE = '2' AND CONFIRM = '21')
+                OR (LENGTH(A.CUSOFFNO) = 18 AND A.CUSTYPE = '1' AND A.CONFIRM = '12')
+                OR (((LENGTH(A.CUSOFFNO) = 10 OR LENGTH(A.CUSOFFNO) = 11) AND SUBSTR(A.CUSOFFNO, 1, 2) = '01' AND A.CUSTYPE = '1' AND A.CONFIRM = '11')))
+                AND A.JOB IS NOT NULL
+                AND A.CUSOFFNO IS NOT NULL)
+            </if>
+            <if test='@org.apache.commons.lang3.StringUtils@isNotBlank(notIssuedErrorCashReceipt) and notIssuedErrorCashReceipt == "Y"'>
+                AND NOT ((C.RCPREQYN = 'Y' AND A.CASHMASCD IS NULL) OR (C.RCPREQYN = 'Y' AND A.CASHMASCD IS NOT NULL AND B.SVECD IN ('DCD', 'OCD')))
+            </if>
+            <if test='@org.apache.commons.lang3.StringUtils@isNotBlank(notIssuedErrorCashReceipt) and notIssuedErrorCashReceipt == "N"'>
+                AND ((C.RCPREQYN = 'Y' AND A.CASHMASCD IS NULL) OR (C.RCPREQYN = 'Y' AND A.CASHMASCD IS NOT NULL AND B.SVECD IN ('DCD', 'OCD')))
+            </if>
+            <if test='@org.apache.commons.lang3.StringUtils@isNotBlank(duplicationIssuedErrorCashReceipt) and duplicationIssuedErrorCashReceipt == "Y"'>
+                AND ( SELECT SUM(CASE TX_TYPE_CODE  WHEN '0' THEN  1  ELSE -1 END)
+                FROM FW_CASH_RECEIPT_MASTER
+                WHERE USER_DEFINE LIKE (A.CASHMASCD || '%')
+                ) IN (0, 1)
+            </if>
+            <if test='@org.apache.commons.lang3.StringUtils@isNotBlank(duplicationIssuedErrorCashReceipt) and duplicationIssuedErrorCashReceipt == "N"'>
+                AND ( SELECT SUM(CASE TX_TYPE_CODE  WHEN '0' THEN  1  ELSE -1 END)
+                FROM FW_CASH_RECEIPT_MASTER
+                WHERE USER_DEFINE LIKE (A.CASHMASCD || '%')
+                ) NOT IN (0, 1)
+            </if>
+        </where>
+    </select>
+
+    <select id="selectNoCashReceiptReceipt" parameterType="map" resultType="string">
+        SELECT A.RCPMASCD
+        FROM XRCPMAS A
+            LEFT OUTER JOIN XCASHMAS B ON B.RCPMASCD=A.RCPMASCD
+        WHERE A.SVECD IN ('VAS', 'DVA', 'DCS')
+              AND A.RCPMASST = 'PA03'
+              AND B.RCPMASCD IS NULL
+              AND A.CHACD=#{chaCd}
+              AND A.SVECD=#{sveCd}
+              AND A.PAYDAY &gt;= #{startDate}
+              AND A.PAYDAY &lt;= #{endDate}
+    </select>
+    
+    <select id="countNoCashReceiptReceipt" parameterType="map" resultType="long">
+        SELECT COUNT(1)
+        FROM XRCPMAS A
+            LEFT OUTER JOIN XCASHMAS B ON B.RCPMASCD=A.RCPMASCD
+        WHERE A.SVECD IN ('VAS', 'DVA', 'DCS')
+          AND A.RCPMASST = 'PA03'
+          AND B.RCPMASCD IS NULL
+          AND A.CHACD=#{chaCd}
+          AND A.SVECD=#{sveCd}
+          AND A.PAYDAY &gt;= #{startDate}
+          AND A.PAYDAY &lt;= #{endDate}        
+    </select>
+    
+    <select id="selectReadyCashReceipt" parameterType="map" resultType="string">
+        SELECT B.CASHMASCD
+        FROM XRCPMAS A
+            INNER JOIN XCASHMAS B ON B.RCPMASCD=A.RCPMASCD
+        WHERE A.SVECD IN ('VAS', 'DVA', 'DCS')
+              AND A.RCPMASST = 'PA03'
+              AND A.CHACD=#{chaCd}
+              AND A.SVECD=#{sveCd}
+              AND A.PAYDAY &gt;= #{startDate}
+              AND A.PAYDAY &lt;= #{endDate}
+              AND B.CASHMASST='ST02'
+        ORDER BY B.CASHMASCD ASC
+    </select>
+    
+    <select id="countReadyCashReceipt" parameterType="map" resultType="long">
+        SELECT COUNT(1)
+        FROM XRCPMAS A
+            INNER JOIN XCASHMAS B ON B.RCPMASCD=A.RCPMASCD
+        WHERE A.SVECD IN ('VAS', 'DVA', 'DCS')
+          AND A.RCPMASST = 'PA03'
+          AND A.CHACD=#{chaCd}
+          AND A.SVECD=#{sveCd}
+          AND A.PAYDAY &gt;= #{startDate}
+          AND A.PAYDAY &lt;= #{endDate}
+          AND B.CASHMASST='ST02'
+    </select>
+
+    
+</mapper>

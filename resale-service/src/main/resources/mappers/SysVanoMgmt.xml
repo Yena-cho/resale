@@ -1,0 +1,835 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="VanoMgmtDao">	
+<!--
+	<resultMap type="VanoMgmtDTO" id="selChrhp">
+		<result	column="chrhp" property="chrhp" javaType="encrypt"	jdbcType="CLOB"/>
+	</resultMap>-->
+	
+	<!-- 페이징을 위한 header -->
+	<sql id="paging_header">
+		select *
+		from (
+		    select row_number() over() as rn, C.*
+		    from (	
+	</sql>
+	<!-- 페이징을 위한 footer -->
+	<sql id="paging_footer">
+		    ) C
+		) X  where rn between #{start} and #{end}
+	</sql>
+	
+	<!-- 가상계좌관리- 가입승인대기목록 -->		
+	<select id="getSysMainInfo01"  resultType="VanoMgmtDTO">
+		SELECT 	VV.totcnt AS totcnt
+			,	VV.usedcnt - DD.delcnt AS usedcnt
+			,	VV.notusedcnt AS notusedcnt
+			, 	DD.delcnt AS delcnt
+		FROM	(SELECT COUNT(0) AS totcnt
+					, 	SUM(CASE WHEN USEYN = 'Y' THEN 1 ELSE 0 END)AS usedcnt  
+					, 	SUM(CASE WHEN USEYN != 'Y' THEN 1 ELSE 0 END) AS notusedcnt 
+				FROM 	VALIST V) VV
+			,	(SELECT SUM(CASE WHEN COALESCE (D.DISABLED, 'Y') = 'Y'  THEN 1 ELSE 0 END)  AS delcnt
+		FROM 	XCUSMAS D 
+		) DD
+    </select>	
+     
+	<!-- 가상계좌 보유현황 total count -->     
+    <select id="getVano01ListTotalCount" resultType="int">
+		SELECT  COUNT(*)	AS cnt
+		FROM 	(SELECT A.CHACD
+					, 	A.CHANAME
+					, 	A.CHRNAME
+					,  	A.CHRTELNO
+					, 	A.CHAST
+					, 	COALESCE (SUM(B.CNT), 0)  AS totcnt
+					, 	COALESCE (SUM(B.YCNT), 0) AS usedcnt
+					, 	COALESCE (SUM(B.NCNT), 0) AS notusedcnt
+					,	COALESCE (MAX(C.CNT), 0)  AS delcnt
+				FROM 	XCHALIST A
+				left outer join (SELECT CHACD
+				 	, 	REGDT
+					,	COUNT(*) AS  CNT 
+					, 	CASE WHEN  USEYN = 'Y' THEN  COUNT(*) END AS YCNT 
+					,	CASE WHEN  USEYN = 'N' THEN  COUNT(*) END AS NCNT 
+				 FROM 	VALIST 
+				 WHERE 	1 = 1 
+				 <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaCd)">
+				 AND	CHACD	= #{chaCd}
+				 </if>
+				 GROUP 	BY CHACD, REGDT, USEYN) B on A.CHACD 	= B.CHACD
+				left outer join (SELECT COUNT(*) AS CNT
+					, 	CHACD
+				 FROM 	XCUSMAS
+				 WHERE 	1 = 1 
+				 <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaCd)">
+				 AND	CHACD	= #{chaCd}
+				 </if>
+				 AND  	DISABLED = 'Y'
+				 GROUP  BY CHACD) C on A.CHACD 	= C.CHACD
+		WHERE 	1=1
+		GROUP 	BY A.CHACD
+			, 	A.CHANAME
+			, 	A.CHRNAME
+			,  	A.CHRTELNO
+			, 	A.CHAST) TA
+		WHERE 	1 = 1
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaCd)">
+		AND		TA.CHACD	= #{chaCd}
+		</if>
+		<include refid="vanoOwnsSearch" />
+	</select>
+
+	<!-- 가상계좌관리 - 가상계좌보유현황 -->	
+	<select id="getVano01ListAll" resultType="VanoMgmtDTO">
+		<include refid="paging_header" />
+		SELECT  *
+		FROM 	(SELECT A.CHACD
+					, 	A.CHANAME
+					, 	A.CHRNAME
+					,  	A.CHRTELNO
+					, 	A.CHAST
+					, 	COALESCE (SUM(B.CNT), 0)  AS totcnt
+					, 	COALESCE (SUM(B.YCNT), 0) - COALESCE (MAX(C.CNT), 0) AS usedcnt
+					, 	COALESCE (SUM(B.NCNT), 0) AS notusedcnt
+					,	COALESCE (MAX(C.CNT), 0)  AS delcnt
+				FROM 	XCHALIST A
+				left outer join (SELECT CHACD
+				 	, 	REGDT
+					,	COUNT(*) AS  CNT 
+					, 	CASE WHEN  USEYN = 'Y' THEN  COUNT(*) END AS YCNT 
+					,	CASE WHEN  USEYN = 'N' THEN  COUNT(*) END AS NCNT 
+				 FROM 	VALIST 
+				 WHERE 	1 = 1 
+				 <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaCd)">
+				 AND	CHACD	= #{chaCd}
+				 </if>
+				 GROUP 	BY CHACD, REGDT, USEYN) B on A.CHACD 	= B.CHACD
+				left outer join (SELECT COUNT(*) AS CNT
+					, 	CHACD
+				 FROM 	XCUSMAS
+				 WHERE 	1 = 1 
+				 <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaCd)">
+				 AND	CHACD	= #{chaCd}
+				 </if>
+				 AND  	DISABLED = 'Y'
+				 GROUP  BY CHACD) C on A.CHACD 	= C.CHACD
+		WHERE 	1=1
+		GROUP 	BY A.CHACD
+			, 	A.CHANAME
+			, 	A.CHRNAME
+			,  	A.CHRTELNO
+			, 	A.CHAST) TA
+		WHERE 	1 = 1
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaCd)">
+		AND		TA.CHACD	= #{chaCd}
+		</if>
+		<include refid="vanoOwnsSearch" />
+		<include refid="vanoList01ListOrderBy"/>
+		<include refid="paging_footer" />
+	</select>	 
+	
+	<!-- 가상계좌관리 - 가상계좌보유현황 조회조건 -->
+	<sql id="vanoOwnsSearch">
+		<if test="searchGb != null and searchGb == 'chrname' and searchValue != ''">
+			AND		TA.CHRNAME 	LIKE '%' || #{searchValue} || '%'
+		</if>
+		<if test="searchGb != null and searchGb == 'chrtelno' and searchValue != ''">
+			AND		TA.CHRTELNO LIKE '%' || #{searchValue} || '%'
+		</if>
+		<if test="stList.size > 0">
+			AND		TA.CHAST  IN  
+			<foreach collection="stList" item="list" index="index" open="(" close=")" separator=",">
+				#{list}
+			</foreach>
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(fromNotUseCnt)">
+		AND		TA.notusedcnt <![CDATA[>=]]> #{fromNotUseCnt}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(toNotUseCnt)">
+		AND  	TA.notusedcnt <![CDATA[<=]]> #{toNotUseCnt}
+		</if>
+	</sql> 
+	
+	<!-- 가상계좌관리 - 가상계좌보유현황 조회조건 -->
+	<sql id="vanoList01ListSearch">
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chacd)">
+			AND		TA.CHACD = #{chacd}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaname)">
+			AND		TA.CHANAME LIKE '%' || #{chaname} || '%'
+		</if>
+		<if test="stList.size > 0">
+			AND		TA.CHAST  IN  
+			<foreach collection="stList" item="list" index="index" open="(" close=")" separator=",">
+				#{list}
+			</foreach>
+		</if>
+	</sql>
+	
+	<sql id="vanoList01ListOrderBy">
+        <choose>                      
+			<when test='searchOrderBy == "chacd" '>
+			    ORDER BY TA.CHACD, TA.CHAST	
+			</when>
+			<when test='searchOrderBy == "chast" '>
+			    ORDER BY TA.CHAST, TA.CHACD			
+			</when>			
+        </choose>
+	</sql>
+
+	<!-- 가상계좌관리 - 기관별 가상계좌 보유현황 -->
+	<select id="getChaVanoListAll" resultType="com.finger.shinhandamoa.sys.setting.dto.VanoMgmt2DTO" fetchSize="500">
+		<include refid="paging_header"/>
+		SELECT	TB.*
+		FROM	(
+			SELECT /*+ use_hash(b c a) */ TO_CHAR(A.REGDT, 'YYYY.MM.DD') AS REGDT
+				,  TO_CHAR(A.REGDT, 'YYYY.MM.DD') 	AS REGDATE
+				,  A.CHACD		AS chacd
+				,  B.CHANAME	AS chaname
+				,  C.CUSNAME	AS cusname
+				,  A.VANO		AS vano
+				,  A.fgcd       AS fgcd
+				,  A.assigndt   AS assigndt
+				,  A.cuscd      AS cuscd
+				,  A.useyn      AS useyn
+				,  TO_CHAR(TO_DATE(PAYDAY, 'YYYYMMDD'), 'YYYY.MM.DD') AS lastrcpdate
+				,  CASE WHEN A.CHACD IS NOT NULL AND A.USEYN = 'Y' THEN 'Y'
+						WHEN A.CHACD IS NOT NULL AND A.CUSCD IS NOT NULL AND A.USEYN = 'N' THEN 'W'
+						WHEN A.CHACD IS NOT NULL THEN 'A'
+						WHEN A.CHACD IS NULL THEN 'N' ELSE '' END AS vastate
+			FROM  VALIST A
+			LEFT OUTER JOIN XCHALIST  B ON A.CHACD = B.CHACD
+			LEFT OUTER JOIN	XCUSMAS C on A.CHACD = C.CHACD AND 	A.VANO 	= C.VANO
+			LEFT OUTER JOIN	(SELECT MAX(PAYDAY) AS PAYDAY
+								, 	VANO
+								, 	CHACD
+							 FROM 	XRCPMAS
+							 WHERE 	RCPMASST = 'PA03'
+							<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chacd)">
+								AND 	CHACD 	 = '${chacd}'
+							</if>
+							 GROUP 	BY VANO, CHACD) D on A.CHACD = D.CHACD AND 	A.VANO 	= D.VANO
+							<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chacd)">
+								AND 	A.CHACD 	 = '${chacd}'
+							</if>
+							) TB
+		WHERE	1 = 1	
+		<include refid="chaVanoListListSearch"/>
+		<include refid="chaVanoListListOrderBy"/>
+		<include refid="paging_footer" />
+	</select>
+
+	<sql id="chaVanoListListSearch">
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startday) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endday)">
+			AND TB.REGDATE::timestamp BETWEEN TO_DATE(#{startday}, 'YYYYMMDD') AND TO_DATE(#{endday} || '235959', 'YYYYMMDDHH24MISS')
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaname)">
+			AND	 TB.chaname LIKE '%' || #{chaname} || '%'
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chacd)">
+			AND	 TB.chacd LIKE '%' || #{chacd} || '%'
+		</if>
+		<if test="searchGb == 'vano' and searchValue != ''">
+			AND  TB.vano 	LIKE '%' || #{searchValue} || '%'
+		</if>
+		<if test="searchGb == 'cusname' and searchValue != ''">
+			AND  COALESCE (TB.cusname, '') LIKE '%' || #{searchValue} || '%'
+		</if>
+		<if test="stList.size > 0">
+			AND	TB.vastate  IN
+			<foreach collection="stList" item="list" index="index" open="(" close=")" separator=",">
+				#{list}
+			</foreach>
+		</if>
+	</sql>
+	
+	<sql id="chaVanoListListOrderBy">
+        <choose>                      
+			<when test='searchOrderBy == "regdt" '>
+			    ORDER BY TB.REGDT DESC, TB.VANO		
+			</when>
+			<when test='searchOrderBy == "vano" '>
+			    ORDER BY TB.VANO, TB.REGDT DESC			
+			</when>			
+        </choose>
+	</sql>
+
+	<select id="getChaVanoListTotalCount" resultType="com.finger.shinhandamoa.sys.setting.dto.VanoMgmt2DTO">
+		SELECT 	COUNT(*) AS totalcnt, count (case when TB.vastate = 'N' then 1 end ) AS miscnt
+		FROM 	(SELECT TO_CHAR(A.REGDT, 'YYYY.MM.DD') AS REGDT
+					,  TO_CHAR(A.REGDT, 'YYYY.MM.DD')  AS REGDATE
+					,  A.CHACD		AS chacd
+					,  B.CHANAME	AS chaname
+					,  C.CUSNAME	AS cusname
+					,  A.VANO		AS vano
+					,  A.fgcd       AS fgcd
+					,  A.assigndt   AS assigndt
+					,  A.cuscd      AS cuscd
+					,  A.useyn      AS useyn
+					,  CASE WHEN A.CHACD IS NOT NULL AND A.USEYN = 'Y' THEN 'Y'
+							WHEN A.CHACD IS NOT NULL AND A.CUSCD IS NOT NULL AND A.USEYN = 'N' THEN 'W'
+							WHEN A.CHACD IS NOT NULL THEN 'A'
+							WHEN A.CHACD IS NULL THEN 'N' ELSE '' END AS vastate
+				FROM VALIST A
+				LEFT OUTER JOIN XCHALIST B ON A.CHACD = B.CHACD
+				LEFT OUTER JOIN XCUSMAS C on A.CHACD = C.CHACD AND A.VANO = C.VANO
+				<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chacd)">
+					WHERE A.CHACD = #{chacd}
+				</if>
+				) TB
+		WHERE 	1 = 1
+		<include refid="chaVanoListListSearch"/>
+	</select>
+
+	<!-- 가상계좌관리 - 가상계좌 거래내역 -->	
+	<select id="getVanoTranHisListAll" resultType="VanoMgmtDTO">
+		<include refid="paging_header" />
+		SELECT  A.PAYDAY       AS  payday     
+			, 	A.PAYTIME      AS  paytime 
+			, 	COALESCE ((SELECT VALUE FROM KFTC_CODE WHERE CODE = A.FICD),' ')         AS  ficd
+		    ,   COALESCE ((SELECT VALUE FROM KFTC_CODE WHERE CODE = A.BNKCD),' ')    AS  bnkcd
+			,	A.RCPUSRNAME   AS  rcpusrname
+			, 	A.CUSNAME      AS  cusname 
+			, 	A.VANO         AS  vano   
+			, 	A.CHACD        AS  chacd      
+			,	B.CHANAME 	   AS  chaname 
+			, 	A.RCPAMT       AS  rcpamt                    
+		FROM 	XRCPMAS 	   A                                   
+		   , 	XCHALIST 	   B                                
+		WHERE 	A.CHACD 	   = B.CHACD                       
+		AND 	RCPMASST 	   = 'PA03' 
+		AND A.SVECD = 'VAS'
+		<include refid="vanoTranHisListListSearch" />
+		<include refid="vanoTranHisListOrderBy" />
+		<include refid="paging_footer" />
+	</select>
+
+	<!-- 가상계좌 거래내역 total count -->
+	<select id="getVanoTranHisListTotalCount" resultType="int">
+		SELECT	COUNT(*)	AS cnt
+		FROM	XRCPMAS 	A                                   
+		  	, 	XCHALIST 	B 
+		WHERE 	A.CHACD 	= B.CHACD      
+		AND 	A.RCPMASST 	= 'PA03'
+		AND A.SVECD = 'VAS'
+		<include refid="vanoTranHisListListSearch" />
+	</select>
+	
+	<sql id="vanoTranHisListListSearch">
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(paydayFrom)">
+			AND A.PAYDAY <![CDATA[>=]]> #{paydayFrom}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(paydayTo)">
+			AND A.PAYDAY <![CDATA[<=]]> #{paydayTo}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(paytimeFrom)">
+			AND A.PAYDAY || A.PAYTIME <![CDATA[>=]]> #{paydayFrom} || #{paytimeFrom}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(paytimeTo)">
+			AND A.PAYDAY || A.PAYTIME <![CDATA[<=]]> #{paydayTo} || #{paytimeTo}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chacd)">
+			AND		A.CHACD 	= #{chacd}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaname)">
+			AND		B.CHANAME 	LIKE '%' || #{chaname} || '%'
+		</if>
+		<if test="searchGb == 'vano' and searchValue != ''">
+			AND		A.VANO 		= #{searchValue}
+		</if>
+		<if test="searchGb == 'cusname' and searchValue != ''">
+			AND		A.CUSNAME 	= #{searchValue}
+		</if>
+	</sql>
+	
+	<sql id="vanoTranHisListOrderBy">
+        <choose>                      
+			<when test='searchOrderBy == "payday" '>
+			    ORDER BY A.PAYDAY || A.PAYTIME DESC,  A.VANO			
+			</when>
+			<when test='searchOrderBy == "vano" '>
+			    ORDER BY A.VANO, A.PAYDAY || A.PAYTIME DESC			
+			</when>			
+        </choose>
+	</sql>
+
+	<!-- 가상계좌관리 > 가상계좌발급관리 total count -->
+	<select id="getVanoIssuedListTotalCount" resultType="int">
+		SELECT	COUNT(*) AS cnt
+		FROM XCHALIST TA LEFT OUTER JOIN
+			 ( SELECT CHACD
+					, COUNT(CASE WHEN USEYN = 'Y'
+							AND CHACD IS NOT NULL THEN 1 END) AS YCNT
+					, COUNT(CASE WHEN USEYN = 'N'
+							AND CUSCD IS NOT NULL
+							AND CHACD IS NOT NULL THEN 1 END) AS WCNT
+					, COUNT(CASE WHEN CHACD IS NOT NULL THEN 1 END) AS ACNT
+					, COUNT(CASE WHEN CHACD IS NULL THEN 1 END) AS NCNT
+					, COUNT(CASE WHEN USEYN = 'N'
+							AND CUSCD IS NULL
+							AND CHACD IS NOT NULL THEN 1 END) AS RCNT
+				FROM VALIST
+				GROUP BY CHACD
+			) TB ON TA.CHACD = TB.CHACD
+			WHERE 1=1
+		<include refid="vanoList01ListSearch" />
+	</select>
+
+	<select id="getMisassignVanoCount" resultType="VanoMgmtDTO">
+		SELECT FGCD AS fgcd, COUNT(*) AS vacnt
+		FROM VALIST
+		WHERE CHACD IS NULL
+		GROUP BY FGCD
+	</select>
+
+	<!-- 가상계좌관리 > 가상계좌 발급요청관리 -->
+	<select id="getVanoIssuedListAll" resultType="VanoMgmtDTO">
+		<include refid="paging_header" />
+		SELECT TA.FGCD AS fgcd
+			, TA.CHACD AS chacd
+			, TA.CHANAME AS chaname
+			, TA.CHASTATUS AS chastatus
+			, TA.CHATYPE AS chatype
+			, TA.CHAST AS chast
+			, TA.CHATRTY AS chatrty
+			, TB.YCNT AS ycnt
+			, TB.WCNT AS wcnt
+			, TB.ACNT AS acnt
+			, TB.NCNT AS ncnt
+			, TB.RCNT AS rcnt
+		FROM XCHALIST TA LEFT OUTER JOIN
+			( SELECT CHACD
+					, COUNT(CASE WHEN USEYN = 'Y'
+							AND CHACD IS NOT NULL THEN 1 END) AS YCNT
+					, COUNT(CASE WHEN USEYN = 'N'
+							AND CUSCD IS NOT NULL
+							AND CHACD IS NOT NULL THEN 1 END) AS WCNT
+					, COUNT(CASE WHEN CHACD IS NOT NULL THEN 1 END) AS ACNT
+					, COUNT(CASE WHEN CHACD IS NULL THEN 1 END) AS NCNT
+					, COUNT(CASE WHEN USEYN = 'N'
+							AND CUSCD IS NULL
+							AND CHACD IS NOT NULL THEN 1 END) AS RCNT
+				FROM VALIST
+				GROUP BY CHACD
+			) TB ON TA.CHACD = TB.CHACD
+			WHERE 1=1
+        <include refid="vanoList01ListSearch" />
+		<include refid="vanoIssuedOrderBy"/>
+		<include refid="paging_footer" />
+	</select>
+	
+	<sql id="vanoIssuedOrderBy">
+		<choose>                      
+			<when test='searchOrderBy == "chaname" '>
+			    ORDER BY TA.CHANAME, TA.CHAST
+			</when>
+			<when test='searchOrderBy == "chast" '>
+			    ORDER BY TA.CHAST, TA.CHACD			
+			</when>			
+        </choose>
+	</sql>
+	
+	<update id="doVanoIssueReq">
+		WITH q1 AS (
+			SELECT VANO
+			FROM VALIST
+			WHERE CHACD IS NULL
+			  and fgcd = #{fgcd}
+			LIMIT #{acccnt}
+		) UPDATE VALIST v
+		SET CHACD = #{chacd}
+		  , REMARK = #{remark}
+		  , ASSIGNDT = NOW()
+		<if test='chatrty == "03"'>
+			, USEYN = 'Y'
+		</if>
+		FROM q1
+		WHERE v.VANO = q1.VANO
+		RETURNING v.VANO
+	</update>
+
+	<select id = "doVanoIssueReqAfterCount" parameterType="hashmap" resultType="hashmap">
+		SELECT count(*) as totalCnt
+		FROM valist
+		WHERE assigndt is not null
+		  AND to_char(assigndt, 'YYYYMMDD') = to_char(now(), 'YYYYMMDD')
+		  AND chacd = #{chacd}
+		  AND REMARK = #{remark}
+	</select>
+
+	<select id = "doVanoIssueReqAfterList" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			   chacd                         as chaCd,
+			   'N'                           as checkYn,
+			   to_char(assigndt, 'YYYYMMDD') as assignDt
+		FROM valist
+		WHERE assigndt is not null
+		  AND to_char(assigndt, 'YYYYMMDD') = to_char(now(), 'YYYYMMDD')
+		  AND chacd = #{chacd}
+	</select>
+
+	<insert id="doVanoIssueReqAfterInsert" parameterType="com.finger.shinhandamoa.sys.setting.dto.VanoReqDTO">
+		insert into trans_vano_hist(trans_vano_hist_id, chacd, checkyn, assign_dt, regdt, remark, vano_count)
+
+		values (nextval('trans_vano_hist_id'), #{chaCd}, 'N', to_char(now(), 'YYYYMMDD'), now(), #{remark}, #{vanoCount})
+	</insert>
+
+	<select id="doVanoIssueReqCheck"  resultType="int">
+		SELECT count(*) as cnt
+		FROM TRANS_VANO_HIST
+		WHERE CHECKYN in('R','N','F') -- 가상계좌 전송대기 상태가 실패,진행,대기 상태인경우
+		  AND chacd = #{chacd}
+	</select>
+
+
+	<select id="getVanoTranChkListCnt" resultType="int">
+		SELECT
+          COUNT(*)
+		FROM
+			(
+				SELECT
+					transdt,
+					UPPER(destination) AS destination,
+					TRIM(substr(ruledata,17,4) ) AS msgtype,
+					TRIM(substr(ruledata,21,4) ) AS msgtype1,
+					TRIM(substr(ruledata,68,4) ) AS response_code,
+					TRIM(substr(ruledata,201,8) ) AS fgcd,
+					TRIM(substr(ruledata,209,16) ) AS vano
+				FROM
+					trans_data_acct
+			) t, valist v
+		WHERE t.vano = v.vano
+		AND t.transDt BETWEEN #{startday} AND #{endday}
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chacd)">
+			AND v.chacd = #{chacd}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(vano)">
+			AND t.vano = #{vano}
+		</if>
+		<choose>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(succSt) and succSt == '0000'">
+				AND t.response_code = '0000'
+			</when>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(succSt) and succSt == '1111'">
+				and t.response_code ~ 'V|F'
+			</when>
+			<otherwise>
+
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="sndrcvList.size > 0">
+				AND t.msgtype IN
+				<foreach collection="sndrcvList" item="list" index="index" open="(" close=")" separator=",">
+					#{list}
+				</foreach>
+			</when>
+			<otherwise>
+				AND t.msgtype IN ('0200', '0210', '0400', '0410')
+			</otherwise>
+		</choose>
+		<if test="tylist.size > 0">
+			AND t.msgtype1 IN
+			<foreach collection="tylist" item="list" index="index" open="(" close=")" separator=",">
+				#{list}
+			</foreach>
+		</if>
+	</select>
+
+	<select id="getVanoTranChkList" resultType="TransInfoDTO">
+		<include refid="paging_header" />
+		SELECT
+			*
+		FROM
+			(
+				SELECT
+					dealseqno AS dealSeqNo,
+					transdt AS transDt,
+					substr(transtime,0,6) AS transTime,
+					trcode AS trCd,
+					UPPER(destination) AS destination,
+					TRIM(substr(ruledata,17,4) ) AS msgTy,
+					TRIM(substr(ruledata,21,4) ) AS msgTy1,
+					TRIM(substr(ruledata,32,7) ) AS msgno,
+					TRIM(substr(ruledata,68,4) ) AS resCd,
+					TRIM(substr(ruledata,138,50) ) AS resMsg,
+					TRIM(substr(ruledata,201,8) ) AS fgcd,
+					TRIM(substr(ruledata,209,16) ) AS vano,
+					TRIM(substr(ruledata,225,20) ) AS depositNm,
+					TRIM(substr(ruledata,250,3) ) AS bnkCd,
+					COALESCE ((SELECT VALUE FROM KFTC_CODE WHERE CODE = TRIM(substr(ruledata,250,3))),'')    AS bnkNm,
+					TRIM(substr(ruledata,253,16) ) AS withDrawalVano,
+					TRIM(substr(ruledata,269,20) ) AS withDrawalNm,
+					TRIM(substr(ruledata,325,13) ) AS money
+				FROM
+					trans_data_acct
+			) t, valist v
+		WHERE t.vano = v.vano
+			AND t.transDt BETWEEN #{startday} AND #{endday}
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chacd)">
+			AND v.chacd = #{chacd}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(vano)">
+			AND t.vano = #{vano}
+		</if>
+		<choose>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(succSt) and succSt == '0000'">
+				AND t.resCd = '0000'
+			</when>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(succSt) and succSt == '1111'">
+				and t.resCd ~ 'V|F'
+			</when>
+			<otherwise>
+
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="sndrcvList.size > 0">
+				AND t.msgTy IN
+				<foreach collection="sndrcvList" item="list" index="index" open="(" close=")" separator=",">
+					#{list}
+				</foreach>
+			</when>
+			<otherwise>
+				AND t.msgTy IN ('0200', '0210', '0400', '0410')
+			</otherwise>
+		</choose>
+		<if test="tylist.size > 0">
+			AND t.msgTy1 IN
+			<foreach collection="tylist" item="list" index="index" open="(" close=")" separator=",">
+				#{list}
+			</foreach>
+		</if>
+		<choose>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchOrderBy) and searchOrderBy == 'dtASC'">
+				ORDER BY t.transDt ASC, t.transTime ASC, t.msgTy ASC
+			</when>
+			<otherwise>
+				ORDER BY t.transDt DESC, t.transTime DESC, t.msgTy DESC
+			</otherwise>
+		</choose>
+		<include refid="paging_footer" />
+	</select>
+
+	<select id="getVanoTranInitChkCnt" resultType="int">
+		SELECT
+			COUNT(*)
+			FROM
+				(
+					SELECT
+						transdt AS transDt,
+						TRIM(substr(ruledata,17,4) ) AS msgtype,
+						TRIM(substr(ruledata,21,4) ) AS msgtype1,
+						TRIM(substr(ruledata,68,4) ) AS response_code,
+						TRIM(substr(ruledata,105,8) ) AS fgcd,
+						TRIM(substr(ruledata,201,8) ) AS transDt2,
+						TRIM(substr(ruledata,209,3) ) AS transTy
+					FROM
+						trans_data_acct
+				) t
+			WHERE 1=1
+		AND transDt BETWEEN #{startday} AND #{endday}
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chacd)">
+			AND chacd = #{chacd}
+		</if>
+		<choose>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(succSt) and succSt == '0000'">
+				AND response_code = '0000'
+			</when>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(succSt) and succSt == '1111'">
+				and response_code ~ 'V|F'
+			</when>
+			<otherwise>
+
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(sndrcvSt)">
+				AND msgtype = #{sndrcvSt}
+			</when>
+			<otherwise>
+				AND msgtype IN ('0800', '0810')
+			</otherwise>
+		</choose>
+		AND msgtype1 = '1100'
+		<if test="tylist.size > 0">
+			AND transTy IN
+			<foreach collection="tylist" item="list" index="index" open="(" close=")" separator=",">
+				#{list}
+			</foreach>
+		</if>
+	</select>
+
+	<select id="getVanoTranInitChk" resultType="TransInfoDTO">
+		<include refid="paging_header" />
+		SELECT
+			*
+			FROM
+				(
+				SELECT
+					dealseqno AS dealSeqNo,
+					transdt AS transDt,
+					substr(transtime,0,6) AS transTime,
+					trcode AS trCd,
+					UPPER(destination) AS destination,
+					TRIM(substr(ruledata,17,4) ) AS msgTy,
+					TRIM(substr(ruledata,21,4) ) AS msgTy1,
+					TRIM(substr(ruledata,32,7) ) AS msgno,
+					TRIM(substr(ruledata,68,4) ) AS resCd,
+					TRIM(substr(ruledata,138,50) ) AS resMsg,
+					TRIM(substr(ruledata,105,8) ) AS fgcd,
+					TRIM(substr(ruledata,201,8) ) AS transDt2,
+					TRIM(substr(ruledata,209,3) ) AS transTy,
+					COALESCE ((SELECT VALUE FROM FW_TABLE_CODE WHERE KEY = TRIM(substr(ruledata,209,3))),'') AS transTyNm,
+					TRIM(substr(ruledata,212,1) ) AS holiday
+				FROM
+					trans_data_acct
+				) t
+			WHERE 1=1
+		AND transDt BETWEEN #{startday} AND #{endday}
+		<choose>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(succSt) and succSt == '0000'">
+				AND resCd = '0000'
+			</when>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(succSt) and succSt == '1111'">
+				and resCd ~ 'V|F'
+			</when>
+			<otherwise>
+
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(sndrcvSt)">
+				AND msgTy = #{sndrcvSt}
+			</when>
+			<otherwise>
+				AND msgTy IN ('0800', '0810')
+			</otherwise>
+		</choose>
+		AND msgTy1 = '1100'
+		<if test="tylist.size > 0">
+			AND transTy IN
+			<foreach collection="tylist" item="list" index="index" open="(" close=")" separator=",">
+				#{list}
+			</foreach>
+		</if>
+		<choose>
+			<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchOrderBy) and searchOrderBy == 'dtASC'">
+				ORDER BY transDt ASC, transTime ASC, msgTy ASC
+			</when>
+			<otherwise>
+				ORDER BY transDt DESC, transTime DESC, msgTy DESC
+			</otherwise>
+		</choose>
+		<include refid="paging_footer" />
+	</select>
+
+
+<!--	<update id="insertVirtualAccount" parameterType="map" >-->
+<!--		UPDATE-->
+<!--		valist_temp-->
+<!--		SET vano = #{vano}-->
+<!--		, fgcd = #{fgcd}-->
+<!--		, settle_plag = 'N'-->
+
+<!--	</update>-->
+
+	<select id="getTempVanoAccount" resultType="int">
+		SELECT COUNT(*)
+		FROM VALIST_TEMP
+		WHERE settle_plag ='N'
+	</select>
+
+
+	<insert id="insertVirtualAccount" parameterType="java.util.HashMap" >
+		INSERT into
+			valist_temp(vano,settle_date,settle_plag,fgcd)
+		VALUES
+			<foreach collection="vanoList" item="map" index="index" separator=",">
+			    ((#{map.vano}),now(),#{map.settle_plag},#{map.fgcd})
+			</foreach>
+	</insert>
+
+	<insert id="csvUploadResultInsert">
+		insert into valist (ficd, vano, fitxcd, useyn, regdt, remark, fgcd)
+		select '088', trim(vano) ,'0','N',now(),to_char(settle_date,'YYYYMMDD'),fgcd from valist_temp
+		where settle_plag ='N'
+	</insert>
+
+	<update id="csvUploadResultInsertAfter">
+		update
+			valist_temp
+		set settle_plag = 'Y',
+		    remark = to_char(now(),'YYYYMMDD')
+		WHERE settle_plag ='N'
+	</update>
+
+	<delete id="deleteVirtualAccount">
+		delete
+		from valist_temp
+		WHERE settle_plag ='N'
+	</delete>
+
+	<select id="pgVanoSendListCnt" parameterType="com.finger.shinhandamoa.sys.setting.dto.VanoPgDTO" resultType="int">
+		select count(*) as cnt
+		from pg_vareq
+		where 1=1
+		<if test='startDate != null and startDate != ""'>
+			AND TO_CHAR(recvdt, 'YYYYMMDD')  <![CDATA[ >= ]]> #{startDate}
+		</if>
+		<if test='endDate != null and endDate != ""'>
+			AND TO_CHAR(recvdt, 'YYYYMMDD')  <![CDATA[ <= ]]> #{endDate}
+		</if>
+	</select>
+
+	<select id="pgVanoSendList" parameterType="com.finger.shinhandamoa.sys.setting.dto.VanoPgDTO" resultType="com.finger.shinhandamoa.sys.setting.dto.VanoPgDTO">
+		<include refid="paging_header"/>
+
+		select
+			pgvareqid as pgvareqId, /*vareq의 고유번호*/
+			chacd as chaCd,/*기관코드*/
+			fgcd as fgCd,/**/
+			vanocount as vanoCount,/*가상계좌요청건수*/
+			mchtid as mchtId,/*가맹점코드*/
+			appendyn as appendYn,/*가상계좌전송여부*/
+			TO_CHAR(assigndt, 'YYYYMMDD') as assignDt,/*가상계좌할당일자*/
+			TO_CHAR(reqdt, 'YYYYMMDD') as reqDt,/**/
+			TO_CHAR(senddt, 'YYYYMMDD') as sendDt,/*가상계좌기관전송일자*/
+			TO_CHAR(recvdt, 'YYYYMMDD') as recvDt,/*가상계좌요청일자*/
+			remark as remark,/*메모*/
+			pgseq as pgSeq/*pgseq 값*/
+		from pg_vareq
+		WHERE 1=1
+		<if test='startDate != null and startDate != ""'>
+			AND TO_CHAR(recvdt, 'YYYYMMDD')  <![CDATA[ >= ]]> #{startDate}
+		</if>
+		<if test='endDate != null and endDate != ""'>
+			AND TO_CHAR(recvdt, 'YYYYMMDD')  <![CDATA[ <= ]]> #{endDate}
+		</if>
+		<include refid="paging_footer"/>
+
+	</select>
+
+	<update id="updateSendListStat" parameterType="map">
+		UPDATE pg_vareq
+		set
+			senddt = now(),
+			appendyn= #{appendYn}
+		where pgvareqid=#{pgvareqId}
+	</update>
+
+	<select id="pgVanoCheckCnt" parameterType="com.finger.shinhandamoa.sys.setting.dto.VanoPgDTO"  resultType="int">
+		/*PG 사용가능 가상계좌수 조회 (기관코드가 할당되어있지 않고 20008155 모계좌인건 */
+		select COUNT(*)
+		FROM valist
+		where chacd is null
+		  and fgcd = '20008155'
+	</select>
+
+
+
+
+</mapper>

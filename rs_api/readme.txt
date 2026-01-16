@@ -1,0 +1,1 @@
+-Dfile.encoding=EUC-KR

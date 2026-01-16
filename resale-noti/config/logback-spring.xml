@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+	<contextName>cbm-backoffice-server</contextName>
+	<property name="serviceLogPattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %5p %logger{15} - %m%n" />
+	<property name="LOG_NAME_SVC" value="service" />
+	<property name="LOG_NAME_DBG" value="debug" />
+	<property name="LOG_NAME_INF" value="info" />
+	<property name="LOG_NAME_BATCH" value="debug" />
+	<property name="LOG_HOME" value="${BUILD_PATH}/logs/" />
+	<property name="LOGBAK_HOME" value="${BUILD_PATH}/logs/back/" />
+	<!--<property scope="local" name="CONSOLE" value="TRACE" />-->
+
+	<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>DEBUG</level>
+		</filter>
+		<encoder>
+			<pattern>${serviceLogPattern}</pattern>
+		</encoder>
+	</appender>
+
+	<appender name="INFO" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>INFO</level>
+		</filter>
+		<file>${LOG_HOME}${LOG_NAME_INF}.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${LOGBAK_HOME}${LOG_NAME_INF}-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+			<maxFileSize>100MB</maxFileSize>
+			<maxHistory>30</maxHistory>
+			<totalSizeCap>10GB</totalSizeCap>
+		</rollingPolicy>
+		<encoder>
+			<pattern>${serviceLogPattern}</pattern>
+		</encoder>
+	</appender>
+
+	<logger name="jdbc.sqlonly" level="INFO" appender-ref="CONSOLE" additivity="true"/>
+	<logger name="jdbc.resultsettable" level="INFO" appender-ref="CONSOLE" additivity="true"/>
+
+	<root level="DEBUG">
+		<appender-ref ref="CONSOLE"/>
+		<!--        <appender-ref ref="DEBUG"/>-->
+		<appender-ref ref="INFO"/>
+	</root>
+
+
+
+</configuration>

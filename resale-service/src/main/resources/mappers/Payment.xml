@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 
+	KST 2014 -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Payment">
+<!--
+<resultMap type="PaymentDTO" id="PaymentResultMap">
+		<result	column="PAYDAY"   property="payDay"    javaType="String"	          jdbcType="VARCHAR" />
+		<result	column="MASMONTH"   property="masMonth"    javaType="String"	              jdbcType="VARCHAR" />
+		<result	column="SVECD"   property="sveCd"    javaType="String"	              jdbcType="VARCHAR" />
+		<result	column="RCPAMT"   property="rcpAmt"    javaType="String"	          jdbcType="NUMERIC" />
+		<result	column="TOTAMT"   property="totAmt"    javaType="String"	          jdbcType="NUMERIC" />
+		<result	column="PAYRCPYN"   property="payRcpYn"    javaType="encrypt"	          jdbcType="CLOB" />
+		<result	column="CHAOFFNO"   property="chaOffNo"    javaType="String"	          jdbcType="VARCHAR" />
+		<result	column="OWNER"   property="owner"    javaType="String"	          jdbcType="VARCHAR" />
+		<result	column="CHAADDRESS1"   property="chaAddress1"    javaType="String"	          jdbcType="VARCHAR" />
+		<result	column="CHAADDRESS2"   property="chaAddress2"    javaType="String"	          jdbcType="VARCHAR" />
+		<result	column="OWNERTEL"   property="ownerTel"    javaType="String"	          jdbcType="VARCHAR" />
+		<result	column="DEALAMT"   property="dealAmt"    javaType="String"	              jdbcType="NUMERIC" />
+		<result	column="TAX"   property="tax"    javaType="String"	              jdbcType="NUMERIC" />
+		<result	column="TIP"   property="tip"    javaType="String"	              jdbcType="NUMERIC" />
+		<result	column="CUSOFFNO"   property="cusoffNo"    javaType="encrypt"	          jdbcType="CLOB" />
+		<result	column="APPNO"   property="appNo"    javaType="String"	          jdbcType="VARCHAR" />
+		<result	column="APPDAY"   property="appDay"    javaType="String"	              jdbcType="VARCHAR" />
+		<result	column="CUSNAME"   property="cusName"    javaType="String"	          jdbcType="VARCHAR" />
+		<result	column="BNKMSGNO"   property="bnkMsgNo"    javaType="String"     jdbcType="VARCHAR" />
+		<result	column="PAYDAY2"   property="payDay2"    javaType="String"	          jdbcType="VARCHAR" />
+		<result	column="NOTIMASCD"   property="notimasCd"    javaType="String"	          jdbcType="VARCHAR" />
+		<result	column="PACKETNO"   property="packetNo"    javaType="String"	          jdbcType="VARCHAR" />
+		<result	column="PGSERVICEID"   property="pgServiceId"    javaType="String"	          jdbcType="VARCHAR" />
+		<result	column="RCPREQYN"   property="rcpReqYn"    javaType="String"	          jdbcType="VARCHAR" />
+		<result	column="PAYITEMAMT"   property="payItemAmt"    javaType="String"	          jdbcType="NUMERIC" />
+		<result	column="NOTIMASST"   property="notiMasSt"    javaType="String"	          jdbcType="VARCHAR" />
+		<result	column="RCPMASCD"   property="rcpmasCd"    javaType="String"	          jdbcType="VARCHAR" />
+		<result	column="RCPMASST"   property="rcpMasSt"    javaType="String"	          jdbcType="VARCHAR" />
+	</resultMap>
+	
+	<resultMap type="hashMap" id="payListTotalCountmap">
+		<result	column="CUSOFFNO"   property="cusoffNo"    javaType="encrypt"	          jdbcType="CLOB" />
+	</resultMap>
+	
+	<resultMap type="PaymentDTO" id="DTOpayListTotalCountmap">
+		<result	column="CUSOFFNO"   property="cusoffNo"    javaType="encrypt"	          jdbcType="CLOB" />
+	</resultMap>-->
+
+		<sql id="paging_header">
+			select *
+			from (
+			select (ROW_NUMBER() OVER()) as rn, A.*
+			from (
+		</sql>
+
+		<sql id="paging_footer">
+				) A
+			) X where rn between #{start} and #{end}
+		</sql>
+
+		<sql id="orderBy">
+			<choose>
+				<when test="search_orderBy == 'rcpGbn'">
+					ORDER BY RCPMASST, MAKEDT
+				</when>
+				<otherwise>
+					ORDER BY PAYDAY2 DESC, MAKEDT
+				</otherwise>
+			</choose>
+		</sql>
+
+		<!-- 가맹점 정보 조회 -->
+		<select id="selectChaInfo" resultType="PaymentDTO">
+			SELECT CHA.USEPGYN
+				, CHA.CHACD
+				, CHANAME
+				, CHA.RCPDTDUPYN
+			FROM XCHALIST CHA, VALIST VA
+			WHERE CHA.CHACD = VA.CHACD
+			AND VANO = #{vaNo}
+			AND CHAST = 'ST06'
+		</select>
+
+		<select id="payListMaxMonth" resultType="hashMap" parameterType="hashMap">
+			SELECT COALESCE(MAX(RCP.MASDAY), TO_CHAR(NOW(), 'YYYYMMDD')) AS MASDAY
+			FROM XCHALIST CHA
+			<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(noCus)">
+				,XRCPMAS RCP
+			</if>
+			<if test="@com.finger.shinhandamoa.common.CmmnUtils@empty(noCus)">
+				,XNOTIMAS XMAS
+				LEFT OUTER JOIN XRCPMAS RCP ON XMAS.NOTIMASCD = RCP.NOTIMASCD AND XMAS.CHACD = RCP.CHACD
+				LEFT OUTER JOIN XCASHMAS CAS ON RCP.RCPMASCD = CAS.RCPMASCD AND CAS.CASHMASST = 'ST03'
+				LEFT OUTER JOIN XREPAYMAS RPAY ON RCP.RCPMASCD = RPAY.RCPMASCD
+			</if>
+			WHERE
+			RCP.CHACD = CHA.CHACD
+			AND RCP.VANO = #{vaNo}
+			AND RCP.RCPMASST = 'PA03'
+			<if test="@com.finger.shinhandamoa.common.CmmnUtils@empty(noCus)">
+				AND XMAS.NOTIMASST IN ('PA03','PA04','PA05','PA06')
+				AND XMAS.NOTI_CAN_YN = 'N'
+				AND XMAS.DISABLED = 'N'
+			</if>
+		</select>
+
+		<!-- 납부내역 총 개수 -->
+		<select id="payListTotalCount" resultType="hashMap" parameterType="hashMap">
+			SELECT COALESCE(MAX(TOTAMT),0) AS TOTAMT
+					,COALESCE(MAX(CNT),0) AS CNT
+			FROM (SELECT
+					SUM (COALESCE(RCPAMT,0)) OVER (PARTITION BY CHACD) AS TOTAMT
+					,COUNT (CHACD) OVER (PARTITION BY CHACD) AS CNT
+					FROM (
+					SELECT TO_CHAR (TO_DATE (RCP.PAYDAY, 'YYYYMMDD'), 'YYYY/MM/DD') AS PAYDAY
+					,RCP.MASMONTH
+					,RCP.SVECD
+					,RCP.RCPAMT AS RCPAMT
+					,(CASE WHEN RCP.CUSOFFNO IS NULL THEN '미신청' ELSE '신청' END) AS PAYRCPYN
+					,CHA.OWNER
+					,CHA.CHAADDRESS1
+					,CHA.CHAADDRESS2
+					,CHA.OWNERTEL
+					,RCP.CUSNAME
+					,RCP.BNKMSGNO
+					,RCP.PAYDAY AS PAYDAY2
+					,RCP.NOTIMASCD
+					,RCP.PACKETNO
+					,CHA.PGSERVICEID
+					,CHA.RCPREQYN
+					,RCP.CHACD
+					<if test="@com.finger.shinhandamoa.common.CmmnUtils@empty(noCus)">
+					,RPAY.REPAYAMT AS REPAYAMT
+					,CAS.CHAOFFNO
+					,CAS.RCPAMT AS DEALAMT
+					,CAS.TAX
+					,CAS.TIP
+					,CAS.CUSOFFNO
+					,CAS.APPNO
+					,CAS.APPDAY
+					</if>
+				FROM XCHALIST CHA
+					,XRCPMAS RCP
+				<if test="@com.finger.shinhandamoa.common.CmmnUtils@empty(noCus)">
+					RIGHT OUTER JOIN XNOTIMAS XMAS ON XMAS.NOTIMASCD = RCP.NOTIMASCD AND XMAS.CHACD = RCP.CHACD
+					LEFT OUTER JOIN XCASHMAS CAS ON RCP.RCPMASCD = CAS.RCPMASCD AND CAS.CASHMASST = 'ST03'
+					LEFT OUTER JOIN XREPAYMAS RPAY ON RCP.RCPMASCD = RPAY.RCPMASCD
+				</if>
+				WHERE RCP.CHACD = CHA.CHACD
+				AND RCP.CHACD = #{chaCd}
+				AND RCP.VANO = #{vaNo}
+				AND RCP.RCPMASST = 'PA03'
+				<if test="@com.finger.shinhandamoa.common.CmmnUtils@empty(noCus)">
+					AND XMAS.NOTIMASST IN ('PA03','PA04','PA05','PA06')
+					AND XMAS.NOTI_CAN_YN = 'N'
+					AND XMAS.DISABLED = 'N'
+				</if>
+				<if test='(fmasMonth != "" and tmasMonth != "") and (fmasMonth != null and tmasMonth != null)'>
+					AND RCP.PAYDAY BETWEEN #{fmasMonth} AND #{tmasMonth}
+				</if>
+				<if test='checkListValue != null'>
+					AND RCP.RCPMASCD IN
+					<foreach item="item" collection="checkListValue" index="index"
+						open="(" close=")" separator=",">
+						#{item}
+					</foreach>
+				</if>
+				) T1
+			) T2
+		</select>
+
+		<!-- 납부내역 리스트 -->
+		<select id="payList" resultType="PaymentDTO">
+			<include refid="paging_header" />
+			SELECT TO_CHAR (TO_DATE (RCP.PAYDAY, 'YYYYMMDD'), 'YYYY/MM/DD') AS PAYDAY
+				, RCP.MASMONTH
+				, RCP.SVECD
+				, COALESCE(RCP.RCPAMT,0) AS RCPAMT
+				, SUM (RCP.RCPAMT) OVER (PARTITION BY RCP.CHACD) AS TOTAMT
+				, CASE WHEN RCP.CUSOFFNO::varchar(100) IS NULL THEN '미신청' ELSE '신청' END AS PAYRCPYN
+				, CHA.OWNER
+				, CHA.CHAADDRESS1
+				, CHA.CHAADDRESS2
+				, CHA.OWNERTEL
+				, RCP.CUSNAME
+				, RCP.BNKMSGNO
+				, RCP.PAYDAY AS PAYDAY2
+				, RCP.NOTIMASCD
+				, RCP.PACKETNO
+				, CHA.PGSERVICEID
+				, CHA.RCPREQYN
+				, RCP.RCPMASCD
+				, RCP.RCPMASST
+				, RCP.MAKEDT
+				<choose>
+					<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(noCus)">
+						, COALESCE(RCP.RCPAMT,0) AS PAYITEMAMT
+					</when>
+					<otherwise>
+						, (SELECT SUM (COALESCE(PAYITEMAMT,0))
+						FROM XNOTIDET
+						WHERE NOTIMASCD = RCP.NOTIMASCD
+						AND NOTI_CAN_YN = 'N'
+						AND NOTIDETST != 'PA00'
+						) AS PAYITEMAMT
+						, CAS.CHAOFFNO
+						, CAS.RCPAMT AS DEALAMT
+						, CAS.TAX
+						, CAS.TIP
+						, CAST(CAS.CUSOFFNO AS VARCHAR(100))
+						, CAS.APPNO
+						, CAS.APPDAY
+						, CASE WHEN XMAS.NOTIMASST IS NULL THEN '' ELSE (CASE XMAS.NOTIMASST WHEN 'PA00' THEN '임시' WHEN 'PA02' THEN '미납' WHEN 'PA03' THEN '완납' WHEN 'PA04' THEN '일부납' WHEN 'PA05' THEN '초과납' WHEN 'PA06' THEN '환불' END) END AS NOTIMASST
+					</otherwise>
+				</choose>
+			FROM XCHALIST CHA
+				,XRCPMAS RCP
+			<if test="@com.finger.shinhandamoa.common.CmmnUtils@empty(noCus)">
+				RIGHT OUTER JOIN XNOTIMAS XMAS ON XMAS.NOTIMASCD = RCP.NOTIMASCD AND XMAS.CHACD = RCP.CHACD
+				LEFT OUTER JOIN XCASHMAS CAS ON RCP.RCPMASCD = CAS.RCPMASCD AND CAS.CASHMASST = 'ST03'
+				LEFT OUTER JOIN XREPAYMAS RPAY ON RCP.RCPMASCD = RPAY.RCPMASCD
+			</if>
+			WHERE RCP.CHACD = CHA.CHACD
+				AND RCP.CHACD = #{chaCd}
+				AND RCP.VANO = #{vaNo}
+				AND RCP.RCPMASST = 'PA03'
+			<if test="@com.finger.shinhandamoa.common.CmmnUtils@empty(noCus)">
+				AND XMAS.NOTIMASST != 'PA00'
+				AND XMAS.NOTI_CAN_YN = 'N'
+				AND XMAS.DISABLED = 'N'
+			</if>
+			<if test='(fmasMonth != "" and tmasMonth != "") and (fmasMonth != null and tmasMonth != null)'>
+				AND RCP.PAYDAY BETWEEN #{fmasMonth} AND #{tmasMonth}
+			</if>
+			<include refid="orderBy" />
+			<include refid="paging_footer" />
+		</select>
+
+		<select id="chkPayList" resultType="PaymentDTO">
+			SELECT TO_CHAR (TO_DATE (RCP.PAYDAY, 'YYYYMMDD'), 'YYYY/MM/DD') AS PAYDAY
+				, RCP.MASMONTH
+				, RCP.SVECD
+				, COALESCE(RCP.RCPAMT,0)- COALESCE(RPAY.REPAYAMT,0) AS RCPAMT
+				, SUM (RCP.RCPAMT) OVER (PARTITION BY RCP.CHACD) AS TOTAMT
+				, CASE WHEN RCP.CUSOFFNO IS NULL THEN '미신청' ELSE '신청' END AS PAYRCPYN
+				, RCP.CUSNAME
+				, RCP.BNKMSGNO
+				, RCP.PAYDAY AS PAYDAY2
+				, RCP.NOTIMASCD
+				, RCP.PACKETNO
+				, CHA.OWNER
+				, CHA.CHAADDRESS1
+				, CHA.CHAADDRESS2
+				, CHA.OWNERTEL
+				, CHA.PGSERVICEID
+				, CHA.RCPREQYN
+				, CASE RCP.RCPMASST WHEN 'PA03' THEN '완납' END AS RCPMASST
+				, RCP.RCPMASCD
+				, RCP.MAKEDT
+				<choose>
+					<when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(noCus)">
+						, COALESCE(RCP.RCPAMT,0)- COALESCE(RPAY.REPAYAMT,0) AS PAYITEMAMT
+					</when>
+					<otherwise>
+						, (SELECT SUM (COALESCE(PAYITEMAMT,0)) FROM XNOTIDET WHERE NOTIMASCD = RCP.NOTIMASCD) AS PAYITEMAMT
+					</otherwise>
+				</choose>
+				, CAS.CHAOFFNO
+				, CAS.RCPAMT AS DEALAMT
+				, CAS.TAX
+				, CAS.TIP
+				, CAS.CUSOFFNO
+				, CAS.APPNO
+				, CAS.APPDAY
+			FROM XCHALIST CHA,
+			XRCPMAS RCP LEFT OUTER JOIN XCASHMAS CAS ON RCP.RCPMASCD = CAS.RCPMASCD AND CAS.CASHMASST = 'ST03'
+			LEFT OUTER JOIN XREPAYMAS RPAY ON RCP.RCPMASCD = RPAY.RCPMASCD
+			WHERE RCP.CHACD = #{chaCd}
+			AND RCP.VANO = #{vaNo}
+			AND RCP.RCPMASST = 'PA03'
+			AND RCP.CHACD = CHA.CHACD
+			<if test='checkListValue != null'>
+				AND RCP.RCPMASCD IN
+				<foreach item="item" collection="checkListValue" index="index"
+					open="(" close=")" separator=",">
+					#{item}
+				</foreach>
+			</if>
+			<include refid="orderBy" />
+		</select>
+
+</mapper>

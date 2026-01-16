@@ -1,0 +1,503 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ClaimExcelDao">
+
+	<!-- 청구 대량 등록 헤더 및 데이터 추출 -->
+	<select id="selExcelItemSample" resultType="ClaimDTO">
+		SELECT 	'청구년월(필수)' 		AS masMonth
+			, 	'납부자명(필수)' 		AS cusName
+			, 	'납부자전용계좌(필수)' 	AS vano
+			,	'청구항목코드(필수)'		AS payItemCd
+			, 	'청구항목(필수)' 		AS payItemName
+			, 	'청구금액(필수)' 		AS payItemAmt
+			, 	'납부시작일(필수)' 		AS startDate
+			, 	'납부마감일(필수)' 		AS endDate
+			, 	'고지출력납부마감일' 		AS printDate
+			, 	'비고' 					AS remark
+		UNION 	ALL
+		SELECT *
+		FROM (
+			SELECT 	#{masMonth} 	AS masMonth
+			    ,	A.CUSNAME 		AS cusName
+			    , 	A.VANO 			AS vano
+			    ,	''				AS payItemCd
+			    , 	''			 	AS payItemName
+			    , 	''				AS payItemAmt
+			    , 	#{startDate}	AS startDate --납부시작일
+			    , 	#{endDate}		AS endDate 	 --납부마감일
+			    , 	#{printDate}	AS printDate --고지출력납부마감일
+			    , 	'' 				AS remark 	 --비고
+			FROM 	XCUSMAS A
+			WHERE 	A.DISABLED 		= 'N'
+			AND 	A.CHACD 		= #{chaCd}
+			AND 	A.RCPGUBN 		= 'Y'
+			ORDER 	BY A.CUSNAME) A
+	</select>
+
+	<select id="selExcelBeforeSample" resultType="ClaimDTO">
+		SELECT 	'청구년월(필수)' 		AS masMonth
+			, 	'납부자명(필수)' 		AS cusName
+			, 	'납부자전용계좌(필수)' 	AS vano
+			,	'청구항목코드(필수)'		AS payItemCd
+			, 	'청구항목(필수)' 		AS payItemName
+			, 	'청구금액(필수)' 		AS payItemAmt
+			, 	'납부시작일(필수)' 		AS startDate
+			, 	'납부마감일(필수)' 		AS endDate
+			, 	'고지출력납부마감일' 		AS printDate
+			, 	'비고' 				AS remark
+		UNION 	ALL
+		SELECT *
+		FROM (
+			SELECT 	#{masMonth} 	AS masMonth
+				,	A.CUSNAME 		AS cusName
+				, 	A.VANO 			AS vano
+				,	B.PAYITEMCD		AS payItemCd
+				, 	B.PAYITEMNAME 	AS payItemName
+				,	''				AS payItemAmt
+				, 	#{startDate}	AS startDate --납부시작일
+				, 	#{endDate}		AS endDate 	 --납부마감일
+				, 	#{printDate}	AS printDate --고지출력납부마감일
+				, 	'' 				AS remark 	 --비고
+			FROM 	XNOTIMAS A
+				, 	XNOTIDET B
+			WHERE 	A.NOTIMASCD 	= B.NOTIMASCD
+			AND 	A.NOTI_CAN_YN 	= B.NOTI_CAN_YN
+			AND 	A.CHACD 		= #{chaCd}
+			AND 	A.NOTI_CAN_YN 	= 'N'
+			AND 	A.MASMONTH 		= (SELECT MAX(MASMONTH) 
+									   FROM   XNOTIMAS 
+									   WHERE  CHACD 		= #{chaCd} 
+									   AND    NOTI_CAN_YN = 'N' 
+									   AND    MASMONTH &lt; TO_CHAR(NOW(), 'YYYYMM'))
+			ORDER 	BY A.CUSNAME) A
+	</select>
+
+	<!-- 청구 등록 중복 확인 -->
+	<select id="selClaimConfirm" resultType="String">
+		SELECT  CASE WHEN COUNT(*) > 0 THEN 'Y' ELSE 'N' END AS conYN
+		FROM	XNOTIMAS 	MAS 						--청구서
+			, 	XNOTIDET 	DET 						--청구서  상세항목
+		WHERE 	MAS.NOTIMASCD = DET.NOTIMASCD
+		AND		MAS.NOTI_CAN_YN = DET.NOTI_CAN_YN
+		AND		MAS.NOTI_CAN_YN = 'N'
+		AND 	MAS.CHACD 	  = #{chaCd}
+		AND 	MAS.MASMONTH  = #{masMonth}
+		AND		MAS.VANO	  = #{vano}
+		AND		DET.PAYITEMCD = #{payItemCd}
+		AND		MAS.NOTIMASST > 'PA00'
+	</select>
+
+	<!-- 청구서 원장코드값 가져오기 -->
+	<select id="selectNotiMasCd" resultType="String">
+		SELECT	NOTIMASCD AS notiMasCd
+		FROM	XNOTIMAS
+		WHERE 	CHACD 	  = #{chaCd}
+		AND 	MASMONTH  = #{masMonth}
+		AND 	VANO 	  = #{vano}
+		AND		NOTIMASST &lt; 'PA02'
+		AND 	NOTI_CAN_YN = 'N'
+	</select>
+
+	<!-- 청구 대량 등록 실패 테이블 delete -->
+	<delete id="claimFailDelete">
+		DELETE	FROM
+		XNOTIMASFAIL
+		WHERE	CHACD = #{chaCd}
+	</delete>
+
+	<!-- 청구 대량 등록 실패 -->
+	<insert id="claimExcelFailInsert">
+		WITH T AS (
+		    UPDATE XNOTIMASFAIL
+		    SET	CUSHP 		= #{cusHp}
+		   	, 	CUSMAIL		= #{cusMail}
+		   	, 	CUSOFFNO	= #{cusOffNo}
+		   	, 	STARTDATE	= #{startDate}
+		   	, 	ENDDATE		= #{endDate}
+		   	, 	PRINTDATE	= #{printDate}
+		   	, 	XCOUNT		= #{xCount}
+		   	, 	XAMT		= ROUND(#{xAmt})
+		   	, 	MAKEDT 		= NOW()
+		   	, 	MAKER 		= #{chaCd}
+		    WHERE CHACD 			= #{chaCd}
+				AND CUSKEY			= #{cusKey}
+				AND PAYITEMCD 		= #{payItemCd}
+				AND RESULT 			= #{result}
+				AND MASMONTH 		= #{masMonth}
+				AND XROW 			= #{xRow}
+		    RETURNING*)
+		INSERT INTO XNOTIMASFAIL (CHACD, 			XROW,			MASMONTH,		CUSKEY,			CUSNAME,
+		                          CUSHP,			CUSMAIL,		CUSOFFNO,		STARTDATE,		ENDDATE,
+		                          PRINTDATE,
+		                          XCOUNT,			XAMT,
+		                          RESULT,			MAKEDT,			MAKER,			REGDT,			PAYITEMCD)
+		SELECT #{chaCd},		#{xRow},		#{masMonth},	#{cusKey},		#{cusName},
+		       #{cusHp},		#{cusMail},		#{cusOffNo},	#{startDate},	#{endDate},
+			   COALESCE(#{printDate}, ''),
+			   #{xCount},		ROUND(#{xAmt}),
+			   #{result},		NOW(),			#{chaCd},		NOW(),		#{payItemCd}
+		WHERE NOT EXISTS (SELECT * FROM T)
+	</insert>
+
+	<!-- 페이징을 위한 header -->
+	<sql id="paging_header">
+		select *
+		from (
+		    select (ROW_NUMBER() OVER()) as rn, Z.*
+		    from (	
+	</sql>
+	<!-- 페이징을 위한 footer -->
+	<sql id="paging_footer">
+		    ) Z
+		) X where rn between #{start} and #{end}
+	</sql>
+
+	<!-- 대량등록 실패내역 -->
+	<select id="selectFailList" resultType="ClaimDTO">
+		<include refid="paging_header" />
+		SELECT	A.CHACD										AS chaCd
+			,	A.CUSKEY									AS cusKey
+			,	A.CUSNAME									AS cusName
+			,	A.CUSHP										AS cusHp
+			,	A.CUSMAIL									AS cusMail
+			,	A.CUSOFFNO									AS cusOffNo
+			,	A.RESULT									AS result
+			,   A.PAYITEMCD   								AS payItemCd
+			, 	B.PAYITEMNAME 								AS payItemName
+			,	TO_CHAR(A.XAMT::integer, 'FM999,999,999') 	AS xAmt
+			,	A.MASMONTH									AS masMonth
+			,	TO_CHAR(TO_DATE(A.STARTDATE, 'YYYYMMDD'), 'YYYY.MM.DD')			AS startDate
+			,	TO_CHAR(TO_DATE(A.ENDDATE, 'YYYYMMDD'), 'YYYY.MM.DD')			AS endDate
+			,	TO_CHAR(TO_DATE(A.PRINTDATE, 'YYYYMMDD'), 'YYYY.MM.DD')			AS printDate
+		FROM	XNOTIMASFAIL A
+		LEFT OUTER JOIN XPAYITEM B ON A.PAYITEMCD = B.PAYITEMCD
+		WHERE	A.CHACD = #{chaCd}
+		ORDER	BY A.CUSNAME
+		<include refid="paging_footer" />
+	</select>
+
+	<!-- 대량등록 실패 내역 total count -->
+	<select id="failTotalCount" resultType="int">
+		SELECT  COUNT(*) AS cnt
+         FROM	XNOTIMASFAIL A
+		WHERE	A.CHACD 	= #{chaCd}
+	</select>
+
+	<!-- 청구 대량 실패 내역 -->
+	<select id="selExcelFailData" resultType="ClaimDTO">
+		SELECT 	DISTINCT A.MASMONTH
+			, A.XROW
+			, A.CUSNAME
+			, A.CUSKEY
+			, B.PAYITEMNAME
+			, TO_CHAR(A.XAMT::integer, 'FM999,999,999') AS payItemAmt
+			, TO_CHAR(TO_DATE(A.STARTDATE, 'YYYYMMDD'), 'YYYY.MM.DD') AS startDate
+			, TO_CHAR(TO_DATE(A.ENDDATE, 'YYYYMMDD'), 'YYYY.MM.DD') AS endDate
+			, A.PRINTDATE
+			, A.RESULT
+			, A.PAYITEMCD
+			, C.VANO
+			, C.CUSGUBN1
+			, C.CUSGUBN2
+			, C.CUSGUBN3
+			, C.CUSGUBN4
+		FROM XNOTIMASFAIL A
+		LEFT OUTER JOIN XPAYITEM	B ON A.CHACD = B.CHACD AND A.PAYITEMCD = B.PAYITEMCD
+		INNER JOIN 		XCUSMAS		C ON C.CUSKEY = A.CUSKEY
+		WHERE 	A.CHACD = #{chaCd}
+		ORDER	BY A.CUSNAME
+	</select>
+
+	<!-- 청구대상 목록 -->
+	<select id="selectClaimExcel" resultType="ClaimDTO">
+		SELECT	MAS.NOTIMASCD,
+				DET.NOTIDETCD,
+				MAS.CUSKEY,
+				MAS.CUSNAME,
+				MAS.CUSGUBN1,
+				MAS.CUSGUBN2,
+				MAS.CUSGUBN3,
+				MAS.CUSGUBN4,
+				DET.PAYITEMCD,
+				DET.PAYITEMNAME,
+				DET.PAYITEMAMT,
+				DET.PTRITEMNAME,
+				DET.PTRITEMREMARK,
+				CUS.VANO,
+				MAS.MASMONTH,
+				MAS.MASDAY,
+				MAS.STARTDATE,
+				MAS.ENDDATE,
+				MAS.PRINTDATE,
+				CASE MAS.NOTIMASST  WHEN 'PA00' THEN  '임시'  WHEN 'PA02' THEN  '미납'  WHEN 'PA03' THEN  '납부'  WHEN 'PA04' THEN  '일부납'
+									WHEN 'PA05' THEN  '초과납'  WHEN 'PA06' THEN  '환불' END													AS NOTIMASST,
+				CASE MAS.NOTI_CAN_YN  WHEN 'Y' THEN  '취소'  WHEN 'N' THEN  '정상' END														AS NOTICANYN,
+				MAS.REMARK
+		FROM XNOTIMAS MAS
+			, XNOTIDET DET
+			, XCUSMAS CUS
+		WHERE MAS.NOTIMASCD = DET.NOTIMASCD
+		AND MAS.VANO = CUS.VANO
+		AND MAS.CHACD = #{chaCd}
+		<include refid="search" />
+		<include refid="orderByClaimReg"/>
+	</select>
+
+	<!-- search 청구상태 추가 필요-->
+	<sql id="search">
+		<if test="notiMasSt == 'PA00' and notiMasSt != null">
+			AND 	MAS.NOTIMASST = DET.NOTIDETST
+			AND 	MAS.NOTIMASST = #{notiMasSt}
+			AND 	CUS.DISABLED  = 'N'
+		</if>
+		<if test="notiMasSt != 'PA00' and notiMasSt != null">
+			AND 	MAS.NOTIMASST != 'PA00'
+			AND 	DET.NOTIDETST != 'PA00'
+		</if>
+		<if test='selGb == "M" and selGb != null'>
+			AND		MAS.MASMONTH = #{masMonth}
+		</if>
+		<if test='selGb == "D" and selGb != null'>
+			AND		MAS.MASDAY BETWEEN #{masStDt} AND #{masEdDt}
+		</if>
+
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchValue)'>
+			<if test='cusGubn == "cusName"'>
+				AND
+				<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+					MAS.CUSNAME LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='cusGubn == "vano"'>
+				AND
+				<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+					MAS.VANO LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+		</if>
+
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusGubnValue)'>
+			<if test='seachCusGubn == "all"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					( MAS.CUSGUBN1 LIKE '%' || #{list} || '%' OR MAS.CUSGUBN2 LIKE '%' || #{list} || '%' OR MAS.CUSGUBN3 LIKE '%' || #{list} || '%' OR MAS.CUSGUBN4 LIKE '%' || #{list} || '%' )
+				</foreach>
+			</if>
+			<if test='seachCusGubn == "CUSGUBN1"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					MAS.CUSGUBN1 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='seachCusGubn == "CUSGUBN2"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					MAS.CUSGUBN2 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='seachCusGubn == "CUSGUBN3"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					MAS.CUSGUBN3 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+			<if test='seachCusGubn == "CUSGUBN4"'>
+				AND
+				<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+					MAS.CUSGUBN4 LIKE '%' || #{list} || '%'
+				</foreach>
+			</if>
+		</if>
+
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(strList)">
+			AND		MAS.NOTI_CAN_YN  IN
+			<foreach collection="strList" item="list" index="index" open="(" close=")" separator=",">
+				#{list}
+			</foreach>
+		</if>
+
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(payList)">
+			AND MAS.NOTIMASST IN
+			<foreach collection="payList" item="list" index="index" open="(" close=")" separator=",">
+				#{list}
+			</foreach>
+		</if>
+	</sql>
+
+	<!-- ORDER BY -->
+	<sql id="orderByClaimReg">
+		<choose>
+			<when test="search_orderBy == 'masMonth'">
+				ORDER BY MASMONTH DESC, CUSNAME ASC, PAYITEMNAME ASC, MAS.NOTI_CAN_YN DESC
+			</when>
+			<when test="search_orderBy == 'cusName'">
+				ORDER BY CUSNAME ASC, MASMONTH DESC, PAYITEMNAME ASC, MAS.NOTI_CAN_YN DESC
+			</when>
+			<when test="search_orderBy == 'payItemName'">
+				ORDER BY PAYITEMNAME ASC, MASMONTH DESC, CUSNAME ASC, MAS.NOTI_CAN_YN DESC
+			</when>
+			<when test="search_orderBy == 'printDate'">
+				ORDER BY PRINTDATE DESC
+			</when>
+			<when test="search_orderBy == 'masDay'">
+				ORDER BY MASDAY DESC
+			</when>
+			<when test="search_orderBy == 'date'">
+				ORDER BY STARTDATE DESC, ENDDATE DESC
+			</when>
+		</choose>
+	</sql>
+
+	<!-- 납부제외고객 -->
+	<select id="selPcpGubn" resultType="int">
+		SELECT	COUNT(*) AS cnt
+		FROM	XCUSMAS
+		WHERE   VANO 	= #{vano}
+		AND		RCPGUBN = 'N'
+	</select>
+
+	<!-- 청구 대량 등록 헤더 및 데이터 추출 - 고객 -->
+	<select id="excelCusList" resultType="ClaimDTO">
+		SELECT DISTINCT *
+		FROM (	SELECT 	#{masMonth} 	AS masMonth
+					,	A.CUSNAME 		AS cusName
+					,	A.CUSGUBN1		AS "cusGubn1"
+					,	A.CUSGUBN2		AS "cusGubn2"
+					,	A.CUSGUBN3		AS "cusGubn3"
+					,	A.CUSGUBN4		AS "cusGubn4"
+					, 	A.VANO 			AS vano
+					, 	#{startDate}	AS startDate --납부시작일
+					, 	#{endDate}		AS endDate 	 --납부마감일
+					, 	#{printDate}	AS printDate --고지출력납부마감일
+					, 	'' 				AS remark 	 --비고
+				FROM 	XCUSMAS A
+				WHERE 	A.DISABLED 		= 'N'
+				AND 	A.CHACD 		= #{chaCd}
+				AND 	A.RCPGUBN 		= 'Y'
+				ORDER 	BY A.CUSNAME) T
+	</select>
+
+	<!-- 청구 대량 등록 데이터 추출 - 전월고객 -->
+	<select id="selExcelBeforeMonth" resultType="ClaimDTO">
+		SELECT	DISTINCT	*
+		FROM (	SELECT 	#{masMonth} 	AS masMonth
+					,	A.CUSNAME 		AS cusName
+					,	A.CUSGUBN1    	AS cusGubn1
+					,	A.CUSGUBN2    	AS cusGubn2
+					,	A.CUSGUBN3    	AS cusGubn3
+					,	A.CUSGUBN4    	AS cusGubn4
+					, 	A.VANO 			AS vano
+					, 	#{startDate}	AS startDate --납부시작일
+					, 	#{endDate}		AS endDate 	 --납부마감일
+					, 	#{printDate}	AS printDate --고지출력납부마감일
+					, 	'' 				AS remark 	 --비고
+				FROM 	XNOTIMAS A
+				WHERE 	A.CHACD 		= #{chaCd}
+				AND 	A.NOTI_CAN_YN 	= 'N'
+				AND 	A.MASMONTH 		= (	SELECT MAX(MASMONTH)
+											FROM   XNOTIMAS
+											WHERE  CHACD = #{chaCd}
+											AND    NOTI_CAN_YN = 'N'
+											AND    MASMONTH &lt; TO_CHAR(NOW(), 'YYYYMM'))
+		    ) T
+		ORDER 	BY CUSNAME
+	</select>
+
+	<!-- 청구 항목 코드, 항목 이름 -->
+	<select id="excelItemList" resultType="ClaimDTO">
+		SELECT PAYITEMCD
+			, PAYITEMNAME
+		FROM XPAYITEM
+		WHERE PAYITEMST = 'ST01'
+		AND COALESCE(DISABLEDYN, 'N') = 'N'
+		AND CHACD = #{chaCd}
+		ORDER BY PTRITEMORDER::integer, PAYITEMCD
+	</select>
+
+	<select id="selectDetailsForExcel" resultType="ClaimItemDTO">
+		SELECT	NOTIMASCD
+				, PAYITEMCD
+				, PAYITEMNAME
+				, PAYITEMAMT
+				, PTRITEMREMARK
+		FROM XNOTIDET
+		WHERE NOTIMASCD= #{notimasCd}
+	</select>
+
+	<select id="selectClaimMasterExcel" resultType="ClaimDTO">
+		SELECT MAS.NOTIMASCD
+			, MAX(MAS.CUSNAME)          AS CUSNAME
+			, MAX(MAS.CUSGUBN1)         AS CUSGUBN1
+			, MAX(MAS.CUSGUBN2)         AS CUSGUBN2
+			, MAX(MAS.CUSGUBN3)         AS CUSGUBN3
+			, MAX(MAS.CUSGUBN4)         AS CUSGUBN4
+			, MAX(MAS.VANO)             AS VANO
+			, MAX(MAS.MASMONTH)         AS MASMONTH
+			, MAX(MAS.MASDAY)           AS MASDAY
+			, MAX(MAS.STARTDATE)        AS STARTDATE
+			, MAX(MAS.ENDDATE)          AS ENDDATE
+			, MAX(MAS.PRINTDATE)        AS PRINTDATE
+			, MAX(MAS.REMARK)           AS REMARK
+		FROM XNOTIMAS MAS, XNOTIDET DET, XCUSMAS CUS
+		WHERE MAS.NOTIMASCD = DET.NOTIMASCD
+		AND MAS.VANO = CUS.VANO
+		AND MAS.CHACD = #{chaCd}
+		<include refid="search" />
+		GROUP BY MAS.NOTIMASCD, MAS.NOTIMASST, MAS.NOTI_CAN_YN
+		ORDER BY MASMONTH DESC, CUSNAME ASC
+	</select>
+
+	<select id="selectClaimFailMasterExcel" resultType="ClaimDTO">
+		SELECT A.XROW
+			, MAX(A.CUSNAME)    AS CUSNAME
+			, MAX(C.CUSGUBN1)   AS CUSGUBN1
+			, MAX(C.CUSGUBN2)   AS CUSGUBN2
+			, MAX(C.CUSGUBN3)   AS CUSGUBN3
+			, MAX(C.CUSGUBN4)   AS CUSGUBN4
+			, MAX(C.VANO)       AS VANO
+			, MAX(A.MASMONTH)   AS MASMONTH
+			, MAX(A.STARTDATE)  AS STARTDATE
+			, MAX(A.ENDDATE)    AS ENDDATE
+			, MAX(A.PRINTDATE)  AS PRINTDATE
+		FROM XNOTIMASFAIL A
+		LEFT OUTER JOIN  XPAYITEM	B ON A.CHACD = B.CHACD AND A.PAYITEMCD = B.PAYITEMCD
+		INNER JOIN		 XCUSMAS	C ON C.CUSKEY = A.CUSKEY
+		WHERE A.CHACD = #{chaCd}
+		GROUP BY A.XROW
+		ORDER BY A.XROW
+	</select>
+
+	<select id="selectFailDetailsForExcel" resultType="ClaimItemDTO">
+		SELECT	XROW
+				, PAYITEMCD
+				, XAMT AS PAYITEMAMT
+				, PTRITEMREMARK
+  				, REMARK
+		FROM XNOTIMASFAIL
+		WHERE CHACD = #{chaCd}
+		AND XROW = #{xRow}
+	</select>
+
+	<select id="listForExcelTrans" resultType="ClaimDTO">
+		SELECT MAX(COALESCE(A.CUSGUBN1, '')) 		AS cusGubn1
+			  ,MAX(COALESCE(A.CUSGUBN2, ''))		AS cusGubn2
+			  ,MAX(COALESCE(A.CUSGUBN3, ''))		AS cusGubn3
+			  ,MAX(COALESCE(A.CUSGUBN4, ''))		AS cusGubn4
+			  ,MAX(COALESCE(A.VANO, ''))         	AS vano
+		FROM (	SELECT	CUSGUBN1
+						, CUSGUBN2
+					  	, CUSGUBN3
+                      	, CUSGUBN4
+                      	, VANO
+						, DENSE_RANK () OVER (ORDER BY NOTIMASCD DESC) rnk
+				FROM XCUSMAS
+				WHERE CHACD = #{chaCd}
+				  AND CUSNAME = #{cusName}
+				  AND DISABLED = 'N') A
+		WHERE rnk = 1
+	</select>
+
+
+</mapper>

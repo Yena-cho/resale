@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SysNotice">	
+<!--
+	<resultMap type="SysNoticeDTO" id="selHpNo">
+		<result	column="hpNo" property="hpNo" javaType="encrypt"	jdbcType="CLOB"/>
+	</resultMap>-->
+	
+	<!-- 페이징을 위한 header -->
+	<sql id="paging_header">
+		select *
+		from (
+		    select row_number() over() as rn, A.*
+		    from (	
+	</sql>
+	
+	<!-- 페이징을 위한 footer -->
+	<sql id="paging_footer">
+		    ) A
+		) X where rn between #{start} and #{end}
+	</sql>
+	
+	<!-- 고객상담 COUNT -->
+	<select id="sysSmsCustCount"  resultType="int">
+		SELECT 	COUNT(DISTINCT A.CHACD)
+    	FROM 	XCHALIST 	A
+		LEFT OUTER JOIN XMONTHSUM 	B ON A.CHACD = B.CHACD
+        WHERE  1=1
+		<include refid="searchStatus" />
+		<include refid="searchClass" />
+		<include refid="searchDate" />
+	</select>
+
+	<!-- sms발송용 리스트 불러오기 -->
+	<select id="sysGetCustList" resultType="SysNoticeDTO">
+		SELECT 	DISTINCT A.CHACD 	AS chaCd
+		, 	SUBSTR(A.CHRHP, 13, 1) AS hpNo
+		, 	A.CHAST AS userStatus
+		FROM 	XCHALIST 	A
+		LEFT OUTER JOIN XMONTHSUM 	B ON A.CHACD = B.CHACD
+		WHERE  1=1
+		<include refid="searchStatus" />
+		<include refid="searchClass" />
+		<include refid="searchDate" />
+	</select>
+	
+	<select id="maxSmsSeq" resultType="int">
+		SELECT 	COALESCE (MAX(SMSSEQ) + 1, 1)
+		FROM 	SMS_SYS_MNG
+	</select>
+	
+		<!-- sms 발송 후처리 -->
+	<insert id="sysInsertSmsReq">
+		INSERT 	INTO  SMS_SYS_MNG
+					(SMSTY
+				,	 SMSSEQ
+				, 	 TITLE
+				, 	 MSG
+				,	 SEND_TELNO
+				,	 MSGTY
+				,	 CHAST
+				,	 USETY
+				,	 CHATY
+				,	 SEND_CNT
+				,	 FAIL_CNT
+				, 	 SEND_ID
+				,	 REQDT)
+		VALUES(		 #{smsty}
+				,	 #{smsseq}
+				,	 #{title}
+				,	 #{msg}
+				,	 #{sendTelno}
+				,	 #{msgty}
+				,	 #{chast}
+				,	 #{usety}
+				,	 #{chaty}
+				,	 #{sendCnt}
+				,	 #{failCnt}
+				,	 #{sendId}
+				,	 now())
+	</insert>
+	
+	<insert id="sysInsertSmsList">
+		INSERT INTO SMS_SYS_LIST
+					(SMS_SYS_REQCD
+				, 	SMSTY
+				, 	SMSSEQ
+				, 	CHACD
+				, 	RCV_CHRHP
+				, 	SEND_STATUS
+				, 	REQDT)
+		VALUES (	#{smsReqCd}
+				, 	#{smsty}
+				, 	#{smsseq}
+				, 	#{chaCd}
+				,	#{rcvChrhp}
+				, 	#{status}
+				, 	now())
+	</insert>
+	
+	<select id="selFailCnt" resultType="int">
+		SELECT 	COUNT(*)
+		FROM 	SMS_SYS_LIST
+		WHERE 	SEND_STATUS = '3' 
+		AND 	SMSTY 		= #{smsty} 
+		AND 	SMSSEQ 		= #{smsseq}
+	</select>
+	
+	<update id="updateFailCnt">
+		UPDATE 	SMS_SYS_MNG
+		SET 	FAIL_CNT 	= #{fcount}
+		WHERE 	SMSTY 		= #{smsty} 
+		AND 	SMSSEQ 		= #{smsseq}
+	</update>
+		
+	<!--  내역페이지 토탈 카운트 -->
+	<select id="sysSmsMngCount" resultType="int">
+		SELECT 	COUNT(*)
+		FROM 	SMS_SYS_MNG
+		WHERE 	SMSTY IN ('0', '10')
+	</select>
+
+	<select id="selNoticeList" resultType="SysNoticeDTO">
+		<include refid="paging_header"/>
+		SELECT 	SMSTY 			AS smsTy
+			, 	SMSSEQ 			AS smsSeq
+			, 	TITLE 			AS title
+			, 	MSG 			AS smsMsg
+			, 	SEND_TELNO 		AS telNo
+			, 	MSGTY 			AS msgTy
+			, 	CHAST 			AS userStatus
+			, 	USETY 			AS userClass
+			, 	CHATY 			AS userDate
+			, 	SEND_CNT 		AS sendCnt
+			, 	FAIL_CNT 		AS failCnt
+			, 	SEND_ID 		AS id
+			,	to_char(REQDT, 'yyyy.mm.dd hh24:mi:ss') AS reqDate
+		FROM 	SMS_SYS_MNG
+		WHERE 	SMSTY IN ('0', '10')
+		ORDER 	BY REQDT desc
+		<include refid="paging_footer"/>
+	</select>
+	
+	<select id="selSendList" resultType="SysNoticeDTO">
+		SELECT 	SMS_SYS_REQCD AS smsReqCd
+		FROM 	SMS_SYS_LIST
+		WHERE 	SEND_STATUS IN ('0', '1')	
+	</select>
+
+	<update id="updateStatus">
+		UPDATE	SMS_SYS_LIST
+		SET		SEND_STATUS	  = #{status}
+		WHERE  	SMS_SYS_REQCD = #{smsReqCd}
+	</update>
+
+	<select id="sysGetCustEmList" resultType="SysNoticeDTO">
+		SELECT 	DISTINCT A.CHACD 	AS chaCd
+			, 	A.CHAST 			AS emailChast
+			,	SUBSTR(A.CHRMAIL, 0, position( '@' in A.CHRMAIL ) - 1) 				AS cusMail
+	        , 	SUBSTR(A.CHRMAIL, position( '@' in A.CHRMAIL ) + 1, LENGTH(A.CHRMAIL)) AS mail
+	        , 	A.CHANAME 			AS chaName
+		FROM 	XCHALIST	A 
+			,	XMONTHSUM 	B
+		WHERE 	A.CHACD 	= B.CHACD
+		<include refid="searchStatus" />
+		<include refid="searchClass" />
+		<include refid="searchDate" />
+	</select> 
+
+	<select id="maxEmailSeq" resultType="int">
+		SELECT 	COALESCE (MAX(EMAIL_SEQ) + 1, 1)
+		FROM 	EMAIL_NOTI_MNG
+	</select>
+
+	<insert id="sysInsertEmailReq">
+		INSERT INTO  EMAIL_NOTI_MNG
+					(EMAIL_TYPE
+					, 	EMAIL_SEQ
+					, 	TITLE
+					, 	CONTENTS
+					, 	CHAST
+					, 	USETY
+					, 	CHATY
+					, 	SEND_CNT
+					, 	FAIL_CNT 
+					, 	CHACD
+					, 	REQDT)
+		VALUES(			#{emailtype}
+					,	#{emailseq}
+					,	#{title}
+					,	#{msg}
+					,	#{chast}
+					,	#{usety}
+					,	#{chaty}
+					,	#{sendCnt}
+					,	#{failCnt}
+					,	#{chaCd}
+					,	now())
+	</insert>
+	
+	<insert id="sysInsertEmailHist">
+		INSERT INTO EMAIL_NOTI_HIST
+						(SEQ
+					, 	 ECARE_NO
+					, 	 EMAIL_TYPE
+					,	 EMAIL_SEQ
+					,	 REQDT
+					,	 SEND_ID
+					,	 SENDER
+					,	 RECEIVER_ID
+					,	 RECEIVER_NM
+					,	 RECEIVER
+					,	 CHAST)
+		VALUES (		 #{seq}
+					, 	 #{ecareNo}
+					, 	 #{emailtype}
+					, 	 #{emailseq}
+					,	 now()
+					,	 #{senderNm}
+					,	 #{sender}
+					,	 #{receiverId}
+					,	 #{receiverNm}
+					,	 #{receiver}
+					,	 #{chast})
+	</insert>
+	
+		<!--  내역페이지 토탈 카운트 -->
+	<select id="sysEmailMngCount" resultType="int">
+		SELECT 	COUNT(*)
+		FROM 	EMAIL_NOTI_MNG
+	</select>
+
+	<select id="selEmNoticeList" resultType="SysNoticeDTO">
+		<include refid="paging_header"/>
+		SELECT 	EMAIL_TYPE 	AS emailTy
+			, 	EMAIL_SEQ 	AS emailSeq
+			, 	TITLE 	 	AS emailTitle
+			, 	CONTENTS 	AS emailMsg
+			, 	CHAST 		AS emailChast
+			, 	USETY 		AS emUseTy
+			, 	CHATY 		AS emChaTy
+			, 	SEND_CNT 	AS emSendCnt
+			, 	FAIL_CNT 	AS emFailCnt
+			, 	CHACD 	 	AS emId
+			,	TO_CHAR(REQDT, 'yyyy.mm.dd hh24:mi:ss') AS emReqDate
+		FROM 	EMAIL_NOTI_MNG
+		ORDER 	BY REQDT desc
+		<include refid="paging_footer"/>
+	</select>
+
+	<update id="sysEmFailCountUpd">
+		UPDATE 	EMAIL_NOTI_MNG 
+		SET 	FAIL_CNT 	= #{fcount} 
+		WHERE 	EMAIL_SEQ 	= #{emailSeq}
+	</update>
+
+	<sql id="sfcheck">
+		<choose>
+			<when test="sucorfail != null">
+				AND B.SEND_FG NOT IN ('E')
+			</when>
+			<otherwise>
+				AND B.SEND_FG = 'E'
+			</otherwise>
+		</choose>
+	</sql>
+	
+	<!-- 검색어 조건 -->
+	<sql id="searchClass">
+		<choose>
+			<!-- 기관형태 조회 -->
+			<when test="option3 == 1 ">
+			    AND A.CHATRTY = '01'
+			</when>
+			<when test="option3 == 2 ">
+			    AND A.CHATRTY = '03'
+			</when>
+			<otherwise>
+				AND A.CHATRTY IN('01','03')
+			</otherwise>
+		</choose>
+	</sql>
+	
+	<!-- 신청구분 조건-->
+	<sql id="searchDate">
+		<choose>
+			<when test="option2 == 1 ">
+			    		AND B.MONTH BETWEEN #{startday} AND #{endday}
+			</when>
+			<when test="option2 == 2 ">
+			   			AND B.MONTH BETWEEN #{startday} AND #{endday}
+			</when>
+			<otherwise>
+				
+			</otherwise>
+		</choose>
+	</sql>
+	
+		<!-- 상태 조건 -->
+	<sql id="searchStatus">
+		<choose>
+			<when test="option1 == 1">
+			    AND A.CHAST = 'ST06'
+			</when>
+			<when test="option1 == 2">
+			    AND A.CHAST = 'ST02'
+			</when>
+			<when test="option1 == 3 ">
+			    AND A.CHAST = 'ST08'
+			</when>
+			<when test="option1 == 4 ">
+			    AND (A.CHAST = 'ST06' OR A.CHAST = 'ST02')
+			</when>
+			<when test="option1 == 5 ">
+			    AND (A.CHAST = 'ST06' OR A.CHAST = 'ST08')
+			</when>
+			<when test="option1 == 6 ">
+			    AND (A.CHAST = 'ST02' OR A.CHAST = 'ST08')
+			</when>
+			<otherwise>
+				AND A.CHAST IN('ST02','ST06','ST08')
+			</otherwise>
+		</choose>
+	</sql>
+
+</mapper>

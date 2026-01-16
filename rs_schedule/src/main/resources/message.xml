@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<messages charset="UTF-8">
+    <message id="NewHeader" msgType="kr.co.finger.msgio.msg.NewHeader" desc="헤더">
+        <field id="recordType" length="1" type="AN" desc="Record구분"/>
+        <field id="seqNo" length="8" type="N" desc="일련번호"/>
+        <field id="corpCode" length="10" type="AN" desc="기관코드"/>
+        <field id="fileName" length="8" type="AN" desc="파일이름"/>
+        <field id="reqData" length="6" type="AN" desc="신청접수일자"/>
+        <field id="filler" length="87" type="AN" desc="filler"/>
+    </message>
+    <message id="NewTrailer" msgType="kr.co.finger.msgio.msg.NewTrailer" desc="트레일러">
+        <field id="recordType" length="1" type="AN" desc="Record구분"/>
+        <field id="seqNo" length="8" type="N" desc="일련번호"/>
+        <field id="corpCode" length="10" type="AN" desc="기관코드"/>
+        <field id="fileName" length="8" type="AN" desc="파일이름"/>
+        <field id="totalRecordCount" length="8" type="N" desc="총DataRecord수"/>
+        <field id="newReqCount" length="8" type="N" desc="신규등록건수"/>
+        <field id="modiReqCount" length="8" type="N" desc="변경등록건수"/>
+        <field id="moveReqCount" length="8" type="N" desc="해지등록"/>
+        <field id="tempMoveReqCount" length="8" type="N" desc="임의해지등록"/>
+        <field id="filler" length="43" type="AN" desc="filler"/>
+        <field id="macValue" length="10" type="AN" desc="Mac검증값"/>
+    </message>
+    <message id="NewData" msgType="kr.co.finger.msgio.msg.NewData" desc="데이터">
+        <field id="recordType" length="1" type="AN" desc="Record구분"/>
+        <field id="seqNo" length="8" type="N" desc="일련번호"/>
+        <field id="corpCode" length="10" type="AN" desc="기관코드"/>
+        <field id="reqDate" length="6" type="AN" desc="신청일자"/>
+        <field id="reqType" length="1" type="AN" desc="신청구분"/>
+        <field id="payerNo" length="20" type="AN" desc="납부자번호"/>
+        <field id="bankCode" length="7" type="AN" desc="은행점코드"/>
+        <field id="withdrawalAccountNo" length="16" type="AN" desc="지점출금계좌번호"/>
+        <field id="compRegNo" length="16" type="AN" desc="사업자등록번호"/>
+        <field id="dealerCode" length="4" type="N" desc="취급점코드"/>
+        <field id="fundType" length="2" type="AN" desc="자금종료"/>
+        <field id="resultCode" length="1" type="AN" desc="결과코드"/>
+        <field id="errorCode" length="4" type="AN" desc="불능코드"/>
+        <field id="filler1" length="1" type="AN" desc="filler1"/>
+        <field id="phoneNo" length="12" type="AN" desc="전화번호"/>
+        <field id="channel" length="1" type="AN" desc="신청서접수채널"/>
+        <field id="filler2" length="10" type="AN" desc="filler2"/>
+    </message>
+
+    <message id="BatchHeader" msgType="kr.co.finger.msgio.msg.BatchHeader" desc="헤더">
+        <field id="recordType" length="1" type="AN" desc="Record구분"/>
+        <field id="seqNo" length="8" type="N" desc="일련번호"/>
+        <field id="corpCode" length="10" type="AN" desc="기관코드"/>
+        <field id="fileName" length="8" type="AN" desc="파일이름"/>
+        <field id="withdrawalDate" length="6" type="AN" desc="출금일자"/>
+        <field id="mainBankCd" length="7" type="AN" desc="주거래은행코드"/>
+        <field id="depositAccountNo" length="16" type="AN" desc="입금계좌번호"/>
+        <field id="filler" length="94" type="AN" desc="filler"/>
+    </message>
+    <message id="EB21BatchTrailer" msgType="kr.co.finger.msgio.msg.EB21BatchTrailer" desc="헤더">
+        <field id="recordType" length="1" type="AN" desc="Record구분"/>
+        <field id="seqNo" length="8" type="N" desc="일련번호"/>
+        <field id="corpCode" length="10" type="AN" desc="기관코드"/>
+        <field id="fileName" length="8" type="AN" desc="파일이름"/>
+        <field id="tatalRecordCount" length="8" type="N" desc="총데이터레코드건수"/>
+        <field id="allCount" length="8" type="N" desc="출금의뢰한레코드건수"/>
+        <field id="allAmount" length="13" type="N" desc="출금의뢰금액합계"/>
+        <field id="partialCount" length="8" type="N" desc="00000000"/>
+        <field id="partialAmount" length="13" type="N" desc="0000000000000"/>
+        <field id="filler" length="63" type="AN" desc="filler"/>
+        <field id="macValue" length="10" type="AN" desc="Mac검증값"/>
+    </message>
+
+    <message id="EB22BatchTrailer" msgType="kr.co.finger.msgio.msg.EB22BatchTrailer" desc="헤더">
+        <field id="recordType" length="1" type="AN" desc="Record구분"/>
+        <field id="seqNo" length="8" type="N" desc="일련번호"/>
+        <field id="corpCode" length="10" type="AN" desc="기관코드"/>
+        <field id="fileName" length="8" type="AN" desc="파일이름"/>
+        <field id="tatalRecordCount" length="8" type="N" desc="총데이터레코드건수"/>
+        <field id="allCount" length="8" type="N" desc="출금의뢰한레코드건수"/>
+        <field id="allAmount" length="13" type="N" desc="출금의뢰금액합계"/>
+        <field id="partialCount" length="8" type="N" desc="00000000"/>
+        <field id="partialAmount" length="13" type="N" desc="0000000000000"/>
+        <field id="filler" length="63" type="AN" desc="filler"/>
+        <field id="macValue" length="10" type="AN" desc="Mac검증값"/>
+    </message>
+
+    <message id="BatchData" msgType="kr.co.finger.msgio.msg.BatchData" desc="데이터">
+        <field id="recordType" length="1" type="AN" desc="Record구분"/>
+        <field id="seqNo" length="8" type="N" desc="일련번호"/>
+        <field id="corpCode" length="10" type="AN" desc="기관코드"/>
+        <field id="withdrawalBankCode" length="7" type="AN" desc="출금참가기관"/>
+        <field id="withdrawalAccntNo" length="16" type="AN" desc="출금계좌번호"/>
+        <field id="withdrawalAmout" length="13" type="N" desc="출금의뢰금액"/>
+        <field id="compRegNo" length="13" type="AN" desc="사업자등록번호"/>
+        <field id="resultCode" length="1" type="AN" desc="결과코드"/>
+        <field id="errorCode" length="4" type="AN" desc="불능코드"/>
+        <field id="passBookInfo" length="16" type="AH" desc="통장기재내용"/>
+        <field id="fundType" length="2" type="AN" desc="자금종료"/>
+        <field id="payerNo" length="20" type="AN" desc="납부자번호"/>
+        <field id="temp" length="5" type="AN" desc="이용기관사용영역"/>
+        <field id="withdrawalType" length="1" type="AN" desc="출금형태"/>
+        <field id="phoneNo" length="12" type="AN" desc="전화번호"/>
+        <field id="filler" length="21" type="AN" desc="filler"/>
+    </message>
+
+    <message id="EB13" msgType="kr.co.finger.msgio.msg.EB13" desc="출금이체">
+        <field id="header" ref="NewHeader"/>
+        <field id="dataList" ref="NewData"/>
+        <field id="trailer" ref="NewTrailer"/>
+    </message>
+    <message id="EB14" msgType="kr.co.finger.msgio.msg.EB14" desc="출금이체신청결과">
+        <field id="header" ref="NewHeader"/>
+        <field id="dataList" ref="NewData"/>
+        <field id="trailer" ref="NewTrailer"/>
+    </message>
+    <message id="EB21" msgType="kr.co.finger.msgio.msg.EB21" desc="출금의뢰">
+        <field id="header" ref="BatchHeader"/>
+        <field id="dataList" ref="BatchData"/>
+        <field id="trailer" ref="EB21BatchTrailer"/>
+    </message>
+    <message id="EB22" msgType="kr.co.finger.msgio.msg.EB22" desc="출금결과내역">
+        <field id="header" ref="BatchHeader"/>
+        <field id="dataList" ref="BatchData"/>
+        <field id="trailer" ref="EB22BatchTrailer"/>
+    </message>
+    <message id="EI13" msgType="kr.co.finger.msgio.msg.EI13" desc="출금동의증빙자료">
+        <field id="header" ref="EvidenceHeader"/>
+        <field id="dataList" ref="EvidenceData"/>
+        <field id="trailer" ref="EvidenceTrailer"/>
+    </message>
+
+    <message id="EvidenceHeader" msgType="kr.co.finger.msgio.msg.EvidenceHeader" desc="헤더">
+        <field id="workType" length="6" type="AN" desc="업무구분코드 AE1112"/>
+        <field id="recordType" length="2" type="AN" desc="Record구분 11"/>
+        <field id="seqNo" length="7" type="N" desc="일련번호 0000000"/>
+        <field id="reqData" length="8" type="N" desc="신청일 YYYYMMDD"/>
+        <field id="corpCode" length="20" type="AN" desc="기관코드"/>
+        <field id="totalEvidenceCount" length="7" type="N" desc="총증빙자료개수"/>
+        <field id="filler" length="974" type="AN" desc="filler"/>
+    </message>
+
+    <message id="EvidenceTrailer" msgType="kr.co.finger.msgio.msg.EvidenceTrailer" desc="헤더">
+        <field id="workType" length="6" type="AN" desc="업무구분코드 AE1112"/>
+        <field id="recordType" length="2" type="AN" desc="Record구분 33"/>
+        <field id="seqNo" length="7" type="N" desc="일련번호 9999999"/>
+        <field id="corpCode" length="20" type="AN" desc="기관코드"/>
+        <field id="totalDataRecordCount" length="7" type="N" desc="총 Data Record 수"/>
+        <field id="totalDataBlockCount" length="10" type="N" desc="총 Data Block 수"/>
+        <field id="filler" length="972" type="AN" desc="filler"/>
+    </message>
+
+    <message id="EvidenceData" msgType="kr.co.finger.msgio.msg.EvidenceData" desc="헤더">
+        <field id="workType" length="6" type="AN" desc="업무구분코드 AE1112"/>
+        <field id="recordType" length="2" type="AN" desc="Record구분 22"/>
+        <field id="seqNo" length="7" type="N" desc="일련번호 "/>
+        <field id="filler1" length="10" type="AN" desc="filler"/>
+        <field id="corpCode" length="20" type="AN" desc="기관코드"/>
+        <field id="payerNo" length="30" type="AN" desc="납부자번호"/>
+        <field id="bankCd" length="3" type="N" desc="은행코드"/>
+        <field id="accountNo" length="20" type="AN" desc="계좌번호"/>
+        <field id="reqData" length="8" type="N" desc="신청일 YYYYMMDD"/>
+        <field id="evidenceType" length="1" type="N" desc="증빙자료구분 1(서번)"/>
+        <field id="evidenceExt" length="5" type="AN" desc="증빙자료확장자"/>
+        <field id="evidenceLength" length="7" type="N" desc="증빙자료길이"/>
+        <field id="evidenceData" length="0" type="X" desc="증빙자료데이터"/>
+        <field id="filler2" length="0" type="AN" desc="filler"/>
+    </message>
+
+
+</messages>

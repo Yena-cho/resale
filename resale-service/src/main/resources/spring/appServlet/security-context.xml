@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+             xmlns:beans="http://www.springframework.org/schema/beans"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:jee="http://www.springframework.org/schema/jee"
+             xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-4.1.xsd
+             http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee.xsd
+             http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <http pattern="/assets/**" security="none"/>
+    <http pattern="/resources/**" security="none"/>
+
+    <http auto-config='true' use-expressions="true" create-session="ifRequired" disable-url-rewriting="true">
+
+        <!-- 권한 정리
+        ROLE_ADMIN			기관담당자
+        ROLE_USER			납부자
+        ROLE_API_USER		API 기관사용자
+        ROLE_GROUP_ADMIN	그룹 관리자
+        ROLE_GROUP_USER		그룹-사용자
+        ROLE_BANKADMIN		은행관리자
+        ROLE_SYSADMIN		다모아관리자
+        ROLE_CHASVC			기관관리자 약관동의
+        ROLE_CHACMS			기관관리자 자동출금 ARS 동의 전
+         -->
+
+        <!-- 로그인 전 -->
+        <intercept-url pattern="/"                                          access="permitAll"/> <!-- 로그인 전 메인화면 : pattern="/**"로 설정하면 하위 권한 적용 안됨 -->
+        <intercept-url pattern="/common/login"                              access="permitAll"/> <!-- 로그인 -->
+        <intercept-url pattern="/bank"                                      access="permitAll"/> <!-- 로그인 -->
+        <intercept-url pattern="/sys"                                       access="permitAll"/> <!-- 로그인 -->
+        <intercept-url pattern="/common/library"                            access="permitAll"/> <!-- 자료실 -->
+        <intercept-url pattern="/common/customerAsist/noticeList"           access="permitAll"/>
+        <intercept-url pattern="/common/customerAsist/faqList"              access="permitAll"/>
+        <intercept-url pattern="/common/customerAsist/customerCenter"       access="permitAll"/>
+        <intercept-url pattern="/sys/editorStream"                          access="permitAll"/>
+        <intercept-url pattern="/sys/editorStream/**"                       access="permitAll"/>
+        <intercept-url pattern="/rest/nice-payments"                        access="permitAll"/>
+        <intercept-url pattern="/rest/nice-payments/**"                     access="permitAll"/>
+        <intercept-url pattern="/otp/generate/**"                           access="permitAll"/>
+
+
+        <!-- 전문시뮬레이터 -->
+        <intercept-url pattern="/msgtest" access="hasRole('ROLE_ADMIN') or hasRole('ROLE_SYSADMIN')"/>
+
+        <!-- 로그인 후 -->
+        <intercept-url pattern="/common/login/memberAuth"                   access="hasRole('ROLE_CHASVC')"/> <!-- 기관관리자 약관동의 전 -->
+        <intercept-url pattern="/payer/**"                                  access="hasRole('ROLE_USER')"/>   <!-- 납부자 메인화면 -->
+
+        <!-- 고객지원 메뉴 -->
+        <intercept-url pattern="/common/customerAsist/qnaList" access="authenticated"/>
+
+        <!-- 기관담당자 메뉴 -->
+        <!--
+        <intercept-url pattern="/org/custMgmt/custReg"			            access="hasRole('ROLE_ADMIN')" />
+        <intercept-url pattern="/org/custMgmt/custList"			            access="hasRole('ROLE_ADMIN')" />
+
+        <intercept-url pattern="/org/claimMgmt/claimReg"		            access="hasRole('ROLE_ADMIN')" />
+        <intercept-url pattern="/org/claimMgmt/claimSel"		            access="hasRole('ROLE_ADMIN')" />
+        <intercept-url pattern="/org/claimMgmt/claimItemMgmt"	            access="hasRole('ROLE_ADMIN')" />
+
+        <intercept-url pattern="/org/transformer"	                        access="hasRole('ROLE_ADMIN')" />
+        <intercept-url pattern="/org/transformer/**"	                    access="hasRole('ROLE_ADMIN')" />
+        -->
+
+        <!-- 그룹사용자/API 사용자 -->
+        <intercept-url pattern="/org/main/index"                            access="hasAnyRole('ROLE_ADMIN', 'ROLE_GROUP_ADMIN', 'ROLE_GROUP_USER', 'ROLE_API_USER', 'ROLE_CHACMS')"/>
+        <intercept-url pattern="/org/notiMgmt/notiInq"                      access="hasAnyRole('ROLE_ADMIN', 'ROLE_GROUP_ADMIN', 'ROLE_GROUP_USER', 'ROLE_API_USER', 'ROLE_CHACMS')"/>
+        <intercept-url pattern="/org/notiMgmt/notiConfig"                   access="hasAnyRole('ROLE_ADMIN', 'ROLE_GROUP_ADMIN', 'ROLE_GROUP_USER', 'ROLE_API_USER', 'ROLE_CHACMS')"/>
+        <intercept-url pattern="/org/notiMgmt/notiPrintReq"                 access="hasAnyRole('ROLE_ADMIN', 'ROLE_GROUP_ADMIN', 'ROLE_GROUP_USER', 'ROLE_API_USER', 'ROLE_CHACMS')"/>
+        <intercept-url pattern="/org/receiptMgnt/paymentList"               access="hasAnyRole('ROLE_ADMIN', 'ROLE_GROUP_ADMIN', 'ROLE_GROUP_USER', 'ROLE_API_USER', 'ROLE_CHACMS')"/>
+        <intercept-url pattern="/org/receiptMgnt/cashReceipt"               access="hasAnyRole('ROLE_ADMIN', 'ROLE_GROUP_ADMIN', 'ROLE_GROUP_USER', 'ROLE_API_USER', 'ROLE_CHACMS')"/>
+        <intercept-url pattern="/org/myPage/**"                             access="hasAnyRole('ROLE_ADMIN', 'ROLE_GROUP_ADMIN', 'ROLE_GROUP_USER', 'ROLE_API_USER', 'ROLE_CHACMS')"/>
+        <intercept-url pattern="/org/claimMgmt"                             access="hasAnyRole('ROLE_ADMIN', 'ROLE_GROUP_ADMIN', 'ROLE_GROUP_USER', 'ROLE_CHACMS')"/>
+        <intercept-url pattern="/org/claimMgmt/**"                          access="hasAnyRole('ROLE_ADMIN', 'ROLE_GROUP_ADMIN', 'ROLE_GROUP_USER', 'ROLE_CHACMS')"/>
+        <intercept-url pattern="/org/custMgmt"                              access="hasAnyRole('ROLE_ADMIN', 'ROLE_GROUP_ADMIN', 'ROLE_GROUP_USER', 'ROLE_CHACMS')"/>
+        <intercept-url pattern="/org/custMgmt/**"                           access="hasAnyRole('ROLE_ADMIN', 'ROLE_GROUP_ADMIN', 'ROLE_GROUP_USER', 'ROLE_CHACMS')"/>
+        <intercept-url pattern="/org/transformer"                           access="hasAnyRole('ROLE_ADMIN', 'ROLE_GROUP_ADMIN', 'ROLE_GROUP_USER', 'ROLE_CHACMS')"/>
+        <intercept-url pattern="/org/transformer/**"                        access="hasAnyRole('ROLE_ADMIN', 'ROLE_GROUP_ADMIN', 'ROLE_GROUP_USER', 'ROLE_CHACMS')"/>
+        <intercept-url pattern="/exit-run-as"                               access="hasAnyRole('ROLE_RUN_AS')"/>
+
+        <!-- 다모아관리자 -->
+        <intercept-url pattern="/sys/**"                                    access="hasRole('ROLE_SYSADMIN')"/>
+
+        <!-- 은행관리자 -->
+        <intercept-url pattern="/bank/**"                                   access="hasRole('ROLE_BANKADMIN')"/>
+
+        <!-- 로그인 처리 -->
+        <form-login login-page="/"
+                    login-processing-url="/login"
+                    username-parameter="userId"
+                    password-parameter="userPw"
+                    authentication-success-handler-ref="userLoginSuccessHandler"
+                    authentication-failure-handler-ref="userLoginFailureHandler"
+                    always-use-default-target="true"/>
+
+        <!-- 로그아웃 처리 -->
+        <logout delete-cookies="JSESSIONID" success-handler-ref="userLogoutSuccessHandler" logout-url="/logout"/>
+        <!--<logout delete-cookies="JSESSIONID" logout-success-url="/" logout-url="/logout" invalidate-session="true"/>-->
+
+        <csrf disabled="true"/>
+        <session-management invalid-session-url="/loggedOut"/>
+            <!--<concurrency-control max-sessions="1" expired-url="/"/>-->
+        <!--</session-management>-->
+        <access-denied-handler ref="userDeniedHandler"/>
+        <!--<remember-me key="shinhanDamoa" remember-me-parameter="remember_me" token-validity-seconds="604800"/>-->
+    </http>
+
+    <beans:bean id="userService" class="com.finger.shinhandamoa.home.login.UserAuthenticationService">
+        <beans:constructor-arg name="sqlSession" ref="sqlSessionTemplate"/>
+    </beans:bean>
+
+    <authentication-manager>
+        <authentication-provider user-service-ref="userService">
+            <password-encoder ref="passwordEncoder"/>
+        </authentication-provider>
+    </authentication-manager>
+
+    <beans:bean id="passwordEncoder" class="org.springframework.security.authentication.encoding.ShaPasswordEncoder">
+        <beans:constructor-arg name="strength" value="256"/>
+    </beans:bean>
+
+    <beans:bean id="userDeniedHandler" class="com.finger.shinhandamoa.home.login.UserDeniedHandler"/>
+
+    <beans:bean id="userLoginSuccessHandler" class="com.finger.shinhandamoa.home.login.UserLoginSuccessHandler">
+        <beans:constructor-arg name="sqlSession" ref="sqlSessionTemplate"/>
+    </beans:bean>
+
+    <beans:bean id="userLoginFailureHandler" class="com.finger.shinhandamoa.home.login.UserLoginFailureHandler">
+        <beans:constructor-arg name="sqlSession" ref="sqlSessionTemplate"/>
+    </beans:bean>
+
+    <beans:bean id="userLogoutSuccessHandler" class="com.finger.shinhandamoa.home.login.UserLogoutSuccessHandler"/>
+
+    <beans:bean class="org.springframework.session.jdbc.config.annotation.web.http.JdbcHttpSessionConfiguration">
+        <beans:property name="maxInactiveIntervalInSeconds" value="1800"/>
+    </beans:bean>
+
+</beans:beans>

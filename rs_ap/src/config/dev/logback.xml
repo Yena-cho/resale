@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>%d{yyyy-MM-dd HH:mm:ss} %-5p - %msg at %logger.%M\(%F:%L\)%n</Pattern>
+        </layout>
+    </appender>
+
+    <root level="DEBUG">
+        <appender-ref ref="STDOUT" />
+    </root>
+
+    <logger name="kr.co.finger.damoa">
+        <level value="TRACE" />
+    </logger>
+    <logger name="kr.co.finger.shinhandamoa">
+        <level value="TRACE" />
+    </logger>
+    <logger name="com.finger.shinhandamoa">
+        <level value="TRACE" />
+    </logger>
+</configuration>

@@ -1,0 +1,470 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CustMgmtDao">
+<!--
+	&lt;!&ndash; 고객관리 - 고객등록목록조회  &ndash;&gt;
+	<resultMap type="CustReg01DTO" id="custReg01ListResult">
+		<result	column="cusName"	property="cusName"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="regDt"	property="regDt"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="cusKey"	property="cusKey"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="rcpGubn"	property="rcpGubn"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="cusGubn1"	property="cusGubn1"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="cusGubn2"	property="cusGubn2"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="cusGubn3"	property="cusGubn3"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="cusGubn4"	property="cusGubn4"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="vano"	property="vano"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="cusHp"	property="cusHp"	javaType="encrypt"	jdbcType="VARCHAR"/>
+		<result	column="cusMail"	property="cusMail"	javaType="encrypt"	jdbcType="VARCHAR"/>
+		<result	column="cusType"	property="cusType"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="confirm"	property="confirm"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="cusOffNo"	property="cusOffNo"	javaType="encrypt"	jdbcType="VARCHAR"/>
+		<result	column="disabled"	property="disabled"	javaType="String"	jdbcType="VARCHAR"/>
+	</resultMap>
+
+	&lt;!&ndash; 고객관리 - 고객등록목록조회  &ndash;&gt;
+	<resultMap type="CustReg01DTO" id="selectXcusMasResult">
+		<result	column="cusKey"	property="cusKey"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="chaCd"	property="chaCd"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="cusName"	property="cusName"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="rcpGubn"	property="rcpGubn"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="vano"	property="vano"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="cusHp"	property="cusHp"	javaType="encrypt"	jdbcType="VARCHAR"/>
+		<result	column="cusMail"	property="cusMail"	javaType="encrypt"	jdbcType="VARCHAR"/>
+		<result	column="cusGubn1"	property="cusGubn1"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="cusGubn2"	property="cusGubn2"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="cusGubn3"	property="cusGubn3"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="cusGubn4"	property="cusGubn4"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="rcpReqTy"	property="rcpReqTy"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="cusType"	property="cusType"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="cusType"	property="cusType"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="confirm"	property="confirm"	javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="cusOffNo"	property="cusOffNo"	javaType="encrypt"	jdbcType="VARCHAR"/>
+		<result	column="memo"	property="memo"	javaType="String"	jdbcType="VARCHAR"/>
+	</resultMap>-->
+
+	<!-- 페이징을 위한 header -->
+	<sql id="paging_header">
+		select *
+		from (
+		    select (ROW_NUMBER() OVER()) as rn, C.*
+		    from (	
+	</sql>
+	<!-- 페이징을 위한 footer -->
+	<sql id="paging_footer">
+		    ) C
+		) X where rn between #{start} and #{end}
+	</sql>
+
+	<!-- 고객관리 - 고객등록 - 작성중인 내역 삭제 - 가상계좌번호 USEYN = 'N' -->
+	<update id="updateVanoUseYn">
+		UPDATE 	VALIST
+		SET 	USEYN = 'N'
+			,	CUSCD = #{cusCd}
+			,	USEDT = #{useDt}
+		WHERE 	CHACD = #{chaCd}
+		AND 	VANO  IN (SELECT VANO
+						  FROM 	 XCUSMAS
+						  WHERE  CHACD 	  = #{chaCd}
+						  AND    DISABLED = 'I')
+	</update>
+
+	<!-- 고객관리 - 고객등록 - 작성중인 내역 삭제  -->
+	<delete id="deleteXcusMas">
+		DELETE	
+		FROM	XCUSMAS 
+		WHERE 	CHACD     	= #{chaCd}
+		AND		DISABLED	= 'I'
+	</delete>
+
+	<!-- 고객관리 - 고객등록 - 선택삭제 - 가상계좌번호 USEYN = 'N' -->
+	<update id="updateVano">
+		UPDATE	VALIST
+		SET		USEYN 	= #{useYn}
+		  	<if test="_parameter.containsKey('cusCd')">
+			,	CUSCD 	= #{cusCd}
+		  	</if>
+			<if test="_parameter.containsKey('useDt')">
+			,	USEDT	= #{useDt}
+		  	</if>
+		WHERE	CHACD	= #{chaCd}
+		AND		VANO 	= #{vano}
+	</update>
+
+	<!-- 고객관리 - 고객등록 - 선택삭제 -->
+	<delete id="deleteCusInfo">
+		DELETE	
+		FROM	XCUSMAS 
+		WHERE 	CHACD   = #{chaCd}
+		AND		VANO 	= #{vano}
+	</delete>
+
+	<!-- 고객관리 - 고객등록목록조회  -->
+	<select id="custReg01List" parameterType="CustReg01DTO" resultType="CustReg01DTO">
+		<include refid="paging_header" />
+		SELECT 	CUSNAME		AS cusName
+				,	TO_CHAR(REGDT, 'YYYY.MM.DD') 		AS regDt
+				,	CUSKEY 		AS cusKey
+				,	RCPGUBN  	AS rcpGubn
+				, 	CUSGUBN1 	AS cusGubn1
+				, 	CUSGUBN2 	AS cusGubn2
+				, 	CUSGUBN3 	AS cusGubn3
+				, 	CUSGUBN4 	AS cusGubn4
+				,	VANO 		AS vano
+				,	CUSHP 		AS cusHp
+				,	RCPREQTY  	AS rcpReqTy
+				,	CUSTYPE 	AS cusType
+				,	CONFIRM 	AS confirm
+				, 	CUSOFFNO  	AS cusOffNo
+				,	DISABLED 	AS disabled
+				,	 CUSMAIL   	AS cusMail
+		FROM 	XCUSMAS
+		WHERE 	CHACD = #{chaCd}
+		<include refid="custList01ListSearch" />
+		<include refid="custList01ListOrderBy" />
+		<include refid="paging_footer" />
+	</select>
+
+	<sql id="custList01ListSearch">
+		<choose>
+			<when test="disabled != null and disabled != ''">
+			AND		DISABLED	= #{disabled}
+			</when>
+			<otherwise>
+				<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDate) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDate)">
+				AND		TO_CHAR(REGDT, 'YYYYMMDD') BETWEEN #{startDate} AND #{endDate}
+				</if>
+
+				<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchValue)'>
+					<if test='searchGb == "cusname"'>
+						AND
+						<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+							CUSNAME LIKE '%' || #{list} || '%'
+						</foreach>
+					</if>
+					<if test='searchGb == "regGb"'>
+						AND
+						<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+							CUSKEY LIKE '%' || #{list} || '%'
+						</foreach>
+					</if>
+					<if test='searchGb == "vano"'>
+						AND
+						<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+							VANO LIKE '%' || #{list} || '%'
+						</foreach>
+				</if>
+
+					<if test='searchGb == "hpno"'>
+						AND
+						<foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+							CUSHP LIKE '%' || #{list} || '%'
+						</foreach>
+				</if>
+				</if>
+
+				<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusGubnValue)'>
+					<if test='cusGubn == "all"'>
+						AND
+						<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+							( CUSGUBN1 LIKE '%' || #{list} || '%' OR CUSGUBN2 LIKE '%' || #{list} || '%' OR CUSGUBN3 LIKE '%' || #{list} || '%' OR CUSGUBN4 LIKE '%' || #{list} || '%' )
+						</foreach>
+					</if>
+					<if test='cusGubn == "CUSGUBN1"'>
+						AND
+						<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+							CUSGUBN1 LIKE '%' || #{list} || '%'
+						</foreach>
+					</if>
+					<if test='cusGubn == "CUSGUBN2"'>
+						AND
+						<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+							CUSGUBN2 LIKE '%' || #{list} || '%'
+						</foreach>
+					</if>
+					<if test='cusGubn == "CUSGUBN3"'>
+						AND
+						<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+							CUSGUBN3 LIKE '%' || #{list} || '%'
+						</foreach>
+					</if>
+					<if test='cusGubn == "CUSGUBN4"'>
+						AND
+						<foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+							CUSGUBN4 LIKE '%' || #{list} || '%'
+						</foreach>
+				</if>
+				</if>
+
+				<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(payList)">
+				AND		RCPGUBN   IN
+					<foreach collection="payList" item="list" index="index" open="(" close=")" separator=",">
+						#{list}
+					</foreach>
+				</if>
+				<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusList)">
+				AND		DISABLED  IN
+					<foreach collection="cusList" item="list" index="index" open="(" close=")" separator=",">
+						#{list}
+					</foreach>
+				</if>
+			</otherwise>
+		</choose>
+	</sql>
+
+	<select id="custReg01TotalCount" resultType="int">
+		SELECT 	COUNT(*)	AS cnt
+		FROM 	XCUSMAS
+		WHERE 	CHACD = #{chaCd}
+		<include refid="custList01ListSearch" />
+	</select>
+
+	<sql id="custList01ListOrderBy">
+        <choose>
+			<when test="searchOrderBy == 'regDt' ">
+			    ORDER BY REGDT DESC, CUSNAME ASC
+			</when>
+			<when test="searchOrderBy == 'cusName' ">
+			    ORDER BY CUSNAME ASC, REGDT	DESC
+			</when>
+        </choose>
+	</sql>
+
+	<!-- 고객관리 - 고객등록목록조회  -->
+	<select id="selectXcusMas" parameterType="CustReg01DTO" resultType="CustReg01DTO">
+		SELECT	CUSKEY		AS cusKey
+			, 	CHACD		AS chaCd
+			, 	CUSNAME		AS cusName
+			, 	RCPGUBN 	AS rcpGubn
+			, 	VANO		AS vano
+			, 	CUSHP		AS cusHp
+			, 	CUSMAIL		AS cusMail
+			, 	CUSGUBN1	AS cusGubn1
+			, 	CUSGUBN2	AS cusGubn2
+			, 	CUSGUBN3	AS cusGubn3
+			, 	CUSGUBN4	AS cusGubn4
+			,  	DISABLED	AS disabled
+			,	RCPREQTY 	AS rcpReqTy
+			,	CUSTYPE 	AS cusType
+			,	CONFIRM 	AS confirm
+			, 	CUSOFFNO 	AS cusOffNo
+			,	MEMO		AS memo
+		FROM	XCUSMAS
+		WHERE 	CHACD 	= #{chaCd}
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusKey)">
+		AND		CUSKEY 	= #{cusKey}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(vano)">
+		AND		VANO	= #{vano}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusHp)">
+		AND		CUSHP	= #{cusHp}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusName)">
+		AND		CUSNAME	= #{cusName}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusMail)">
+		AND		CUSMAIL	= #{cusMail}
+		</if>
+	</select>
+
+	<!-- 고객등록 -->
+	<insert id="insertXCustMas">
+		INSERT	INTO 
+		XCUSMAS (NOTIMASCD
+			,	CHACD
+			,	VANO
+			,	MASKEY
+			,	CUSKEY
+			,	CUSGUBN1
+			,	CUSGUBN2
+			,	CUSGUBN3
+			,	CUSGUBN4
+			,	CUSNAME
+			,	CUSHP
+			,	CUSMAIL
+			,	SMSYN
+			,	MAILYN
+			,	CUSOFFNO
+			,	MAKEDT
+			,	MAKER
+			,	REGDT
+			,	DISABLED
+			,	RCPGUBN
+			,	RCPREQTY
+			,	CONFIRM
+			,	MEMO
+			,	CUSTYPE
+			,	PASS_VANO
+			,	PASS_CUSHP)
+		VALUES	(#{notiMasCd}
+			, 	#{chaCd}
+			, 	#{vano}
+			, 	#{masKey}
+			, 	#{cusKey}
+			, 	#{cusGubn1}
+			, 	#{cusGubn2}
+			, 	#{cusGubn3}
+			, 	#{cusGubn4}
+			, 	#{cusName}
+			, 	#{cusHp}
+			, 	#{cusMail}
+			, 	#{smsYn}
+			, 	#{mailYn}
+			, 	#{cusOffNo}
+			, 	NOW()
+			, 	#{maker}
+			, 	NOW()
+			, 	#{disabled}
+			, 	#{rcpGubn}
+			, 	#{rcpReqTy}
+			, 	#{confirm}
+			, 	#{memo}	
+			, 	#{cusType}				
+			, 	#{passVano}
+			, 	#{passCushp})
+		ON CONFLICT (vano)
+		DO UPDATE
+			  SET	NOTIMASCD	= #{notiMasCd}
+				,	CHACD		= #{chaCd}
+				,	MASKEY		= #{masKey}
+				,	CUSKEY		= #{cusKey}
+				,	CUSGUBN1	= #{cusGubn1}
+				,	CUSGUBN2	= #{cusGubn2}
+				,	CUSGUBN3	= #{cusGubn3}
+				,	CUSGUBN4	= #{cusGubn4}
+				,	CUSNAME		= #{cusName}
+				,	CUSHP		= #{cusHp}
+				,	CUSMAIL		= #{cusMail}
+				,	SMSYN		= #{smsYn}
+				,	MAILYN		= #{mailYn}
+				,	CUSOFFNO	= #{cusOffNo}
+				,	MAKEDT		= NOW()
+				,	MAKER		= #{maker}
+				,	REGDT		= NOW()
+				,	DISABLED	= #{disabled}
+				,	RCPGUBN		= #{rcpGubn}
+				,	RCPREQTY	= #{rcpReqTy}
+				,	CONFIRM		= #{confirm}
+				,	MEMO		= #{memo}
+				,	CUSTYPE		= #{cusType}
+				,	PASS_VANO	= #{passVano}
+				,	PASS_CUSHP	= #{passCushp}
+	</insert>
+
+	<!-- 고객관리 - 고객정보수정  -->
+	<update id="updateXcusMas">
+		UPDATE 	XCUSMAS
+		SET 	MAKEDT    	=  NOW()
+			,	MAKER	  	=  #{chaCd}
+		<include refid="updateCon"/>
+		WHERE 	CHACD     	=  #{chaCd}
+		AND 	VANO  	  	=  #{vano}
+	</update>
+
+	<sql id="updateCon">
+		<if test='jobType  != null and jobType == "U"'>
+             , 	NOTIMASCD 	=  #{notiMasCd}
+             , 	MASKEY    	=  #{masKey}
+             , 	CUSKEY    	=  COALESCE(#{cusKey}, #{vano})
+			 , 	CUSNAME   	=  #{cusName}
+			 , 	CUSGUBN1  	=  #{cusGubn1}
+			 , 	CUSGUBN2  	=  #{cusGubn2}
+			 , 	CUSGUBN3  	=  #{cusGubn3}
+			 , 	CUSGUBN4  	=  #{cusGubn4}
+			 , 	CUSHP     	=  #{cusHp}
+			 , 	CUSMAIL     =  #{cusMail}
+			 ,	CUSTYPE		=  #{cusType}
+			 ,	CONFIRM		=  #{confirm}
+			 , 	CUSOFFNO    =  #{cusOffNo}
+			 , 	PASS_CUSHP	=  #{passCushp}
+			 , 	MEMO        =  #{memo}
+        </if>
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(smsYn) '>	 , SMSYN       =  #{smsYn}   </if>
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(mailYn) '>	 , MAILYN      =  #{mailYn}  </if>
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(rcpGubn) '>	 , RCPGUBN     =  #{rcpGubn} </if>
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(rcpReqTy) '>	 , RCPREQTY    =  #{rcpReqTy} </if>
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(disabled) '>	 , DISABLED    =  #{disabled} </if>
+	</sql>
+
+	<!-- 고객 등록 -->
+	<update id="updateCusmas">
+		UPDATE	XCUSMAS
+		SET		MAKEDT		= NOW()
+			,	MAKER		= #{chaCd}
+			<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(disabled) ">
+			,	DISABLED  	= #{disabled}
+			</if>
+			<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(rcpGubn) ">
+			,	RCPGUBN  	= #{rcpGubn}
+			</if>
+		WHERE	CHACD		= #{chaCd}
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(disab) ">
+		AND		DISABLED	= #{disab}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(vano) ">
+		AND		VANO	= #{vano}
+		</if>
+	</update>
+
+	<!-- 고객관리 - 가상계좌조회(채번용)  -->
+	<select id="getVanoInfo" resultType="CustReg01DTO">
+		SELECT A.VANO AS vano
+			,  A.USEYN AS useYn
+		FROM 	VALIST A
+		WHERE  	A.CHACD = #{chaCd}
+        <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(useYn) '>
+		AND 	A.USEYN  =  #{useYn}
+		</if>
+        <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusCd) '>
+		AND 	A.CUSCD  =  #{cusCd}
+		</if>
+		<if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(vano) '>
+		AND 	A.VANO  =  #{vano}
+		</if>
+		ORDER BY CUSCD DESC, VANO
+		LIMIT 1
+	</select>
+
+	<!-- 고객관리 - 가상계좌사용여부업데이트  -->
+	<update id="updateValist">
+		UPDATE 	VALIST
+		SET USEDT	= TO_CHAR(NOW(), 'YYYYMMDD')
+		<if  test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(useYn)'>
+		  , USEYN  =  #{useYn}
+		</if>
+		<if  test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusCd)'>
+		  , CUSCD  =  #{cusCd}
+		</if>
+		WHERE 	CHACD = #{chaCd}
+		AND 	VANO  =  #{vano}
+	</update>
+
+	<!-- 고객명 수정시 청구원장 고객명 수정(미납) -->
+	<update id="updateNotiMasCusName">
+		UPDATE	XNOTIMAS
+		SET		CUSNAME 	= #{cusName}
+		WHERE	VANO		= #{vano}
+		AND		NOTIMASST 	= 'PA02'
+	</update>
+
+	<select id="selectCusDisabled" resultType="CustReg01DTO">
+		SELECT DISABLED
+		FROM XCUSMAS
+		WHERE CHACD=#{chaCd}
+		AND VANO=#{vano}
+	</select>
+
+	<!-- 현금영수증 정보 변경 시 고객정보에 반영 -->
+	<update id="updateCashMasInfo" parameterType="java.util.HashMap">
+		UPDATE XCUSMAS
+			SET CUSOFFNO = COALESCE(#{cusOffNo2}, '')
+			  , CONFIRM  = COALESCE(#{confirm2}, '')
+			  , CUSTYPE  = COALESCE(#{cusType2}, '')
+			  , MAKEDT   = NOW()
+			  , MAKER    = #{chaCd}
+		WHERE VANO= #{vano}
+	</update>
+
+</mapper>

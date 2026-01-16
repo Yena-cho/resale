@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MyPage">	
+
+	<resultMap type="MyPageDTO" id="selChrHp">
+		<result column="chrHp" property="chrHp" javaType="encrypt" jdbcType="CLOB" />
+	</resultMap>
+
+	<!-- 페이징을 위한 header -->
+	<sql id="paging_header">
+		select *
+		from (
+		    select (row_number() over()) as rn, Z.*
+		    from (	
+	</sql>
+	<!-- 페이징을 위한 footer -->
+	<sql id="paging_footer">
+		    ) Z
+		) X where rn between #{start} and #{end}
+	</sql>
+	
+	<!-- sms설정 정보 가져오기 -->
+	<select id="getSmsConfig" resultType="MyPageDTO">
+		SELECT	NOTSMS
+			,	RCPSMS
+			,	USESMSYN
+			,	NOTSMSYN
+			,	RCPSMSTY
+			,	NOTSMS2
+			,	SMS_MSG_DEF1
+			,	SMS_MSG_DEF2
+		FROM	XCHALIST
+		WHERE	CHACD    	= #{chaCd}
+	</select>
+	
+	<update id="updateSmsNoti">
+		UPDATE	XCHALIST
+		SET		NOTSMS 	   = #{notSms}
+			,	RCPSMS	   = #{rcpSms}
+			,	NOTSMS2   = #{notSms2}
+			,	SMS_MSG_DEF1   = #{smsMsgDef1}
+			,	SMS_MSG_DEF2   = #{smsMsgDef2}
+			,	NOTSMSYN = #{notSmsYn}
+			,	RCPSMSTY = #{rcpSmsTy}
+		<choose>
+			<when test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(rcpSmsTy) and rcpSmsTy == "A"'>
+				, RCPSMSYN = 'Y'
+			</when>
+			<when test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(rcpSmsTy) and rcpSmsTy == "M"'>
+				, RCPSMSYN = 'N'
+			</when>
+			<when test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(rcpSmsTy) and rcpSmsTy == "N"'>
+				, RCPSMSYN = 'N'
+			</when>
+		</choose>
+			,	USESMSYN = #{useSmsYn}
+		WHERE	CHACD  = #{chaCd}
+	</update>
+	
+	<!-- 기관정보 가져오기 -->
+	<select id="selectChaInfo" resultType="MyPageDTO">
+		SELECT  A.CHACD
+			,	A.AGTCD
+			, 	A.CHANAME
+			, 	A.OWNER
+			, 	A.OWNERTEL
+			, 	A.CHAOFFNO
+			,	A.CHASTATUS
+			, 	A.CHATYPE
+			, 	A.CHAADDRESS1
+			, 	A.CHAADDRESS2
+			, 	A.CHAZIPCODE
+			,	A.CHRNAME
+			, 	A.CHRTELNO
+			, 	A.CHRHP
+			, 	A.CHRMAIL
+			, 	A.FEEACCNO
+			, 	A.FEEOFFNO
+			,   A.FEEACCNAME
+			, 	A.ACCNOCNT
+			, 	A.CONNAME
+			, 	A.CONTELNO
+			, 	A.ADJACCYN
+			,	A.RCPREQYN
+			, 	A.RCPREQTY
+			, 	A.RCPDTDUPYN
+			, 	A.USESMSYN
+			, 	A.NOTSMSYN
+			,   A.RCPSMSYN
+			, 	A.RCPSMSTY
+			, 	A.USEMAILYN
+			, 	A.AMTCHKTY
+			,	A.RCP_DUE_CHK
+			, 	A.CUSNAMETY
+			,	A.NOTAXYN
+			, 	A.CHATRTY
+			, 	A.CHAIP
+			, 	A.CHAPORT
+			, 	A.CUSGUBN1
+			, 	A.CUSGUBN2
+			,	A.CUSGUBN3
+			, 	A.CUSGUBN4
+			, 	A.CUSGUBNYN1
+			, 	A.CUSGUBNYN2
+			, 	A.CUSGUBNYN3
+			,	A.CUSGUBNYN4
+			, 	A.BILLNAME
+			, 	A.CUSALS
+			, 	A.NOTICHANAME
+			, 	A.TELNO
+			, 	A.REMARK
+			,   A.CHAST
+			, 	A.PRECHAST
+			, 	A.MAKEDT
+			, 	A.MAKER
+			, 	A.REGDT
+			, 	A.USRPWD
+			,	A.USEPGYN
+			, 	B.AGTNAME
+			,	B.GRPUSRCD, B.AGTTELNO
+			,   A.PARTIAL_PAYMENT AS PARTIAL_PAYMENT 
+			,   C.LOGINID
+			,	A.MNLRCPREQTY AS mnlRcpReqTy
+			,	A.RCPREQSVETY AS rcpReqSveTy
+			,	COALESCE(A.MAND_RCP_YN, 'N') AS mandRcpYn
+		FROM   	XCHALIST A LEFT OUTER JOIN FIAGTLIST B ON A.AGTCD = B.AGTCD, WEBUSER C
+		WHERE  A.CHACD = C.CHACD
+		AND A.CHACD = #{chaCd}
+	</select>
+	
+	<!-- 기관정보 수정 -->
+	<update id="updateOrgInfo">
+		UPDATE	XCHALIST
+		SET		CHRNAME	   = #{chrName}
+			,	CHRTELNO   = #{chrTelNo}
+			,	CHRMAIL    = #{chrMail}
+			,	CHRHP      = #{chrHp}
+			,	CHAZIPCODE = #{chaZipCode}
+			,	CHAADDRESS1 = #{chaAddr1}
+			,	CHAADDRESS2 = #{chaAddr2}
+		WHERE	CHACD  = #{chaCd}
+	</update>
+		<!-- 입금계좌명 수정 -->
+	<update id="updateOrgAccInfo">
+		UPDATE	XADJGROUP
+		SET		GRPADJNAME = #{grpadjname}
+		WHERE	CHACD  = #{chaCd} AND ADJFIREGKEY = #{adjfiregkey}
+	</update>
+	
+	<!-- 서비스설정 > 고객구분수정 -->
+	<update id="updateCusGubn">
+		UPDATE	XCHALIST
+		SET		CUSGUBN1   = #{cusGubn1}
+			,	CUSGUBN2   = #{cusGubn2}
+			,	CUSGUBN3   = #{cusGubn3}
+			,	CUSGUBN4   = #{cusGubn4}
+			,	CUSGUBNYN1 = #{cusGubnYn1}
+			,	CUSGUBNYN2 = #{cusGubnYn2}
+			,	CUSGUBNYN3 = #{cusGubnYn3}
+			,	CUSGUBNYN4 = #{cusGubnYn4}
+		WHERE	CHACD  = #{chaCd}
+	</update>
+	
+	<!-- 서비스설정 > 가상계좌수납 수정 -->
+	<update id="updateRcpChk">
+		UPDATE	XCHALIST
+		SET		AMTCHKTY   = #{amtChkTy}
+			,	RCP_DUE_CHK = #{rcpDueChk}
+		WHERE	CHACD  = #{chaCd}
+	</update>
+	
+	<!-- 서비스설정 > 현금영수증발급 수정 -->
+	<update id="updateCashRcp">
+		UPDATE	XCHALIST
+		SET		RCPREQYN   = #{rcpReqYn}
+			,	RCPREQTY   = #{rcpReqTy}
+			,	NOTAXYN = #{noTaxYn}
+		WHERE	CHACD  = #{chaCd}
+	</update>
+	
+	<select id="selectBillForm" resultType="MyPageDTO">
+		SELECT	BILLGUBN
+		FROM	XBILLFORM
+		WHERE	CHACD    	= #{chaCd}
+	</select>
+	
+	<insert id="insertBillForm" parameterType="java.util.HashMap">
+		INSERT INTO XBILLFORM(CHACD, BILLGUBN, BILLNAME, BILLCONT1, MAKEDT, MAKER, REGDT)
+		VALUES
+		(#{chaCd}, #{billGubn}, #{billName}, #{billCont}, NOW(), #{chaCd}, NOW())
+	</insert>
+	
+	<update id="updateBillForm" parameterType="hashMap">
+		UPDATE  XBILLFORM 
+		SET	  	BILLNAME 	= #{billName}
+			,	BILLCONT1	= #{billCont}
+			,	MAKEDT		= NOW()
+		WHERE 	CHACD = #{chaCd}
+		AND		BILLGUBN 	= #{billGubn} 
+	</update>
+	
+	<!-- 고지설정 정보 가져오기 -->
+	<select id="getBillConfig1" resultType="MyPageDTO">
+		SELECT	BILLGUBN
+			,	BILLNAME AS billName1
+			,	BILLCONT1 AS billCont1
+		FROM	XBILLFORM
+		WHERE	CHACD    	= #{chaCd}
+		AND		BILLGUBN    = #{billGubn}
+	</select>
+	
+	<select id="getBillConfig2" resultType="MyPageDTO">
+		SELECT	BILLGUBN
+			,	BILLNAME AS billName2
+			,	BILLCONT1 AS billCont2
+		FROM	XBILLFORM
+		WHERE	CHACD    	= #{chaCd}
+		AND		BILLGUBN    = #{billGubn}
+	</select>
+	
+	<select id="getBillConfig3" resultType="MyPageDTO">
+		SELECT	BILLGUBN
+			,	BILLNAME AS billName3
+			,	BILLCONT1 AS billCont3
+		FROM	XBILLFORM
+		WHERE	CHACD    	= #{chaCd}
+		AND		BILLGUBN    = #{billGubn}
+	</select>
+	
+
+	<select id="selectPwd" resultType="String">
+		SELECT LOGINPW
+		FROM   WEBUSER 
+		WHERE  CHACD = #{chaCd}
+	</select>
+	
+	<update id="updatePwd" parameterType="hashMap">
+		UPDATE  WEBUSER 
+		SET	  	LOGINPW = #{chgPwd1}
+			,	MAKEDT	= NOW()
+			,	MAKER	= #{chaCd}
+		WHERE 	CHACD 	= #{chaCd}
+	</update>
+	
+	<!-- 다계좌정보 조회 -->
+	<select id="adjList" resultType="MyPageDTO">
+		SELECT  ADJFIREGKEY,
+				GRPADJNAME
+		FROM   	XADJGROUP
+		WHERE   CHACD = #{chaCd}
+	</select>
+	
+	<!-- 온라인 카드결제 설정수정 -->
+	<update id="updateUsePgYn">
+		UPDATE	XCHALIST
+		SET		USEPGYN = #{usePgYn}
+		WHERE	CHACD  = #{chaCd}
+	</update>
+
+	<!-- 비번 재설정시 로그인 실패횟수 수정 -->
+	<update id="updateFailCnt">
+		UPDATE 	WEBUSER
+		SET MAKEDT 	=  NOW()
+		, 	MAKER 	= #{chaCd}
+		<if test="stat != null and stat == 'success'">
+			,	FAILCNT = 0
+		</if>
+		<if test="stat != null and stat == 'fail'">
+			,	FAILCNT = (SELECT MAX(FAILCNT) + 1 FROM WEBUSER WHERE CHACD = #{chaCd})
+		</if>
+		WHERE 	CHACD = #{chaCd}
+	</update>
+
+	<select id="selectFailCnt" resultType="int">
+		SELECT FAILCNT
+		FROM   WEBUSER
+		WHERE  CHACD = #{chaCd}
+	</select>
+
+	<!-- 알림톡 정보 가져오기 -->
+	<select id="getAtConfig" resultType="MyPageDTO">
+		SELECT ATYN
+       		  , NOTATYN
+       		  , RCPATYN
+       		  , COALESCE(ATCHANAME, CHANAME) AS CHANAME
+       		  , OWNERTEL					AS ChaTelNo
+  		  FROM XCHALIST
+ 		 WHERE CHACD = #{chaCd}
+	</select>
+
+	<!-- 알림톡 정보 수정 -->
+	<update id="updateAtNoti">
+		UPDATE XCHALIST
+	    SET NOTATYN = #{notAtYn}
+		  , RCPATYN = #{rcpAtYn}
+		WHERE CHACD = #{chaCd}
+	</update>
+</mapper>

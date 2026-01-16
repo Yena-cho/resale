@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<messages charset="UTF-8">
+    <message id="Head" msgType="kr.co.finger.msgio.cash.Head" desc="헤더">
+        <field id="headType" length="2" type="N" desc="Head구분 10"/>
+        <field id="sendDate" length="8" type="N" desc="전송일자 YYYYMMDD"/>
+        <field id="reqCorp" length="8" type="AN" desc="요청사 FINGER"/>
+        <field id="processCorp" length="8" type="AN" desc="처리사 KIS"/>
+        <field id="processCount" length="1" type="N" desc="작업회차 1"/>
+        <field id="filler" length="173" type="AN" desc="filler"/>
+    </message>
+    <message id="Data" msgType="kr.co.finger.msgio.cash.Data" desc="데이터">
+        <field id="dataType" length="2" type="AN" desc="Data구분 20"/>
+        <field id="traderType" length="1" type="N" desc="거래자구분 0:소득공제, 1:지출증빙(사업자번호 승인시)"/>
+        <field id="dealType" length="1" type="N" desc="거래구분 0:승인거래, 1:취소거래(승인+매출)"/>
+        <field id="seqNo" length="9" type="N" desc="데이터 일련번호"/>
+        <field id="trtmntType" length="1" type="N" desc="처리구분  1:주민번호 2:핸드폰번호 3:카드번호 4:사업자번호 "/>
+        <field id="bizNo" length="12" type="AN" desc="가맹점 사업자 번호 좌측정렬을 위해 AN"/>
+        <field id="id" length="20" type="AN" desc="신분확인 주민번호/핸드폰번호/카드번호/사업자번호"/>
+        <field id="customerNo" length="20" type="AN" desc="고객번호 사업자에서 관리하는 고객번호"/>
+        <field id="terminalNo" length="8" type="AN" desc="단말기번호"/>
+        <field id="salesDate" length="8" type="N" desc="매출일자 YYYYMMDD"/>
+        <field id="posEntity" length="2" type="N" desc="Swipe : 01, Key-in : 02"/>
+        <field id="creditApprovalNo" length="9" type="AN" desc="신용승인번호 공란"/>
+        <field id="cashApprovalNo" length="9" type="AN" desc="현금승인번호 KIS에서 승인번호 부여 (응답시 전송)"/>
+        <field id="cashOriginApprovalNo" length="9" type="AN" desc="취소시 현금 원승인의 승인번호 ‘취소시만 사용’"/>
+        <field id="salesAmount" length="12" type="N" desc="매출액"/>
+        <field id="serviceCharge" length="12" type="N" desc="봉사료 발생시만, 없으면 0 취소시 제외"/>
+        <field id="tax" length="12" type="N" desc="없으면 0 취소시 제외"/>
+        <field id="originSalesDate" length="8" type="N" desc="운매출일자 YYYYMMDD (취소시만, 승인거래의 매출일자)"/>
+        <field id="currencyCd" length="3" type="N" desc="통화코드 원화 420, 미화:840"/>
+        <field id="returnCd" length="4" type="AN" desc="반송코드"/>
+        <field id="temp" length="38" type="AN" desc="요청사이용영역"/>
+    </message>
+    <message id="Trailer" msgType="kr.co.finger.msgio.cash.Trailer" desc="트레일러">
+        <field id="trailerType" length="2" type="AN" desc="Trailer 구분"/>
+        <field id="totalCount" length="9" type="N" desc="총건수 = 승인 + 취소"/>
+        <field id="totalAmount" length="13" type="N" desc="총금액 = 승인 + 취소"/>
+        <field id="filler" length="176" type="AN" desc="filler"/>
+    </message>
+
+</messages>

@@ -1,0 +1,288 @@
+@charset "UTF-8";
+
+/*
+**
+** _button.scss
+** Author : 이영주
+** Create date : 2018.02.26
+** Description : Damoa 서비스에서 사용하는 버튼들 모음 damoa.scss 에서 최종으로 compile 됨
+**
+*/
+
+
+
+/* buttons */
+
+.btn {
+    border-radius: .1rem;
+
+    /* button size */
+    &.btn-xs {
+        padding: 0.5rem 0.325rem;
+        font-size: 0.8rem;
+        line-height: 1.325;
+        border-radius: 0.2rem;
+    }
+
+    &.btn-primary {
+        background: #1e75d6;
+
+        &.btn-outlined {
+            background: #fff !important;
+            border:1px solid #1e75d6 !important;
+
+            color:#1e75d6;
+        }
+    }
+
+    &.btn-secondary {
+        border-color: #ff9c4e !important;
+        background: #ff9c4e !important;
+    }
+
+    &.btn-img {
+        background: none;
+        border: 0;
+        padding: 0.125rem;
+    }
+
+    &.btn-d-gray {
+        color:#fff;
+        background:#606972;
+    }
+
+    &.btn-gray-outlined {
+        background:#fff;
+
+        border-color: #d3d3d3;
+
+        color:#444444;
+    }
+
+    &.btn-sitemap {
+        position: relative;
+        z-index: 1010;
+        //
+        // right: 0;
+        // top: 1.8rem;
+
+        width:30px;
+        height:30px;
+
+        top:0;
+
+        margin-left:1rem;
+
+        // border-radius: 0;
+        background: rgba(255,255,255,0);/*557bb9*/
+        // box-shadow: 5px 5px 5px 0 rgba(0,0,0,.2);
+
+        transition : all .5s;
+
+        &.for-main {
+            top: .35rem;
+
+            &.active {
+                top: 0;
+            }
+        }
+
+        span {
+        	display : inline-block;
+        	transition : all .5s;
+        	box-sizing : border-box;
+            position : absolute;
+            left : 0;
+            width : 100%;
+            height : 4px;
+            background-color : #000;
+            border-radius : 4px;
+
+            &:nth-of-type(1) {
+            	top : 0;
+            }
+
+            &:nth-of-type(2) {
+            	top : 12px;
+            }
+
+            &:nth-of-type(3) {
+            	bottom : 0;
+            }
+        }
+
+        &.active {
+            top: 1.2rem;
+            span {
+                &:nth-of-type(1) {
+                	-webkit-transform:translateY(12px) rotate(-315deg);
+                	transform : translateY(12px) rotate(-315deg);
+                }
+
+                &:nth-of-type(2) {
+                	opacity : 0;
+                }
+
+                &:nth-of-type(3) {
+                    -webkit-transform : translateY(-12px) rotate(315deg);
+                	transform : translateY(-12px) rotate(315deg);
+                }
+            }
+        }
+    }
+
+    &.btn-excel-form-download-in-modal {
+        width: 100%;
+        height: 100%;
+        max-width: 15rem;
+        background:#fff;
+
+        margin-left: auto;
+        margin-right: auto;
+
+        border:1px solid #99a9bd;
+        border-radius: 1px;
+
+        &:hover {
+            text-decoration: none;
+            color: #444;
+        }
+        span {
+            display: inline-block;
+            color: #444;
+            font-size: 1rem;
+            text-align: left;
+            vertical-align: middle;
+        }
+    }
+
+    &.btn-topbar {
+        background: none;
+        border:1px solid #d3d3d3;
+        border-radius: 1px;
+    }
+
+    &.btn-preset-month {
+        border: 1px solid #d3d3d3;
+        background:#fff;
+
+        color:#444;
+
+        &.active, &:hover {
+            border: 1px solid #606972;
+            background:#606972;
+
+            color:#fff;
+        }
+    }
+
+    &.btn-acrobat-reader-download{
+        padding: .1rem .2rem;
+
+        border:1px solid #d3d3d3;
+        border-radius: 1px;
+
+        font-size: .8125rem;
+        color:#666;
+    }
+
+    &.btn-cal {
+
+    }
+
+    &.btn-flexible-height {
+        width: 100%;
+        height:100%;
+        font-size: 1rem;
+
+        display: flex;
+        flex-grow: column;
+        flex: 1;
+        justify-content: center;
+        align-items: center;
+    }
+
+    &.btn-wide {
+        width: 8.75rem;
+    }
+
+    &.btn-cs-center {
+        height:3.3125rem;
+        font-size: 1.125rem;
+        color:rgb(255,255,255);
+    }
+
+    &.btn-download-application {
+        background:rgba(58,188,183,1);
+    }
+
+    &.btn-cs-phone-number {
+        background:rgba(203,128,108,1);
+
+        line-height: 2.5rem;
+    }
+
+    &.btn-book-counselling {
+        background:rgba(170,151,147,1);
+    }
+
+    &.btn-open-hidden-cell {
+        padding: 0 .35rem;
+        margin-left: .5rem;
+        border:1px solid rgba(191,199,208,1);
+        border-radius: 2px;
+    }
+}
+
+.btn-text {
+    text-decoration: underline;
+    color: #007bff ;
+    &:hover {
+        cursor: pointer;
+    }
+}
+
+@media screen and (max-width:992px) {
+    .btn {
+        &.btn-sitemap {
+            transition : all .5s;
+
+            &.for-main {
+                &.active {
+                    top:1.5rem;
+                }
+            }
+
+            // &.active {
+            //     top:1.5rem;
+            // }
+        }
+    }
+}
+
+@media screen and (max-width:768px) {
+    .btn {
+        // margin-bottom:.25rem;
+    }
+}
+
+.btn-icon-info {
+    position: absolute;
+    right: 0;
+    img {
+        position: absolute;
+        top: -10px;
+        right: 5px;
+    }
+}
+
+.in-info-icon {
+    position: absolute;
+    top: 14px;
+    left: 190px;
+    img {
+        position: absolute;
+        top: -8px;
+        right: 3px;
+    }
+}

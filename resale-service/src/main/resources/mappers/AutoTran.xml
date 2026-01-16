@@ -1,0 +1,709 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="AutoTran">	
+<!--
+	<resultMap type="AutoDTO" id="selFeeAccNo">
+		<result	column="FEEACCNO"		property="feeAccNo"		 javaType="encrypt"	jdbcType="CLOB"/>
+	</resultMap>
+
+	<resultMap type="AutoDTO" id="selFanHn">
+		<result	column="CHRHP"		property="chrHp"	 	 javaType="encrypt"	jdbcType="VARCHAR"/>
+	</resultMap>
+
+	<resultMap type="hashMap" id="autoCreResult">
+		<result	column="REGDT"			property="REGDT"		 javaType="java.sql.Timestamp"	jdbcType="DATE"/>
+		<result	column="CHAST"			property="CHAST"		 javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="CHACD"			property="CHACD"		 javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="BANKCD"			property="BANKCD"		 javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="FEEACCNO"		property="FEEACCNO"		 javaType="encrypt"	jdbcType="VARCHAR"/>
+		<result	column="FEEOFFNO"		property="FEEOFFNO"		 javaType="encrypt"	jdbcType="VARCHAR"/>
+		<result	column="CMS_FILE_NAME"	property="CMS_FILE_NAME" javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="CMS_REQ_ST"		property="CMS_REQ_ST"	 javaType="String"	jdbcType="VARCHAR"/>
+		<result	column="CMS_APP_GUBN"	property="CMS_APP_GUBN"	 javaType="String"	jdbcType="VARCHAR"/>
+	</resultMap> 
+	
+	<resultMap type="AutoDTO" id="selFeeInfo">
+		<result	column="FEEACCNO"		property="FEEACCNO"		 javaType="encrypt"	jdbcType="VARCHAR"/>
+		<result	column="CHAOFFNO"		property="CHAOFFNO"	 	 javaType="encrypt"	jdbcType="VARCHAR"/>
+	</resultMap>
+
+	<resultMap type="AutoDTO" id="selFeeRegInfo">
+		&lt;!&ndash;<result	column="FEEACCNO"		property="feeAccNo"		 javaType="encrypt"	jdbcType="VARCHAR"/>&ndash;&gt;
+		<result	column="CHAOFFNO"		property="chaOffNo"	 	 javaType="encrypt"	jdbcType="VARCHAR"/>
+		<result	column="CHRHP"		property="chrHp"	 	 javaType="encrypt"	jdbcType="VARCHAR"/>
+	</resultMap>-->
+
+	<!-- 페이징을 위한 header -->
+	<sql id="paging_header">
+		select *
+		from (
+		    select (ROW_NUMBER() OVER()) as rn, Z.*
+		    from (	
+	</sql>
+	<!-- 페이징을 위한 footer -->
+	<sql id="paging_footer">
+		    ) Z
+		) X where rn between #{start} and #{end}
+	</sql>
+
+	<!-- 날짜 빈값 체크 / 자동이체처리현황 -->
+	<sql id="dayBetween-cms">
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDt) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDt)">
+			AND 	TO_CHAR(TO_DATE(CMS_REQ_DT, 'YYYYMMDD')) BETWEEN #{startDt} AND #{endDt}
+		</if>
+	</sql>
+
+	<!-- 날짜 빈값 체크 / 자동이체신청관리 -->
+	<sql id="dayBetween-reg">
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDt) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDt)">
+			AND 	TO_CHAR(REGDT, 'YYYYMMDD') BETWEEN #{startDt} AND #{endDt}
+		</if>
+	</sql>
+	
+	<!-- 자동이체 신청관리 total count -->
+	<select id="selAutoTranCnt" resultType="int">
+		SELECT	COUNT(*)	AS cnt
+		FROM	XCHALIST
+		WHERE 	1=1
+		<include refid="dayBetween-cms" />
+		<include refid="search" />
+	</select>
+	
+	<!-- 자동이체 신청관리 목록 -->
+	<select id="selAutoTranList" resultType="AutoDTO">
+		<include refid="paging_header" />
+		SELECT	TO_CHAR(REGDT, 'YYYY.MM.DD')		AS regDt
+			,  	CHACD			AS chaCd
+			, 	CHANAME			AS chaName
+			, 	CHRNAME			AS chrName
+			, 	FEEACCNO		AS feeAccNo
+			, 	CMS_REQ_ST		AS cmsReqSt
+			,  	CMS_FILE_NAME	AS cmsFileName 
+			,	TO_CHAR(TO_DATE(CMS_REQ_FIN_DT, 'YYYYMMDD'), 'YYYY.MM.DD')		AS cmsReqDt
+			, 	CHKCMS 			AS chkCms
+			,	CMS_APP_GUBN	AS cmsAppGubn
+		FROM	XCHALIST
+		WHERE 	1=1
+		<include refid="dayBetween-cms" />
+		<include refid="search" />
+		<include refid="orderBy" />
+		<include refid="paging_footer" />
+	</select>
+	
+	<!-- 자동이체 신청관리 조회조건 -->
+	<sql id="search">
+		<if test="chaCd != null and chaCd != ''">
+			AND		CHACD = #{chaCd}
+		</if>
+		<if test="chaName != null and chaName != ''">
+			AND 	CHANAME LIKE '%' || #{chaName} || '%'
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchOption) and searchOption == 'All' and keyword != null and keyword != ''">
+			AND 	FEEACCNO = #{keyword}
+					OR CHRNAME	LIKE '%' || #{keyword} || '%')
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchOption) and searchOption == 'feeAccNo' and keyword != null and keyword != ''">
+			AND 	FEEACCNO = #{keyword}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchOption) and searchOption == 'chrName'">
+			AND 	CHRNAME	LIKE '%' || #{keyword} || '%'
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cmsList)">
+			AND		CMS_APP_GUBN IN  
+			<foreach collection="cmsList" item="list" index="index" open="(" close=")" separator=",">
+				#{list}
+			</foreach>
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(stList)">
+			AND		CMS_REQ_ST IN  
+			<foreach collection="stList" item="list" index="index" open="(" close=")" separator=",">
+				#{list}
+			</foreach>
+		</if> 
+	</sql>
+	<sql id="orderBy">
+		<if test="orderBy != null and orderBy == 'regDt'">
+			ORDER	BY REGDT DESC, CHACD, MAKEDT DESC
+		</if>
+		<if test="orderBy != null and orderBy == 'chaCd'">
+			ORDER	BY CHACD, REGDT DESC, MAKEDT DESC
+		</if>
+		<if test="orderBy != null and orderBy == 'makeDt'">
+			ORDER	BY MAKEDT DESC, CHACD, REGDT DESC
+		</if>
+	</sql>
+
+    <!-- 자동이체 동의관리 total count -->
+    <select id="selAutoTranRegCount" resultType="int">
+        SELECT	COUNT(*)	AS cnt
+        FROM	XCHALIST
+        WHERE 	1=1
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDt) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDt)">
+			AND (SELECT TO_CHAR(CREATE_DATE, 'YYYYMMDD')
+			FROM WITHDRAW_AGREEMENT
+			WHERE ID = WITHDRAW_AGREEMENT_ID) BETWEEN #{startDt} AND #{endDt}
+		</if>
+        <include refid="searchReg" />
+    </select>
+
+    <!-- 자동이체 동의관리 목록 -->
+    <select id="selAutoTranRegList" resultType="AutoDTO">
+        <include refid="paging_header" />
+        SELECT	TO_CHAR(REGDT, 'YYYY.MM.DD')		AS regDt
+		,	COALESCE((SELECT TO_CHAR(CREATE_DATE, 'YYYY.MM.DD') FROM WITHDRAW_AGREEMENT WHERE ID = WITHDRAW_AGREEMENT_ID),' ')    AS cmsReqDt
+        ,  	CHACD			AS chaCd
+        , 	CHANAME			AS chaName
+        , 	CHAST			AS chaSt
+        , 	CHATRTY			AS chatrty
+        , 	COALESCE(FINGER_FEE_ACCOUNT_NO, ' ')		AS feeAccNo
+        , 	CHRNAME			AS chrName
+        , 	CHAOFFNO		AS chaOffNo
+        , 	CMS_REQ_ST		AS cmsReqSt
+        ,  	CMS_FILE_NAME	AS cmsFileName
+        ,	TO_CHAR(TO_DATE(CMS_REQ_FIN_DT, 'YYYYMMDD'), 'YYYY.MM.DD')		AS cmsReqFinDt
+        ,   COALESCE((SELECT VALUE FROM KFTC_CODE WHERE CODE = FINGER_FEE_BANK_CODE),' ')    AS bnkCd
+        , 	COALESCE((SELECT NAME FROM FW_CODE WHERE CODE = FINGER_FEE_AGREE_STATUS),' ') 	AS chkCms
+        , 	USECMSYN 			AS useCmsYn
+        ,	CMS_APP_GUBN	AS cmsAppGubn
+        ,	CHRHP	AS chrHp
+		,	WITHDRAW_AGREEMENT_ID AS waId
+		, 	COALESCE((SELECT TYPE FROM WITHDRAW_AGREEMENT WHERE ID = WITHDRAW_AGREEMENT_ID),' ') 	AS consentTy
+        FROM	XCHALIST
+        WHERE 	1=1
+        <include refid="searchReg" />
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDt) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDt)">
+			AND (SELECT TO_CHAR(CREATE_DATE, 'YYYYMMDD')
+			FROM WITHDRAW_AGREEMENT
+			WHERE ID = WITHDRAW_AGREEMENT_ID) BETWEEN #{startDt} AND #{endDt}
+		</if>
+        <include refid="orderByReg" />
+        <include refid="paging_footer" />
+    </select>
+
+    <!-- 자동이체 동의관리 조건 -->
+    <sql id="searchReg">
+        <if test="chaCd != null and chaCd != ''">
+            AND	CHACD = #{chaCd}
+        </if>
+        <if test="chaName != null and chaName != ''">
+            AND CHANAME LIKE '%' || #{chaName} || '%'
+        </if>
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchOption) and searchOption == 'All' and keyword != null and keyword != ''">
+            AND (FINGER_FEE_ACCOUNT_NO = #{keyword}
+            	OR CHAOFFNO = #{keyword})
+        </if>
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchOption) and searchOption == 'feeAccNo' and keyword != null and keyword != ''">
+            AND FINGER_FEE_ACCOUNT_NO = #{keyword}
+        </if>
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchOption) and searchOption == 'chaOffNo' and keyword != null and keyword != ''">
+            AND CHAOFFNO = #{keyword}
+        </if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchOpt) and searchOpt == 'All' and keyword != null and keyword != ''">
+			AND (FINGER_FEE_OWNER_NO = #{keyword}
+				OR  CHAOFFNO = #{keyword})
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchOpt) and searchOpt == 'feeOwnNo' and keyword != null and keyword != ''">
+			AND FINGER_FEE_OWNER_NO = #{keyword}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchOpt) and searchOpt == 'feeAccIden' and keyword != null and keyword != ''">
+			AND CHAOFFNO = #{keyword}
+		</if>
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(chaList)">
+            AND CHAST IN
+            <foreach collection="chaList" item="list" index="index" open="(" close=")" separator=",">
+                #{list}
+            </foreach>
+        </if>
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(stList)">
+            AND CMS_REQ_ST IN
+            <foreach collection="stList" item="list" index="index" open="(" close=")" separator=",">
+                #{list}
+            </foreach>
+        </if>
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cmsList)">
+            AND FINGER_FEE_AGREE_STATUS IN
+            <foreach collection="cmsList" item="list" index="index" open="(" close=")" separator=",">
+                #{list}
+            </foreach>
+        </if>
+        <if test="consentTy != null and consentTy != '' and consentTy != 'All'">
+        	<if test="consentTy =='ars'">
+				AND COALESCE((SELECT TYPE FROM WITHDRAW_AGREEMENT WHERE ID = WITHDRAW_AGREEMENT_ID),' ') = 'W00002'
+        	</if>
+        	<if test="consentTy =='signed'">
+				AND COALESCE((SELECT TYPE FROM WITHDRAW_AGREEMENT WHERE ID = WITHDRAW_AGREEMENT_ID),' ') = 'W00001'
+        	</if>
+        </if>
+        <if test="chatrty != null and chatrty != '' and chatrty != 'All'">
+            AND CHATRTY = #{chatrty}
+        </if>
+    </sql>
+    <sql id="orderByReg">
+        <if test="orderBy != null and orderBy == 'reqDt'">
+            ORDER	BY (SELECT TO_CHAR(CREATE_DATE, 'YYYYMMDD')
+            FROM WITHDRAW_AGREEMENT
+            WHERE ID = WITHDRAW_AGREEMENT_ID) DESC, CHACD DESC
+        </if>
+        <if test="orderBy != null and orderBy == 'chaCd'">
+            ORDER	BY CHACD ASC, (SELECT TO_CHAR(CREATE_DATE, 'YYYYMMDD')
+            FROM WITHDRAW_AGREEMENT
+            WHERE ID = WITHDRAW_AGREEMENT_ID) DESC
+        </if>
+        <if test="orderBy != null and orderBy == 'chaName'">
+            ORDER	BY CHANAME ASC , CHACD DESC
+        </if>
+        <if test="orderBy != null and orderBy == 'bnkCd'">
+            ORDER	BY FINGER_FEE_BANK_CODE ASC, CHACD DESC
+        </if>
+    </sql>
+	<sql id="dayBetween-cmsReg">
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDt) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDt)">
+			AND 	TO_DATE(CMS_REQ_DT, 'YYYYMMDD') BETWEEN #{startDt} AND #{endDt}
+		</if>
+	</sql>
+	<!-- 자동이체 CMSFILENAME-->
+	<select id="getCmsFileName" resultType="String">
+    	SELECT CMS_FILE_NAME AS cmsFileName
+		FROM 	XCHALIST
+		WHERE 	CHACD = #{chaCd}
+    </select>
+	
+    <!-- 자동이체 대상생성 TOTAL COUNT -->
+    <select id="selAutoTargetCnt" resultType="int">
+    	SELECT 	COUNT(*) 		AS cnt
+		FROM 	XCHALIST
+		WHERE 	LENGTH(COALESCE(WITHDRAW_AGREEMENT_ID, ' ')) > 1
+		AND FINGER_FEE_PAYTY = 'CMS'
+		AND	FINGER_FEE_AGREE_STATUS = 'A00000'
+		<include refid="searchReg" />
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDt) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDt)">
+			AND (SELECT TO_CHAR(CREATE_DATE, 'YYYYMMDD')
+			FROM WITHDRAW_AGREEMENT
+			WHERE ID = WITHDRAW_AGREEMENT_ID) BETWEEN #{startDt} AND #{endDt}
+		</if>
+    </select>
+    
+    <!-- 자동이체 대상생성 목록 -->
+    <select id="selAutoTargetList" resultType="AutoDTO">
+    	<include refid="paging_header" />
+    	SELECT	TO_CHAR(REGDT, 'YYMMDD') 		AS regDt
+			,	CHRHP 							AS chrHp
+			,	CMS_APP_GUBN    				AS cmsAppGubn
+			,	COALESCE((SELECT TO_CHAR(CREATE_DATE, 'YYYY.MM.DD') FROM WITHDRAW_AGREEMENT WHERE ID = WITHDRAW_AGREEMENT_ID),' ')    AS cmsReqDt
+			, 	CHACD							AS chaCd
+			, 	CHANAME							AS chaName
+			,	CHAOFFNO						AS chaOffNo
+			, 	FINGER_FEE_ACCOUNT_NO			AS feeAccNo
+			,	FINGER_FEE_ACCOUNT_OWNER		AS feeAccName
+			, 	CMS_REQ_ST      				AS cmsReqSt
+			, 	FINGER_FEE_OWNER_NO      		AS finFeeOwnNo
+			,   COALESCE((SELECT VALUE FROM KFTC_CODE WHERE CODE = FINGER_FEE_BANK_CODE),' ')    		AS bnkCd
+			,	FINGER_FEE_BANK_CODE 			AS bankCd
+			, 	FINGER_FEE_ACCOUNT_IDENTITY 	AS finFeeAccIdent
+			,	COALESCE((SELECT TYPE FROM WITHDRAW_AGREEMENT WHERE ID = WITHDRAW_AGREEMENT_ID),' ')    AS consentTy
+		FROM 	XCHALIST
+		WHERE 	LENGTH(COALESCE(WITHDRAW_AGREEMENT_ID, ' ')) > 1
+		AND 	FINGER_FEE_PAYTY = 'CMS'
+		AND		FINGER_FEE_AGREE_STATUS = 'A00000'
+		<include refid="searchReg" />
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDt) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDt)">
+			AND (SELECT TO_CHAR(CREATE_DATE, 'YYYYMMDD')
+			FROM WITHDRAW_AGREEMENT
+			WHERE ID = WITHDRAW_AGREEMENT_ID) BETWEEN #{startDt} AND #{endDt}
+		</if>
+		<include refid="orderByReg" />
+		<include refid="paging_footer" />
+    </select>
+    
+	<!-- 신청파일 생성 -->
+	<select id="findNewAutomaticWithdrawal" resultType="hashMap">
+        SELECT	REGDT         		-- 서비스 신청일자
+        	,	CHAST     			-- 기관상태
+            ,	FINGER_FEE_OWNER_NO AS CHACD-- 납부자번호
+            ,	'088' 	 AS BANKCD  -- 참가기관은행점코드
+            ,	FINGER_FEE_ACCOUNT_NO   AS FEEACCNO 	-- 지정출금계좌번호
+            ,	FINGER_FEE_ACCOUNT_IDENTITY AS FEEOFFNO     		-- 예금주 생년월일 또는 사업자등록번호
+            ,	#{cmsPath} || CMS_FILE_NAME AS CMS_FILE_NAME		-- 출금동의서파일명 FIXME
+            ,	CMS_REQ_ST
+            ,	COALESCE(CMS_APP_GUBN, 'CM01') AS CMS_APP_GUBN
+        FROM 	XCHALIST
+        WHERE 	CMS_REQ_ST IN ('CST01') -- 출금동의서파일이 있고  미전송, 전송에러.변경
+        AND		LENGTH(COALESCE(WITHDRAW_AGREEMENT_ID, ' ')) > 1
+        AND FINGER_FEE_PAYTY = 'CMS'
+    </select>
+    
+    <!-- 신청파일 생성 후 상태 수정 - 신청중 -->
+    <update id="updateEB13Result" parameterType="map">
+        UPDATE 	XCHALIST
+        SET	 	CMS_REQ_ST 	= #{CMS_REQ_ST}
+        	,	CMS_REQ_DT  = TO_CHAR(NOW(), 'YYYYMMDD')
+        WHERE 	CHACD 		= #{CHACD}
+    </update>
+    
+    <!-- 금결원 신청완료 -->
+    <update id="applyFinish">
+    	UPDATE	XCHALIST
+    	SET		CMS_REQ_ST 	= #{cmsReqSt}
+    		,	CMS_REQ_DT  = TO_CHAR(NOW(), 'YYYYMMDD')
+    	WHERE	CMS_REQ_ST 	= #{cmsSt}
+    </update>
+    
+    <!-- 수수료 출금 total count -->
+    <select id="selAccSumCnt" resultType="int">
+		SELECT COUNT(*) AS cnt
+		FROM KFTC_WITHDRAW A, XCHALIST B
+		WHERE B.FINGER_FEE_OWNER_NO = TRIM(A.PAYER_NO)
+		AND A.STATUS_CD IN
+		<foreach collection="stList" item="list" index="index" open="(" close=")" separator=",">
+			#{list}
+		</foreach>
+		<include refid="atTranFee"/>
+    </select>
+    
+    <select id="selAccSumList" resultType="AutoDTO">
+    	<include refid="paging_header" />
+		SELECT A.ID           AS iD
+			,A.PAYER_KFTC_CODE   AS bnkCd
+			,COALESCE((SELECT VALUE FROM KFTC_CODE WHERE CODE = A.PAYER_KFTC_CODE),' ') AS bankCd
+			,A.PAYER_ACCOUNT_NO  AS feeAccNo
+			,A.AMOUNT            AS feeSum
+			,A.PAYER_IDENTITY_NO AS finFeeAccIdent
+			,A.PAYER_NO          AS finFeeOwnNo
+			,A.WITHDRAW_TYPE_CD
+			,A.CONTACT_NO  AS chrHp
+			,A.CREATE_DATE AS rcpDt
+			,A.STATUS_CD   AS rcpSt
+			,B.CHACD            AS chaCd
+			,B.CHANAME                  AS chaName
+			,B.CHAOFFNO                 AS chaOffNo
+			,B.FINGER_FEE_ACCOUNT_OWNER AS feeAccName,
+			A.RESULT_CD AS resultCd,
+			C.NAME AS resultName,
+			C.DESCRIPTION AS resultMessage,
+			A.SUCCESS_YN AS successYn
+		FROM KFTC_WITHDRAW A
+			INNER JOIN XCHALIST B ON B.FINGER_FEE_OWNER_NO = TRIM(A.PAYER_NO)
+			LEFT OUTER JOIN FW_CODE C ON C.CODE=A.RESULT_CD
+		WHERE A.STATUS_CD IN
+			<foreach collection="stList" item="list" index="index" open="(" close=")" separator=",">
+				#{list}
+			</foreach>
+		<include refid="atTranFee"/>
+		<include refid="atFeeorderBy"/>
+		<include refid="paging_footer"/>
+    </select>
+	<sql id="atTranFee">
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchOpt) and searchOpt == 'All' and keyword != null and keyword != ''">
+			AND 	A.PAYER_NO = #{keyword}
+					OR  B.CHAOFFNO = #{keyword}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchOpt) and searchOpt == 'feeOwnNo' and keyword != null and keyword != ''">
+			AND 	A.PAYER_NO = #{keyword}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchOpt) and searchOpt == 'feeAccIden' and keyword != null and keyword != ''">
+			AND 	B.CHAOFFNO = #{keyword}
+		</if>
+		<if test="chaCd != null and chaCd != ''">
+			AND 	B.CHACD  = #{chaCd}
+		</if>
+		<if test="chaName != null and chaName != ''">
+			AND 	B.CHANAME LIKE '%' || #{chaName} || '%'
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDt) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDt)">
+			AND A.CREATE_DATE BETWEEN #{startDt} AND #{endDt}
+		</if>
+	</sql>
+	<sql id="atFeeorderBy">
+		<if test="orderBy != null and orderBy == 'reqDt'">
+			ORDER BY A.CREATE_DATE DESC, B.CHACD DESC
+		</if>
+		<if test="orderBy != null and orderBy == 'chaCd'">
+			ORDER BY B.CHACD ASC, A.CREATE_DATE DESC
+		</if>
+		<if test="orderBy != null and orderBy == 'chaName'">
+			ORDER BY B.CHANAME ASC , B.CHACD DESC
+		</if>
+		<if test="orderBy != null and orderBy == 'bnkCd'">
+			ORDER BY A.PAYER_KFTC_CODE ASC, B.CHACD DESC
+		</if>
+	</sql>
+
+	<sql id="searchAcc">
+		<if test="chaCd != null and chaCd != ''">
+			AND		A.CHACD = #{chaCd}
+		</if>
+		<if test="chaName != null and chaName != ''">
+			AND 	A.CHANAME LIKE '%' || #{chaName} || '%'
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchOpt) and searchOpt == 'All' and keyword != null and keyword != ''">
+			AND 	A.FINGER_FEE_OWNER_NO = #{keyword}
+					OR  A.CHAOFFNO = #{keyword}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchOpt) and searchOpt == 'feeOwnNo' and keyword != null and keyword != ''">
+			AND 	A.FINGER_FEE_OWNER_NO = #{keyword}
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchOpt) and searchOpt == 'feeAccIden' and keyword != null and keyword != ''">
+			AND 	A.CHAOFFNO = #{keyword}
+		</if>
+	</sql>
+
+    <!-- 자동이체 대상생성 - 수수료 출금 -->
+    <select id="findMonthlyAutomaticWithdrawal" resultType="AutoDTO">
+        SELECT	'021' AS BANKCD       	-- 참가기관은행점코드
+            ,	A.FEEACCNO   			--수수료계좌번호
+            ,	B.NOTIFEE    			-- 청구수수료
+            ,	B.SMSFEE     			-- SMS 수수료
+            ,	B.LMSFEE     			-- LMS 수수료
+            ,	CHAOFFNO				-- 예금주 생년월일 또는 사업자등록번호
+            ,	A.CHACD 				--납부자번호
+        FROM 	XCHALIST 	A
+        	, 	XMONTHSUM 	B
+        WHERE 	A.CHACD 	= B.CHACD
+        AND 	B.MONTH 	= #{MONTH}
+    </select>
+
+    <!-- 자동이체 대상생성 - 수수료출급 update -->
+    <update id="updateEB21Result">
+    	UPDATE 	XMONTHSUM
+        SET 	WIT_REQ_DT 	= #{WIT_REQ_DT}
+        	,	RCP_ST		= 'OST02'
+        WHERE	CHACD 		= #{CHACD} 
+        AND 	MONTH 		= #{MONTH}
+    </update>
+    
+    <!-- 자동이체 처리현황 불능건수 - 신규기관 -->
+    <select id="selAutoOrgFailCnt" resultType="int">
+    	SELECT	COUNT(*) 	AS cnt
+    	FROM	XCHALIST
+    	WHERE 	1=1
+		<include refid="dayBetween-cms" />
+    	AND		CMS_REQ_ST = 'CST04'
+    </select>
+    
+    <!-- 자동이체 처리현황 total count - 신규기관 -->
+    <select id="selAutoProcOrgCnt" resultType="int">
+    	SELECT	COUNT(*)	AS cnt
+    	FROM	XCHALIST
+		WHERE 	1=1
+		<include refid="searchReg" />
+		<include refid="dayBetween-cms" />
+    </select>
+    
+    <!-- 자동이체 처리현황 목록 - 신규기관 -->
+    <select id="selAutoProcOrg" resultType="AutoDTO">
+    	<include refid="paging_header"/>
+    	SELECT	TO_CHAR(TO_DATE(CMS_REQ_DT, 'YYYYMMDD'), 'YYYY.MM.DD')	AS cmsReqDt
+		, 	CHACD			AS chaCd
+		, 	CHANAME			AS chaName
+		, 	CMS_REQ_ST      AS cmsReqSt
+		,	CHAOFFNO	AS chaOffNo
+		, 	FINGER_FEE_ACCOUNT_NO		AS feeAccNo
+		,	FINGER_FEE_ACCOUNT_OWNER		AS feeAccName
+		, 	FINGER_FEE_OWNER_NO      AS finFeeOwnNo
+		,   COALESCE((SELECT VALUE FROM KFTC_CODE WHERE CODE = FINGER_FEE_BANK_CODE),' ')    AS bnkCd
+		, 	FINGER_FEE_ACCOUNT_IDENTITY AS	finFeeAccIdent
+		,	COALESCE((SELECT TYPE FROM WITHDRAW_AGREEMENT WHERE ID = WITHDRAW_AGREEMENT_ID),' ')    AS consentTy
+    	FROM	XCHALIST
+		WHERE 	1=1
+		<include refid="searchReg" />
+		<include refid="dayBetween-cms" />
+		ORDER	BY CMS_REQ_DT DESC, CHACD
+    	<include refid="paging_footer"/>
+    </select>
+    
+    <!-- 자동이체 처리현황 불능건수 - 수수료출금 -->
+    <select id="selAutoAccFailCnt" resultType="int">
+    	SELECT	COUNT(*)	AS cnt
+    	FROM	XCHALIST A, XMONTHSUM B
+    	WHERE	B.WIT_REQ_DT	BETWEEN #{startDt} AND #{endDt}
+    	AND		B.RCP_ST 	= 'OST04'
+    </select>
+    
+    <!-- 자동이체 처리현황 total count - 수수료출금 -->
+    <select id="selAutoProcAccCnt" resultType="int">
+    	SELECT	COUNT(*)	AS cnt
+    	FROM	XCHALIST A, XMONTHSUM B
+    	WHERE	A.CHACD = B.CHACD
+    	<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDt) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDt)">
+		AND		B.RCP_DT	BETWEEN #{startDt} AND #{endDt}
+    	</if>
+    	<if test="stList.size > 0">
+			AND		B.RCP_ST IN
+			<foreach collection="stList" item="list" index="index" open="(" close=")" separator=",">
+				#{list}
+			</foreach>
+		</if>
+		<include refid="searchAcc" />
+    </select>
+    
+    <!-- 자동이체 처리현황 목록 - 수수료출금 -->
+    <select id="selAutoProcAcc" resultType="AutoDTO">
+    	<include refid="paging_header"/>
+		SELECT TO_CHAR(TO_DATE(B.WIT_REQ_DT, 'yyyymmddhh24miss'), 'YYYY.MM.DD') AS witReqDt
+		, A.CHACD AS chaCd
+		, A.CHANAME AS chaName
+		, A.CHAOFFNO AS chaOffNo
+		, A.FINGER_FEE_ACCOUNT_NO AS feeAccNo
+		, A.FINGER_FEE_ACCOUNT_OWNER AS feeAccName
+		, A.FINGER_FEE_OWNER_NO AS finFeeOwnNo
+		, A.FINGER_FEE_ACCOUNT_IDENTITY AS finFeeAccIdent
+		, B.FEESUM AS feeSum
+		, B.FAILFEE AS failFee
+		, TO_CHAR(TO_DATE(B.RCP_DT, 'yyyymmddhh24miss'), 'YYYY.MM.DD') AS rcpDt
+		, B.RCP_ST AS rcpSt
+		, B.RCP_FAIL_RESON AS rcpFailReson
+		, COALESCE((SELECT VALUE FROM KFTC_CODE WHERE CODE = A.FINGER_FEE_BANK_CODE),' ') AS bnkCd
+		FROM XCHALIST A
+		, (SELECT CHACD
+		, WIT_REQ_DT
+		, RCP_DT
+		, RCP_ST
+		, RCP_FAIL_RESON
+		, TO_CHAR(SUM(COALESCE(NOTIFEE, 0) + COALESCE(SMSFEE, 0) + COALESCE(LMSFEE, 0)), 'FM999,999,999') AS feeSum	--출금액
+		, COALESCE(TO_CHAR(CASE WHEN RCP_ST = 'OST04'
+		    					THEN SUM(COALESCE(NOTIFEE, 0) + COALESCE(SMSFEE, 0) + COALESCE(LMSFEE, 0)) END
+		    		, 'FM999,999,999'), '0') AS failFee -- 출금불능액
+		FROM XMONTHSUM
+		GROUP BY CHACD
+		, WIT_REQ_DT
+		, RCP_ST
+		, RCP_DT
+		, RCP_ST
+		, RCP_FAIL_RESON) B
+		WHERE A.CHACD = B.CHACD
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDt) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDt)">
+			AND B.RCP_DT BETWEEN #{startDt} AND #{endDt}
+		</if>
+		<if test="stList.size > 0">
+			AND B.RCP_ST IN
+			<foreach collection="stList" item="list" index="index" open="(" close=")" separator=",">
+				#{list}
+			</foreach>
+		</if>
+		<include refid="searchAcc" />
+    	<include refid="paging_footer"/>
+    </select>
+    
+    <!-- 자동이체 처리현황 파일업로드 후 update EB14 -->
+    <update id="updateEB14Result">
+    	UPDATE 	XCHALIST
+        SET 	CMS_REQ_ST 		  = #{CMS_REQ_ST}
+        	,	CMS_REQ_FAIL_CONT = #{CMS_REQ_FAIL_CONT}
+        WHERE 	CHACD 			  = TRIM(#{CHACD})
+    </update>
+    
+    <!-- 자동이체 처리현황 파일업로드 후 update EB22 -->
+    <update id="updateEB22Result">
+    	UPDATE 	XMONTHSUM
+        SET 	RCP_DT 			= #{RCP_DT}
+        	,	RCP_ST  		= 'OST04'
+        	,	RCP_FAIL_RESON 	= #{failReson}
+        WHERE 	CHACD 			= TRIM(#{CHACD}) 
+        AND 	MONTH 			= #{MONTH}
+    </update>
+    
+    <!-- 자동이체 처리현황 파일업로드 후 update 완료 -->
+    <update id="updateEB22Success">
+    	UPDATE 	XMONTHSUM
+        SET 	RCP_DT 			= #{RCP_DT} 
+        	,	RCP_ST  		= 'OST03'
+        WHERE 	RCP_ST  		= 'OST02'
+        AND 	MONTH 			= #{MONTH}
+    </update>
+    
+    <!-- 출금동의서 변경 -->
+    <update id="updateCmsReq">
+    	UPDATE	XCHALIST
+    	SET
+		<if test="updAgreement == null">
+				CMS_REQ_ST		= #{cmsReqSt}
+    		,	CHKCMS			= #{chkCms}
+    		,	CMS_REQ_FIN_DT	= #{cmsReqFinDt}
+    		,	CMS_FILE_NAME	= #{cmsFileName}
+    		,	CMS_APP_GUBN    = #{cmsAppGubn}
+			, 	WITHDRAW_AGREEMENT_ID = #{withdrawAgreementId}
+            <if test="cmsReqDt == null">
+                , CMS_REQ_DT = TO_CHAR(NOW(), 'YYYYMMDD')
+            </if>
+            <if test="cmsReqDt != null">
+                , CMS_REQ_DT = #{cmsReqDt}
+            </if>
+		</if>
+        <if test="updAgreement != null">
+                CMS_REQ_DT = #{cmsReqDt}
+        </if>
+    	<if test="feeAccNo != null and feeAccNo != ''">
+    		,	FEEACCNO = #{feeAccNo}
+    	</if>
+		<if test="finFeeAgreeSt != null and finFeeAgreeSt != ''">
+			,	FINGER_FEE_AGREE_STATUS = #{finFeeAgreeSt}
+		</if>
+		WHERE	CHACD = #{chaCd}
+    </update>
+
+	<!-- 신청파일 생성/취소 후 상태 수정 -->
+	<update id="UpdateAutoTranSt" parameterType="map">
+        UPDATE 	XCHALIST
+        SET	 	CMS_REQ_ST = #{cmsReqSt}
+		<if test="finFeeOwnNo != null and finFeeOwnNo != '' and finFeeOwnNo != 'cancel'">
+			,	FINGER_FEE_OWNER_NO = #{finFeeOwnNo}
+		</if>
+		<if test="finFeeOwnNo == 'cancel'">
+			,	FINGER_FEE_OWNER_NO = ''
+		</if>
+        WHERE CHACD IN
+		<foreach collection="stList" item="list" index="index" open="(" close=")" separator=",">
+			#{list}
+		</foreach>
+    </update>
+
+	<!-- 신청파일 생성 후 상태 수정 - 신청중 -->
+	<update id="UpdateFeeTranSt" parameterType="map">
+		UPDATE 	XMONTHSUM
+		SET 	WIT_REQ_DT 	= #{WIT_REQ_DT}
+		,	RCP_ST		= #{rcpSt}
+		WHERE	CHACD IN
+		<foreach collection="stList" item="list" index="index" open="(" close=")" separator=",">
+			#{list}
+		</foreach>
+		AND 	MONTH 		= #{month}
+    </update>
+
+	<insert id="insertAutoTranFeeInfo" parameterType="map">
+		INSERT
+		INTO KFTC_WITHDRAW
+		  (
+		  	ID
+			, PAYER_KFTC_CODE
+			, PAYER_ACCOUNT_NO
+			, AMOUNT
+			, PAYER_IDENTITY_NO
+			, REMARK
+			, FUND_TYPE_CD
+			, PAYER_NO
+			, WITHDRAW_TYPE_CD
+			, CONTACT_NO
+			, CREATE_DATE
+			, CREATE_USER
+			, STATUS_CD
+		  )
+		VALUES (
+			NEXTVAL('kftc_withdraw_id')
+			, (SELECT FINGER_FEE_BANK_CODE FROM XCHALIST WHERE FINGER_FEE_ACCOUNT_NO = #{feeAccNo} )
+			, #{feeAccNo}
+			, #{feeSum}
+			, #{finFeeAccIdent}
+			, '신한다모아'
+			, #{fundTyCd}
+			, #{finFeeOwnNo}
+			, #{withdrawTyCd}
+			, '010'
+			, #{createDt}
+			, #{createUser}
+			, #{stCd}
+		 )
+	</insert>
+
+</mapper>

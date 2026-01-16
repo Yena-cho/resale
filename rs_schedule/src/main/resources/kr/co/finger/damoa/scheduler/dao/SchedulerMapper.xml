@@ -1,0 +1,1272 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="scheduler">
+    <select id="findCashReceipts" resultType="map" fetchSize="10">
+        SELECT CASHMASCD,
+               RCPMASCD,
+               -- 거래구분코드 1:소득공제,2:지출증빙 (거래자구분)
+               CUSTYPE,
+               -- 작업구분 I:신규 U:재발행 D:취소 (거래구분)
+               JOB,
+               -- 인증번호유형 11: 휴대폰번호, 12현금영수증카드번호, 13:주민번호, 21:사업자번호 (처리구분)
+               CONFIRM,
+               CONFIRM2,
+               CHACD,
+               -- 사업자번호 (신분확인)
+               CHAOFFNO,
+               -- 거래금액
+               RCPAMT,
+               --재발행금액
+               RCPAMT2,
+               -- 봉사료
+               TIP,
+               -- 부가세
+               TAX,
+               --매출일자
+               REGDT,
+               -- 신분확인번호
+               CUSOFFNO,
+               --재발행신분확인번호
+               CUSOFFNO2,
+               CASHMASST,
+               --조작일자
+               MAKEDT,
+               APPNO,
+               APPDAY,
+               SENDDT
+        FROM XCASHMAS
+        WHERE CASHMASST = 'ST05'
+          AND SENDDT = TO_CHAR(now(), 'YYYYMMDD')
+    </select>
+
+    <select id="findDealSeq" resultType="long">
+        select nextval('deal_seq_no')
+    </select>
+
+
+    <update id="updateXCashMasForSending" parameterType="map">
+        update XCASHMAS
+        set SENDDT    = #{SENDDT},
+            CASHMASST = #{CASHMASST}
+        WHERE CASHMASCD = #{CASHMASCD}
+    </update>
+    <update id="updateXCashMasForReceiving" parameterType="map">
+        update XCASHMAS
+        set APPDAY    = #{APPDAY},
+            APPTIME   = #{APPTIME},
+            APPCD     = #{APPCD},
+            APPMSG    = #{APPMSG},
+            CASHMASST = #{CASHMASST},
+            APPNO     = #{APPNO},
+            JOB       = #{JOB}
+        WHERE CASHMASCD = #{CASHMASCD}
+    </update>
+    <update id="updateCashReq" parameterType="map">
+        update CASHREQ
+        set APPDAY  = #{APPDAY},
+            APPTIME = #{APPTIME},
+            APPCD   = #{APPCD},
+            APPMSG  = #{APPMSG},
+            APPNO   = #{APPNO}
+        WHERE CASHMASCD = #{CASHMASCD}
+    </update>
+    <select id="findNewAutomaticWithdrawal" resultType="map">
+        select REGDT           -- 서비스 신청일자
+                ,
+               CHAST           -- 기관상태
+                ,
+               CHACD           -- 납부자번호
+                ,
+               '021' AS BANKCD -- 참가기관은행점코드
+                ,
+               FEEACCNO        -- 지정출금계좌번호
+                ,
+               FEEOFFNO        -- 예금주 생년월일 또는 사업자등록번호
+                ,
+               CMS_FILE_NAME   -- 출금동의서파일명
+                ,
+               CMS_REQ_ST,
+               CMS_APP_GUBN
+        FROM XCHALIST
+        WHERE CHKCMS = 'Y'
+          AND CMS_REQ_ST IN ('CST01') -- 출금동의서파일이 있고  미전송, 전송에러.변경
+    </select>
+    <select id="findMonthlyAutomaticWithdrawal" resultType="map" parameterType="string">
+        select '021' AS BANKCD -- 참가기관은행점코드
+                ,
+               A.FEEACCNO      --수수료계좌번호
+                ,
+               B.NOTIFEE       -- 청구수수료
+                ,
+               B.SMSFEE        -- SMS 수수료
+                ,
+               B.LMSFEE        -- LMS 수수료
+                ,
+               FEEOFFNO        -- 예금주 생년월일 또는 사업자등록번호
+                ,
+               A.CHACD         --납부자번호
+        FROM XCHALIST A,
+             XMONTHSUM B
+        WHERE A.CHACD = B.CHACD
+          AND B.MONTH = #{MONTH}
+
+    </select>
+    <insert id="insertCashReqForSending" parameterType="map">
+        INSERT INTO CASHREQ ( CASHREQCD
+                            , CASHMASCD
+                            , CHACD
+                            , PAYCLS
+                            , CHAOFFNO
+                            , CUSOFFNO
+                            , CUSTYPE
+                            , RCPAMT
+                            , TIP
+                            , TAX
+                            , JOB
+                            , SENDDT
+                            , RECVDT
+                            , APPDAY
+                            , APPTIME
+                            , APPCD
+                            , APPMSG
+                            , APPNO
+                            , GUBN
+                            , MSG1
+                            , MSG2
+                            , MSG3
+                            , MAKEDT
+                            , MAKER
+                            , REGDT
+                            , ORGAPPDAY
+                            , ORGAPPNO)
+        VALUES ( (select nextval('seqcashreqcd'))
+               , #{cashmascd}
+               , #{chacd}
+               , #{paycls}
+               , #{chaoffno}
+               , #{cusoffno}
+               , #{custype}
+               , #{rcpamt} ::numeric
+               , #{tip} ::numeric
+               , #{tax} ::numeric
+               , #{job}
+               , #{senddt}
+               , #{recvdt}
+               , #{appday}
+               , #{apptime}
+               , #{appcd}
+               , #{appmsg}
+               , #{appno}
+               , #{gubn}
+               , #{msg1}
+               , #{msg2}
+               , #{msg3}
+               , #{makedt}
+               , #{maker}
+               , #{regdt}
+               , #{orgappday}
+               , #{orgappno})
+
+    </insert>
+
+    <select id="findUnhandledFilePath" resultType="map">
+        select CASH_FILE_NAME,
+               TRANS_DT
+        FROM CASH_FILE_TRAN_HIST
+        WHERE REC_DT IS NULL
+    </select>
+    <update id="finishUnhandledFilePath" parameterType="map">
+        update CASH_FILE_TRAN_HIST
+        set REC_DT = #{REC_DT}
+        where TRANS_DT = #{TRANS_DT}
+          and CASH_FILE_NAME = #{CASH_FILE_NAME}
+    </update>
+    <insert id="insertCashFilePath" parameterType="map">
+        INSERT INTO CASH_FILE_TRAN_HIST ( TRANS_DT
+                                        , CASH_FILE_NAME)
+        VALUES ( #{trans_dt}
+               , #{cash_file_name})
+    </insert>
+    <update id="updateEBI13Result" parameterType="map">
+        update XCHALIST
+        set CMS_REQ_ST = #{CMS_REQ_ST}
+        where CHACD = #{CHACD}
+    </update>
+    <update id="updateEB14Result" parameterType="map">
+        update XCHALIST
+        set CMS_REQ_ST        = #{CMS_REQ_ST}
+          , CMS_REQ_FAIL_CONT = #{CMS_REQ_FAIL_CONT}
+        where CHACD = #{CHACD}
+    </update>
+
+    <update id="updateEB13Result" parameterType="map">
+        update XCHALIST
+        set CMS_REQ_ST = #{CMS_REQ_ST}
+        where CHACD = #{CHACD}
+    </update>
+    <update id="updateEB21Result" parameterType="map">
+        update XMONTHSUM
+        set WIT_REQ_DT = #{WIT_REQ_DT}
+        where CHACD = #{CHACD}
+          AND MONTH = #{MONTH}
+    </update>
+    <update id="updateEB22Result" parameterType="map">
+        update XMONTHSUM
+        set RCP_DT = #{RCP_DT}
+        where CHACD = #{CHACD}
+          AND MONTH = #{MONTH}
+    </update>
+
+    <insert id="requestPermission" parameterType="map">
+        insert into JOBHISTORY (STARTDATE, JOBID)
+        VALUES (#{startdate}, #{jobid})
+    </insert>
+
+    <update id="finishExecution" parameterType="map">
+        update JOBHISTORY
+        set ENDDATE = #{ENDDATE}
+          , STATUS  = #{STATUS}
+          , TOTCNT  = #{TOTCNT}
+        where STARTDATE = #{STARTDATE}
+          and JOBID = #{JOBID}
+    </update>
+
+    <!-- 고지서 출력의뢰 by YEJ -->
+    <!-- 출력의뢰 기관 조회 -->
+    <select id="selChaCd" resultType="kr.co.finger.damoa.scheduler.model.LayOut">
+        SELECT CHACD              AS chaCd,
+               MASMONTH           AS masMonth,
+               BILLGUBN           AS billGubn,
+               NVL(SORT_1_CD, '') AS sort1Cd,
+               NVL(SORT_2_CD, '') AS sort2Cd
+        FROM XNOTIMASREQ
+        WHERE REQST = 'BR01'
+          AND REQDATE = TO_CHAR(now() - interval '1 day', 'YYYYMMDD') -- scheduler 익일 실행
+    </select>
+
+    <!-- 출력의뢰 데이터 - 헤더 및 테일 -->
+    <select id="printMsg" resultType="kr.co.finger.damoa.scheduler.model.LayOut">
+        SELECT RPAD('0', 7, '0')                             AS dummy,
+               TO_CHAR(now() + interval '1 day', 'YYYYMMDD') AS reqDate,
+               'H'                                           AS header,
+               'D'                                           AS bHeader,
+               'T'                                           AS tHeader
+        FROM DUAL
+    </select>
+
+    <!-- 출력의뢰 데이터 - 메시지 -->
+    <select id="printMsgData" resultType="kr.co.finger.damoa.scheduler.model.LayOut">
+        SELECT RPAD((REGEXP_SPLIT_TO_ARRAY(REPLACE(A.BILLCONT1, chr(10), '#@#'),
+                                           '[#@#]+'))[generate_series(1,10)], 160, ' ') AS msg,
+               A.CHACD                                                                  AS chaCd,
+               generate_series(1, 10)                                                   AS idx
+        FROM (SELECT BILLCONT1,
+                     CHACD
+              FROM XBILLFORM
+              WHERE CHACD = #{chaCd}
+                AND BILLGUBN = #{billGubn}) A
+    </select>
+
+    <!-- 출력의뢰 데이터 - 청구항목 -->
+    <select id="printItemData" resultType="kr.co.finger.damoa.scheduler.model.LayOut">
+        SELECT TB.CHACD,
+               TB.NOTIMASCD,
+               COALESCE(MAX(TB.ITEM1), ' ')                                                                         AS item1,
+               COALESCE(MAX(TB.ITEM2), ' ')                                                                         AS item2,
+               COALESCE(MAX(TB.ITEM3), ' ')                                                                         AS item3,
+               COALESCE(MAX(TB.ITEM4), ' ')                                                                         AS item4,
+               COALESCE(MAX(TB.ITEM5), ' ')                                                                         AS item5,
+               COALESCE(MAX(TB.ITEM6), ' ')                                                                         AS item6,
+               COALESCE(MAX(TB.ITEM7), ' ')                                                                         AS item7,
+               COALESCE(MAX(TB.ITEM8), ' ')                                                                         AS item8,
+               COALESCE(MAX(TB.ITEM9), ' ')                                                                         AS item9,
+               CASE
+                   WHEN MAX(TB.AMT1) = NULL THEN RPAD(' ', 12, ' ')
+                   ELSE LPAD(MAX(TB.AMT1) ::varchar, 12, '0') END                                                   AS amt1,
+               CASE
+                   WHEN MAX(TB.AMT2) = NULL THEN RPAD(' ', 12, ' ')
+                   ELSE LPAD(MAX(TB.AMT2) ::varchar, 12, '0') END                                                   AS amt2,
+               CASE
+                   WHEN MAX(TB.AMT3) = NULL THEN RPAD(' ', 12, ' ')
+                   ELSE LPAD(MAX(TB.AMT3) ::varchar, 12, '0') END                                                   AS amt3,
+               CASE
+                   WHEN MAX(TB.AMT4) = NULL THEN RPAD(' ', 12, ' ')
+                   ELSE LPAD(MAX(TB.AMT4) ::varchar, 12, '0') END                                                   AS amt4,
+               CASE
+                   WHEN MAX(TB.AMT5) = NULL THEN RPAD(' ', 12, ' ')
+                   ELSE LPAD(MAX(TB.AMT5) ::varchar, 12, '0') END                                                   AS amt5,
+               CASE
+                   WHEN MAX(TB.AMT6) = NULL THEN RPAD(' ', 12, ' ')
+                   ELSE LPAD(MAX(TB.AMT6) ::varchar, 12, '0') END                                                   AS amt6,
+               CASE
+                   WHEN MAX(TB.AMT7) = NULL THEN RPAD(' ', 12, ' ')
+                   ELSE LPAD(MAX(TB.AMT7) ::varchar, 12, '0') END                                                   AS amt7,
+               CASE
+                   WHEN MAX(TB.AMT8) = NULL THEN RPAD(' ', 12, ' ')
+                   ELSE LPAD(MAX(TB.AMT8) ::varchar, 12, '0') END                                                   AS amt8,
+               CASE
+                   WHEN MAX(TB.AMT9) = NULL THEN RPAD(' ', 12, ' ')
+                   ELSE LPAD(MAX(TB.AMT9) ::varchar, 12, '0') END                                                   AS amt9,
+               COALESCE(MAX(TB.ETC1), ' ')                                                                          AS etc1,
+               COALESCE(MAX(TB.ETC2), ' ')                                                                          AS etc2,
+               COALESCE(MAX(TB.ETC3), ' ')                                                                          AS etc3,
+               COALESCE(MAX(TB.ETC4), ' ')                                                                          AS etc4,
+               COALESCE(MAX(TB.ETC5), ' ')                                                                          AS etc5,
+               COALESCE(MAX(TB.ETC6), ' ')                                                                          AS etc6,
+               COALESCE(MAX(TB.ETC7), ' ')                                                                          AS etc7,
+               COALESCE(MAX(TB.ETC8), ' ')                                                                          AS etc8,
+               COALESCE(MAX(TB.ETC9), ' ')                                                                          AS etc9
+        FROM (SELECT D.CHACD,
+                     D.NOTIMASCD,
+                     CASE WHEN IDX = 1 THEN ITEM END AS item1,
+                     CASE WHEN IDX = 2 THEN ITEM END AS item2,
+                     CASE WHEN IDX = 3 THEN ITEM END AS item3,
+                     CASE WHEN IDX = 4 THEN ITEM END AS item4,
+                     CASE WHEN IDX = 5 THEN ITEM END AS item5,
+                     CASE WHEN IDX = 6 THEN ITEM END AS item6,
+                     CASE WHEN IDX = 7 THEN ITEM END AS item7,
+                     CASE WHEN IDX = 8 THEN ITEM END AS item8,
+                     CASE WHEN IDX = 9 THEN ITEM END AS item9,
+                     CASE WHEN IDX = 1 THEN AMT END  AS amt1,
+                     CASE WHEN IDX = 2 THEN AMT END  AS amt2,
+                     CASE WHEN IDX = 3 THEN AMT END  AS amt3,
+                     CASE WHEN IDX = 4 THEN AMT END  AS amt4,
+                     CASE WHEN IDX = 5 THEN AMT END  AS amt5,
+                     CASE WHEN IDX = 6 THEN AMT END  AS amt6,
+                     CASE WHEN IDX = 7 THEN AMT END  AS amt7,
+                     CASE WHEN IDX = 8 THEN AMT END  AS amt8,
+                     CASE WHEN IDX = 9 THEN AMT END  AS amt9,
+                     CASE WHEN IDX = 1 THEN ETC END  AS etc1,
+                     CASE WHEN IDX = 2 THEN ETC END  AS etc2,
+                     CASE WHEN IDX = 3 THEN ETC END  AS etc3,
+                     CASE WHEN IDX = 4 THEN ETC END  AS etc4,
+                     CASE WHEN IDX = 5 THEN ETC END  AS etc5,
+                     CASE WHEN IDX = 6 THEN ETC END  AS etc6,
+                     CASE WHEN IDX = 7 THEN ETC END  AS etc7,
+                     CASE WHEN IDX = 8 THEN ETC END  AS etc8,
+                     CASE WHEN IDX = 9 THEN ETC END  AS etc9
+              FROM XNOTIMAS C
+                 , (SELECT B.CHACD                            AS chaCd,
+                           A.NOTIMASCD                        AS notiMasCd,
+                           B.VANO                             AS vano,
+                           A.PTRITEMNAME                      AS item,
+                           A.PAYITEMAMT                       AS amt,
+                           A.PTRITEMREMARK                    AS etc,
+                           ROW_NUMBER()
+                                   OVER (
+                                       PARTITION BY A.NOTIMASCD
+                                       ORDER BY A.NOTIDETCD ) AS idx
+                    FROM XNOTIDET A
+                       , XNOTIMAS B
+                       , XNOTIMASREQ C
+                    WHERE A.NOTIMASCD = B.NOTIMASCD
+                      AND B.CHACD = C.CHACD
+                      AND C.REQST = 'BR01'
+                      AND B.MASMONTH = C.MASMONTH
+                      AND B.NOTIMASST = 'PA02'
+                      AND B.NOTI_CAN_YN = 'N'
+                      AND B.CHACD = #{chaCd}
+                      AND C.BILLGUBN = #{billGubn}
+                      AND C.MASMONTH = #{masMonth}
+                    ORDER BY A.PTRITEMORDER ASC) D
+              WHERE C.NOTIMASCD = D.NOTIMASCD) TB
+        GROUP BY TB.CHACD
+               , TB.NOTIMASCD
+    </select>
+
+    <!-- 출력의뢰 데이터 생성 -->
+    <select id="printReqData" resultType="kr.co.finger.damoa.scheduler.model.LayOut">
+        SELECT
+        RPAD(TB.CHACD, 8, ' ') AS chaCd,
+        RPAD(TB.NOTIMASCD, 20, ' ') AS notiMasCd,
+        RPAD(TB.BILLNAME, 20, ' ') AS msgTitle,
+        RPAD(TB.RECNAME, 30, ' ') AS recName,
+        RPAD(TB.NOTICHANAME, 30, ' ') AS offName,
+        RPAD(TB.TELNO, 15, ' ') AS offTel,
+        RPAD(TB.VANO, 20, ' ') AS vano,
+        LPAD(TB.PAYYEAR, 4, ' ') AS payYear,
+        LPAD(TB.PAYMONTH, 2, ' ') AS payMonth,
+        LPAD(TB.PAYDAY, 2, ' ') AS payDay,
+        RPAD(TB.GRPNAME, 80, ' ') AS grpName,
+        RPAD(TB.ZIPCODE, 6, ' ') AS zipCd,
+        RPAD(TB.ADDR, 150, ' ') AS addr,
+        RPAD(TB.NOTICHANAME, 180, ' ') AS offName2,
+        RPAD(TB.REQHP, 15, ' ') AS hp,
+        RPAD(COALESCE(TB.BILLCONT2, ' '), 120, ' ') AS addMsg,
+        RPAD(TB.OWNERTEL, 15, ' ') AS ownerTel,
+        TB.MASMONTH AS masMonth,
+        CASE WHEN TB.PAYITEMAMT = NULL then RPAD(' ', 12, ' ') else LPAD(TB.PAYITEMAMT::varchar, 12, '0') end AS
+        payItemAmt,
+        TB.CHAZIPCODE,
+        RPAD(COALESCE(TB.CHAADDRESS1, ' ') || COALESCE(TB.CHAADDRESS2, ' '), 150, ' ') AS addr2
+        FROM (SELECT
+        COALESCE(A.CHACD, ' ') AS CHACD,
+        COALESCE(C.NOTIMASCD, ' ') AS NOTIMASCD,
+        COALESCE(A.BILLNAME, ' ') AS BILLNAME,
+        C.CUSNAME || A.CUSALS AS recName,
+        COALESCE(A.NOTICHANAME, ' ') AS NOTICHANAME,
+        COALESCE(SUBSTR(A.TELNO, 0, position(',' in A.TELNO) - 1), ' ') AS TELNO,
+        COALESCE(C.VANO, ' ') AS VANO,
+        COALESCE(TO_CHAR(TO_DATE(C.PRINTDATE, 'YYYYMMDD'), 'YYYY'), ' ') AS payYear,
+        COALESCE(TO_CHAR(TO_DATE(C.PRINTDATE, 'YYYYMMDD'), 'MM'), ' ') AS payMonth,
+        COALESCE(TO_CHAR(TO_DATE(C.PRINTDATE, 'YYYYMMDD'), 'DD'), ' ') AS payDay,
+        (case when D.CUSGUBN1 = NULL then ' ' else D.CUSGUBN1 || ' : ' || C.CUSGUBN1 end) || ' ' ||
+        (case when D.CUSGUBN2 = NULL then ' ' else D.CUSGUBN2 || ' : ' || C.CUSGUBN2 end) || ' ' ||
+        (case when D.CUSGUBN3 = NULL then ' ' else D.CUSGUBN3 || ' : ' || C.CUSGUBN3 end) || ' ' ||
+        (case when D.CUSGUBN4 = NULL then ' ' else D.CUSGUBN4 || ' : ' || C.CUSGUBN4 end) AS grpName,
+        COALESCE(B.ZIPCODE, ' ') AS ZIPCODE,
+        COALESCE(B.ADDRESS1, ' ') || ADDRESS2 AS addr,
+        COALESCE(B.REQNAME, ' ') AS REQNAME,
+        COALESCE(B.REQHP, ' ') AS REQHP,
+        COALESCE(A.BILLCONT2, ' ') AS BILLCONT2,
+        COALESCE(D.OWNERTEL, ' ') AS OWNERTEL,
+        COALESCE(B.MASMONTH, ' ') AS MASMONTH,
+        (SELECT SUM(PAYITEMAMT) FROM XNOTIDET WHERE C.NOTIMASCD = NOTIMASCD) AS PAYITEMAMT,
+        D.CHAZIPCODE,
+        D.CHAADDRESS1,
+        D.CHAADDRESS2
+        FROM XBILLFORM A
+        , XNOTIMASREQ B
+        , XNOTIMAS C
+        , XCHALIST D
+        WHERE A.CHACD = B.CHACD
+        AND A.BILLGUBN = B.BILLGUBN
+        AND A.CHACD = C.CHACD
+        AND A.CHACD = D.CHACD
+        AND B.REQST = 'BR01'
+        AND B.MASMONTH = C.MASMONTH
+        AND C.NOTIMASST = 'PA02'
+        AND C.NOTI_CAN_YN = 'N'
+        AND A.CHACD = #{chaCd}
+        AND A.BILLGUBN = #{billGubn}
+        AND B.MASMONTH = #{masMonth}
+        ORDER BY
+        <choose>
+            <when test="sort1Cd == 'N00001'">
+                C.CUSNAME ASC
+            </when>
+            <when test="sort1Cd == 'N00002'">
+                C.CUSGUBN1 ASC
+            </when>
+            <when test="sort1Cd == 'N00003'">
+                C.CUSGUBN2 ASC
+            </when>
+            <when test="sort1Cd == 'N00004'">
+                C.CUSGUBN3 ASC
+            </when>
+            <when test="sort1Cd == 'N00005'">
+                C.CUSGUBN4 ASC
+            </when>
+            <otherwise>
+                C.CUSGUBN1 ASC
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="sort2Cd == 'N00001'">
+                , C.CUSNAME ASC
+            </when>
+            <when test="sort2Cd == 'N00002'">
+                , C.CUSGUBN1 ASC
+            </when>
+            <when test="sort2Cd == 'N00003'">
+                , C.CUSGUBN2 ASC
+            </when>
+            <when test="sort2Cd == 'N00004'">
+                , C.CUSGUBN3 ASC
+            </when>
+            <when test="sort2Cd == 'N00005'">
+                , C.CUSGUBN4 ASC
+            </when>
+            <otherwise>
+
+            </otherwise>
+        </choose>
+        ) TB
+    </select>
+
+    <!-- 출력의뢰 데이터 - 메시지 -->
+    <select id="remarkMsgData" resultType="kr.co.finger.damoa.scheduler.model.LayOut">
+        SELECT (REGEXP_SPLIT_TO_ARRAY(REPLACE(A.REMARK, chr(10), '#@#'), '#@#'))[generate_series(1, 3)] AS msg,
+            A.CHACD AS chaCd,
+            A.NOTIMASCD AS notiMasCd,
+            generate_series(1, 3) AS idx
+        FROM (SELECT
+            REMARK,
+            CHACD,
+            NOTIMASCD
+            FROM XNOTIMAS
+            WHERE CHACD = #{chaCd}
+            AND MASMONTH = #{masMonth}
+            AND NOTIMASCD = #{notiMasCd}
+            ) A
+    </select>
+
+    <!-- 출력의뢰 ftp 전송 후 상태코드 수정 -->
+    <update id="updateReqSt">
+        UPDATE XNOTIMASREQ
+        SET REQST  = 'BR02' -- 의뢰상태
+          , SENDDT = now()
+        WHERE CHACD = #{chaCd}
+          AND MASMONTH = #{masMonth}
+    </update>
+
+    <select id="findProcessNMsg" resultType="map">
+        SELECT TRANSDT,
+               TRANSTIME,
+               TRCODE,
+               RULEDATA,
+               DEALSEQNO,
+               PROCYN,
+               CANCELYN
+        from TRANS_DATA_ACCT
+        where TRANSDT = #{TRANSDT}
+          and PROCYN = 'N'
+          AND TRCODE IN ('02001100', '02003110', '04001100', '04003110')
+    </select>
+
+    <select id="findCancel" parameterType="map" resultType="map">
+        select RCPMASCD,
+               NOTIMASCD
+        from XRCPMAS
+        where DEALSEQNO = #{DEALSEQNO}
+          AND PAYDAY = #{PAYDAY}
+    </select>
+    <update id="updateRcpCancel" parameterType="string">
+        UPDATE XRCPMAS
+        SET RCPMASST = 'PA09'
+        WHERE RCPMASCD = #{RCPMASCD}
+    </update>
+    <update id="updateRcpDetCancel" parameterType="string">
+        UPDATE XRCPDET
+        SET RCPDETST = 'PA09'
+        WHERE RCPMASCD = #{RCPMASCD}
+    </update>
+
+    <update id="updateNotimas" parameterType="map">
+        UPDATE XNOTIMAS
+        SET NOTIMASST = #{NOTIMASST}
+        WHERE NOTIMASCD = #{NOTIMASCD}
+    </update>
+    <update id="updateNotidetWithNotidetcd" parameterType="map">
+        UPDATE XNOTIDET
+        SET NOTIDETST = #{NOTIDETST}
+        WHERE NOTIDETCD = #{NOTIDETCD}
+    </update>
+    <select id="findNotiCanCelInfo" parameterType="string" resultType="map">
+        SELECT A.NOTIMASCD,
+               A.NOTIMASST,
+               B.ADJFIREGKEY,
+               B.PAYITEMAMT,
+               B.PAYITEMCD,
+               B.NOTIDETCD,
+               B.NOTIDETST
+        FROM XNOTIMAS A,
+             XNOTIDET B
+        WHERE A.NOTIMASCD = B.NOTIMASCD
+          AND A.NOTIMASCD = #{NOTIMASCD}
+    </select>
+
+    <select id="findChaSimpleInfo" parameterType="string" resultType="map">
+        select A.AMTCHKTY,
+               A.RCP_DUE_CHK,
+               A.CHAST,
+               A.CHATRTY,
+               A.ADJACCYN
+        from XCHALIST A
+        WHERE A.CHACD = #{CHACD}
+    </select>
+    <select id="findNotiMasDet" parameterType="map" resultType="map">
+        SELECT A.CHACD,
+               A.VANO,
+               A.MASKEY,
+               A.STARTDATE,
+               A.ENDDATE,
+               A.MASMONTH,
+               A.MASDAY,
+               A.CUSKEY,
+               A.CUSGUBN1,
+               A.CUSGUBN2,
+               A.CUSGUBN3,
+               A.CUSGUBN4,
+               A.CUSNAME,
+               A.CUSHP,
+               A.CUSMAIL,
+               A.SMSYN,
+               A.MAILYN,
+               A.CUSOFFNO,
+               A.CHATRTY,
+               A.NOTIMASCD,
+               A.AMTCHKTY,
+               B.NOTIDETCD,
+               B.ADJFIREGKEY,
+               B.PAYITEMAMT,
+               B.PAYITEMCD,
+               B.PAYITEMNAME,
+               B.RCPITEMYN,
+               B.DETKEY,
+               B.CHAOFFNO,
+               B.PTRITEMNAME,
+               B.PTRITEMREMARK,
+               B.PTRITEMORDER
+        FROM XNOTIMAS A,
+             XNOTIDET B
+        WHERE A.NOTIMASCD = B.NOTIMASCD
+          AND B.PAYITEMAMT > 0
+          AND A.NOTIMASST IN ('PA02', 'PA04')
+          AND A.NOTI_CAN_YN = 'N'
+          AND A.CHACD = #{CHACD}
+          AND A.VANO = #{VANO}
+        ORDER BY MASMONTH,
+                 PAYITEMCD
+    </select>
+    <select id="findSimpleRcpMasDet" parameterType="map" resultType="map">
+        SELECT A.NOTIMASCD,
+               B.ADJFIREGKEY,
+               B.PAYITEMAMT,
+               B.NOTIDETCD
+        FROM XRCPMAS A,
+             XRCPDET B
+        WHERE A.RCPMASCD = B.RCPMASCD
+          AND A.RCPMASST = 'PA03'
+          AND A.NOTIMASCD IN
+              (SELECT A.NOTIMASCD
+               FROM XNOTIMAS A,
+                    XNOTIDET B
+               WHERE A.NOTIMASCD = B.NOTIMASCD
+                 AND B.PAYITEMAMT > 0
+                 AND A.NOTIMASST IN ('PA02', 'PA04')
+                 AND A.CHACD = #{CHACD}
+                 AND A.VANO = #{VANO})
+    </select>
+
+    <select id="findRcpMasCd" resultType="string">
+        select nextval('seqxrcpmascd')
+    </select>
+
+    <insert id="insertDepositMsgHistory" parameterType="map">
+        INSERT INTO TRANS_RCP_HIST ( RCPDAY
+                                   , CHACD
+                                   , VANO
+                                   , RCPAMT
+                                   , FEEAMT
+                                   , RCPMASST)
+        VALUES ( #{RCPDAY}
+               , #{CHACD}
+               , #{VANO}
+               , #{RCPAMT}
+               , #{FEEAMT}
+               , #{RCPMASST})
+    </insert>
+
+
+    <insert id="insertXRcpMas" parameterType="map">
+        INSERT INTO XRCPMAS ( RCPMASCD
+                            , NOTIMASCD
+                            , SVECD
+                            , CHACD
+                            , VANO
+                            , MASKEY
+                            , MASMONTH
+                            , MASDAY
+                            , CUSKEY
+                            , CUSGUBN1
+                            , CUSGUBN2
+                            , CUSGUBN3
+                            , CUSGUBN4
+                            , CUSNAME
+                            , CUSHP
+                            , CUSMAIL
+                            , SMSYN
+                            , MAILYN
+                            , CUSOFFNO
+                            , PAYDAY
+                            , PAYTIME
+                            , BNKMSGNO
+                            , FICD
+                            , BNKCD
+                            , BCHCD
+                            , RCPUSRNAME
+                            , RCPAMT
+                            , OCCGUBN
+                            , MDGUBN
+                            , RCPMASST
+                            , MAKEDT
+                            , MAKER
+                            , REGDT
+                            , CHATRTY
+                            , DEALSEQNO)
+        VALUES ( #{RCPMASCD}
+               , #{NOTIMASCD}
+               , #{SVECD}
+               , #{CHACD}
+               , #{VANO}
+               , #{MASKEY}
+               , #{MASMONTH}
+               , #{MASDAY}
+               , #{CUSKEY}
+               , #{CUSGUBN1}
+               , #{CUSGUBN2}
+               , #{CUSGUBN3}
+               , #{CUSGUBN4}
+               , #{CUSNAME}
+               , #{CUSHP}
+               , #{CUSMAIL}
+               , #{SMSYN}
+               , #{MAILYN}
+               , #{CUSOFFNO}
+               , #{PAYDAY}
+               , #{PAYTIME}
+               , #{BNKMSGNO}
+               , #{FICD}
+               , #{BNKCD}
+               , #{BCHCD}
+               , #{RCPUSRNAME}
+               , #{RCPAMT}
+               , #{OCCGUBN}
+               , #{MDGUBN}
+               , #{RCPMASST}
+               , TO_DATE(#{MAKEDT}, 'YYYY-MM-DD HH24:MI:SS')
+               , #{MAKER}
+               , TO_DATE(#{REGDT}, 'YYYY-MM-DD HH24:MI:SS')
+               , #{CHATRTY}
+               , #{DEALSEQNO})
+    </insert>
+
+    <insert id="insertXRcpDet" parameterType="map">
+        INSERT INTO XRCPDET ( RCPDETCD
+                            , RCPMASCD
+                            , NOTIDETCD
+                            , DETKEY
+                            , PAYITEMCD
+                            , ADJFIREGKEY
+                            , PAYITEMNAME
+                            , PAYITEMAMT
+                            , RCPITEMYN
+                            , CHAOFFNO
+                            , CUSOFFNO
+                            , PTRITEMNAME
+                            , PTRITEMREMARK
+                            , PTRITEMORDER
+                            , RCPDETST
+                            , MAKEDT
+                            , MAKER
+                            , REGDT
+                            , CHATRTY)
+        VALUES ( (select nextval('seqxrcpdetcd'))
+               , #{RCPMASCD}
+               , #{NOTIDETCD}
+               , #{DETKEY}
+               , #{PAYITEMCD}
+               , #{ADJFIREGKEY}
+               , #{PAYITEMNAME}
+               , #{PAYITEMAMT}
+               , #{RCPITEMYN}
+               , #{CHAOFFNO}
+               , #{CUSOFFNO}
+               , #{PTRITEMNAME}
+               , #{PTRITEMREMARK}
+               , #{PTRITEMORDER}
+               , #{RCPDETST}
+               , TO_DATE(#{MAKEDT}, 'YYYY-MM-DD HH24:MI:SS')
+               , #{MAKER}
+               , TO_DATE(#{REGDT}, 'YYYY-MM-DD HH24:MI:SS')
+               , #{CHATRTY})
+    </insert>
+
+    <insert id="insertXCashMas" parameterType="map">
+        INSERT INTO XCASHMAS ( CASHMASCD
+                             , RCPMASCD
+                             , CHACD
+                             , CHAOFFNO
+                             , CUSOFFNO
+                             , CUSTYPE
+                             , CONFIRM
+                             , AMTCHKTY
+                             , NOTAXYN
+                             , RCPREQTY
+                             , CHATRTY
+                             , RCPAMT
+                             , TIP
+                             , TAX
+                             , JOB
+                             , CASHMASST
+                             , MAKEDT
+                             , MAKER
+                             , REGDT)
+        VALUES ( (select nextval('seqcashmascd'))
+               , #{RCPMASCD}
+               , #{CHACD}
+               , #{CHAOFFNO}
+               , #{CUSOFFNO}
+               , #{CUSTYPE}
+               , #{CONFIRM}
+               , #{AMTCHKTY}
+               , #{NOTAXYN}
+               , #{RCPREQTY}
+               , #{CHATRTY}
+               , #{RCPAMT}
+               , #{TIP}
+               , #{TAX}
+               , #{JOB}
+               , #{CASHMASST}
+               , TO_DATE(#{MAKEDT}, 'YYYY-MM-DD HH24:MI:SS')
+               , #{MAKER}
+               , TO_DATE(#{REGDT}, 'YYYY-MM-DD HH24:MI:SS'))
+    </insert>
+
+    <select id="findChaCusInfo" parameterType="string" resultType="map">
+        SELECT B.CHACD,
+               C.CHAOFFNO,
+               B.CUSOFFNO,
+               B.CUSTYPE,
+               C.NOTAXYN,
+               B.RCPREQTY,
+               C.CHATRTY,
+               B.CONFIRM,
+               C.AMTCHKTY,
+               B.RCPREQTY
+        from XCUSMAS B,
+             XCHALIST C
+        WHERE B.CHACD = C.CHACD
+          AND B.VANO = #{VANO}
+    </select>
+    <select id="findRcpCanCelInfo" parameterType="string" resultType="map">
+        SELECT A.NOTIMASCD,
+               A.RCPMASCD,
+               A.SVECD,
+               B.ADJFIREGKEY,
+               B.PAYITEMCD,
+               B.PAYITEMAMT,
+               B.NOTIDETCD,
+               B.RCPDETCD
+        FROM XRCPMAS A,
+             XRCPDET B
+        WHERE A.RCPMASCD = B.RCPMASCD
+          AND A.NOTIMASCD = #{NOTIMASCD}
+          AND A.RCPMASST = 'PA03'
+    </select>
+
+    <select id="findVareq" resultType="map">
+        select RULEMNGNO,
+               CHACD,
+               ACCCNT,
+               REQDT,
+               REMARK
+        from VAREQ
+        where SENDST = 'S'
+          and RECVDT is null
+    </select>
+
+    <select id="findBranchCode" parameterType="string" resultType="string">
+        select AGTCD
+        from XCHALIST
+        where CHACD = #{CHACD}
+    </select>
+
+    <select id="findChatrty" parameterType="string" resultType="string">
+        select CHATRTY
+        from XCHALIST
+        where CHACD = #{CHACD}
+    </select>
+
+    <insert id="insertValist" parameterType="map">
+        INSERT INTO VALIST (FICD, VANO, FITXCD, CHACD, USEYN, REGDT, VAREGTY, REMARK)
+        VALUES (#{FICD}, #{VANO}, #{FITXCD}, #{CHACD}, #{USEYN}, now(), #{VAREGTY}, #{REMARK})
+    </insert>
+
+    <update id="updateSendVareq" parameterType="map">
+        update VAREQ
+        set SENDST = 'W',
+            SENDDT = now()
+        where RULEMNGNO = #{RULEMNGNO}
+    </update>
+
+    <update id="updateReceivingVareqOK" parameterType="map">
+        update VAREQ
+        set SENDST    = 'R',
+            RECVDT    = now(),
+            SENDDT    = now(),
+            STARTACCT = #{STARTACCT}
+        where RULEMNGNO = #{RULEMNGNO}
+    </update>
+    <update id="updateReqOkInsertFail" parameterType="map">
+        update VAREQ
+        set SENDST    = 'R',
+            RECVDT    = now(),
+            SENDDT    = now(),
+            STARTACCT = #{STARTACCT},
+            REMARK    = '가상계좌발급성공 생성실패'
+        where RULEMNGNO = #{RULEMNGNO}
+    </update>
+    <update id="updateReceivingVareqFail" parameterType="string">
+        update VAREQ
+        set SENDST = 'R'
+          , SENDDT = now()
+          , RECVDT = now()
+          , REMARK = '가상계좌발급실패'
+        where RULEMNGNO = #{RULEMNGNO}
+    </update>
+    <update id="finishVanoRequestFailRetry" parameterType="string">
+        update VAREQ
+        set SENDST = 'S'
+          , SENDDT = now()
+--             , RECVDT = SYSDATE
+          , REMARK = '가상계좌발급실패 재시도' || now()
+        where RULEMNGNO = #{RULEMNGNO}
+    </update>
+    <update id="updateMsgProcY" parameterType="map">
+        update TRANS_DATA_ACCT
+        set PROCYN = 'Y'
+        where DEALSEQNO = #{DEALSEQNO}
+          AND TRANSDT = #{TRANSDT}
+    </update>
+    <select id="findAllCorpCode" resultType="map">
+        select CHAOFFNO,
+               CHACD,
+               CHAST,
+               CHA_CLOSE_CHK,
+               CHA_CLOSE_ST,
+               CHA_CLOSE_VAR_DT,
+               CHA_CLOSE_VAR_RESON
+        from XCHALIST
+    </select>
+
+    <update id="updateNoChangeCompanyStatus" parameterType="map">
+        UPDATE XCHALIST
+        SET CHA_CLOSE_VAR_DT = #{CHA_CLOSE_VAR_DT}
+        WHERE CHACD = #{CHACD}
+    </update>
+    <update id="updateChangeCompanyStatus" parameterType="map">
+        UPDATE XCHALIST
+        SET CHA_CLOSE_CHK       = #{CHA_CLOSE_CHK},
+            CHA_CLOSE_ST        = #{CHA_CLOSE_ST},
+            CHA_CLOSE_VAR_DT    = #{CHA_CLOSE_VAR_DT},
+            CHA_CLOSE_VAR_RESON = #{CHA_CLOSE_VAR_RESON}
+        WHERE CHACD = #{CHACD}
+    </update>
+
+    <select id="findVano" resultType="int" parameterType="string">
+        select count(*) COUNT
+        from VALIST
+        where VANO = #{VANO}
+    </select>
+
+
+    <insert id="insertVareq" parameterType="map">
+        INSERT INTO VAREQ (RULEMNGNO, CHACD, ACCCNT, STARTACCT, CREATENO, SENDST, APPENDYN, REQTY, REQDT, SENDDT,
+                           RECVDT, REMARK)
+        VALUES (#{RULEMNGNO}, #{CHACD}, #{ACCCNT}, null, null, 'S', 'Y', 'M', now(), null, null, null)
+    </insert>
+
+
+    <select id="findChacd" resultType="int" parameterType="string">
+        select count(CHACD) count
+        from XCHALIST
+        where CHACD = #{CHACD}
+    </select>
+    <select id="findAdjfiRegKey" resultType="map" parameterType="string">
+        select ADJFIREGKEY
+             , GRPADJNAME
+             , REAL_ACCNO
+        from XADJGROUP
+        where CHACD = #{CHACD}
+    </select>
+
+    <insert id="insertXChalist" parameterType="map">
+        INSERT INTO XCHALIST ( CHACD
+                             , AGTCD
+                             , CHANAME
+                             , OWNERTEL
+                             , CHAOFFNO
+                             , CHASTATUS
+                             , CHAADDRESS1
+                             , CHAADDRESS2
+                             , CHAZIPCODE
+                             , FEEACCNO
+                             , ADJACCYN
+                             , RCPREQYN
+                             , RCPREQTY
+                             , RCPDTDUPYN
+                             , USESMSYN
+                             , NOTSMSYN
+                             , RCPSMSYN
+                             , RCPSMSTY
+                             , USEMAILYN
+                             , AMTCHKTY
+                             , CUSNAMETY
+                             , NOTAXYN
+                             , CHATRTY
+                             , CUSGUBNYN1
+                             , CUSGUBNYN2
+                             , CUSGUBNYN3
+                             , CUSGUBNYN4
+                             , CHASVCYN
+                             , CHAST
+                             , BILLIMGTY
+                             , USEPGYN
+                             , CHKCASH
+                             , CHKOFF
+                             , CHA_NEW_REG_DT
+                             , RCPCNTFEE
+                             , RCPBNKFEE)
+        VALUES ( #{CHACD}
+               , #{AGTCD}
+               , #{CHANAME}
+               , #{OWNERTEL}
+               , #{CHAOFFNO}
+               , #{CHASTATUS}
+               , #{CHAADDRESS1}
+               , #{CHAADDRESS2}
+               , #{CHAZIPCODE}
+               , #{FEEACCNO}
+               , #{ADJACCYN}
+               , #{RCPREQYN}
+               , #{RCPREQTY}
+               , #{RCPDTDUPYN}
+               , #{USESMSYN}
+               , #{NOTSMSYN}
+               , #{RCPSMSYN}
+               , #{RCPSMSTY}
+               , #{USEMAILYN}
+               , #{AMTCHKTY}
+               , #{CUSNAMETY}
+               , #{NOTAXYN}
+               , #{CHATRTY}
+               , #{CUSGUBNYN1}
+               , #{CUSGUBNYN2}
+               , #{CUSGUBNYN3}
+               , #{CUSGUBNYN4}
+               , #{CHASVCYN}
+               , #{CHAST}
+               , #{BILLIMGTY}
+               , #{USEPGYN}
+               , #{CHKCASH}
+               , #{CHKOFF}
+               , #{CHA_NEW_REG_DT}
+               , #{RCPCNTFEE}
+               , #{RCPBNKFEE})
+    </insert>
+    <update id="updateXChalist" parameterType="map">
+        UPDATE XCHALIST
+        SET CHANAME        = #{CHANAME}
+          , CHAOFFNO       = #{CHAOFFNO}
+          , CHASTATUS      = #{CHASTATUS}
+          , OWNERTEL       = #{OWNERTEL}
+          , CHAST          = #{CHAST}
+          , RCPCNTFEE      = #{RCPCNTFEE}
+          , RCPBNKFEE      = #{RCPBNKFEE}
+          , AGTCD          = #{AGTCD}
+          , FEEACCNO       = #{FEEACCNO}
+          , CHA_NEW_REG_DT = #{CHA_NEW_REG_DT}
+        WHERE CHACD = #{CHACD}
+
+    </update>
+
+    <insert id="insertXadjGroup" parameterType="map">
+        INSERT INTO XADJGROUP
+        (CHACD,
+         ADJFIREGKEY,
+         GRPADJNAME,
+         MAKEDT,
+         MAKER,
+         REGDT,
+         REAL_ACCNO)
+        VALUES (#{CHACD},
+                #{ADJFIREGKEY},
+                #{GRPADJNAME},
+                now(),
+                #{MAKER},
+                now(),
+                #{REAL_ACCNO})
+    </insert>
+    <update id="updateXadjGroup" parameterType="map">
+        UPDATE XADJGROUP
+        SET REGDT      = now(),
+            REAL_ACCNO = #{REAL_ACCNO}
+        WHERE CHACD = #{CHACD}
+          AND ADJFIREGKEY = #{ADJFIREGKEY}
+    </update>
+    <delete id="deleteXadjGroup" parameterType="map">
+        DELETE
+        FROM XADJGROUP
+        WHERE CHACD = #{CHACD}
+          AND ADJFIREGKEY = #{ADJFIREGKEY}
+    </delete>
+
+    <select id="findFeeHistory" parameterType="map" resultType="string">
+        SELECT CHACD
+        FROM BNK_FEE_HIST
+        where CHACD = #{CHACD}
+          AND FEE_START_DT = #{FEE_START_DT}
+          AND FEE_END_DT = #{FEE_END_DT}
+    </select>
+
+    <insert id="insertFeeHistory" parameterType="map">
+        INSERT INTO BNK_FEE_HIST
+        (CHACD,
+         FEE_START_DT,
+         FEE_END_DT,
+         RCP_CNT_FEE,
+         RCP_BNK_RATE,
+         RCP_BNK_FEE,
+         REG_DT)
+        VALUES (#{CHACD},
+                #{FEE_START_DT},
+                #{FEE_END_DT},
+                #{RCP_CNT_FEE},
+                #{RCP_BNK_RATE},
+                #{RCP_BNK_FEE},
+                TO_DATE(#{REGDT}, 'YYYY-MM-DD HH24:MI:SS'))
+    </insert>
+
+    <insert id="insertFeeHist" parameterType="map">
+        INSERT INTO BNK_FEE_HIST ( CHACD
+                                 , FEE_START_DT
+                                 , FEE_END_DT
+                                 , RCP_CNT_FEE
+                                 , RCP_BNK_RATE
+                                 , RCP_BNK_FEE
+                                 , REG_DT)
+        VALUES ( #{CHACD}
+               , #{FEE_START_DT}
+               , #{FEE_END_DT}
+               , #{RCP_CNT_FEE}
+               , #{RCP_BNK_RATE}
+               , #{RCP_BNK_FEE}
+               , now())
+    </insert>
+
+    <select id="findFeeHist" parameterType="map" resultType="int">
+        SELECT count(*) COUNT
+        FROM BNK_FEE_HIST
+        where CHACD = #{CHACD}
+          AND FEE_START_DT = #{FEE_START_DT}
+    </select>
+
+    <select id="checkCancelAPStatus" parameterType="string" resultType="map">
+        SELECT B.*,
+               A.TRANSDT
+        FROM TRANS_DATA_ACCT A
+                 INNER JOIN XRCPMAS B ON B.DEALSEQNO = A.DEALSEQNO AND B.PAYDAY = A.TRANSDT
+        WHERE A.TRCODE LIKE '0410%'
+          AND A.TRANSDT BETWEEN '20180824' AND #{today}
+          AND B.RCPMASST &lt;&gt; 'PA09'
+        ORDER BY TRANSDT ASC, TRANSTIME ASC
+    </select>
+
+
+    <!--    재판매 모니터랑 하위 가맹점 정보 데이터 수집-->
+    <select id="selectRsOrgMonitoredDataList" parameterType="String" resultType="map">
+        select LPAD(row_number() over (order by regdt) ::text, 8, '0')  as seq_no, /*일련번호*/
+               chacd                                                       HDR_VAC_ORG_CD_NO,/*기관코드*/
+               chast,/*기관상태*/
+               case
+                   when chast = 'ST06' then '1'
+                   when chast = 'ST02' then '9'
+                   else '2'
+                   end                                                  as TRX_C,/*기관상태2*/
+               chaoffno                                                    HAWI_MCHT_BIZNO,/*사업자번호*/
+               chaname                                                     HAWI_MCHT_NM,/*기관명*/
+               chastatus                                                   HAWI_MCHT_UPJONG_NM,/*업종*/
+               '0'                                                         EPAY_KJ_AGE_YN,/*전자지급결제대행업여부*/
+               case when chast = 'ST02' THEN '' else cha_new_reg_dt end as DR_DT,/*등록일자*/
+               cha_close_dt                                                HJI_DT/*해지일자*/
+        from xchalist
+        where ((chast = 'ST06' and cha_new_reg_dt like to_char(date_trunc('month', CURRENT_DATE) - interval '1 month', 'YYYYMM') || '%')
+            OR (chast = 'ST02' and xchalist.cha_close_dt like to_char(date_trunc('month', CURRENT_DATE) - interval '1 month', 'YYYYMM') || '%'))
+          AND fgcd = #{fgcd}
+    </select>
+    <!--    재판매 모니터랑  가상계좌  데이터 수집-->
+    <select id="selectRsVaMonitoredDataList" parameterType="String" resultType="map">
+
+        select LPAD(row_number() over (order by valist.regdt) ::text, 8, '0') as seq_no, /*일련번호*/
+               valist.fgcd                                                       HDR_VAC_ORT_CD_NO,/*기관코드*/
+               '1'                                                            as TRX_G,/*기관상태2*/
+               vano                                                              VRTL_ACNO,/*가상계좌번호*/
+               chaoffno                                                          HAWI_MCHT_BIZNO,/*사업자번호*/
+               to_char(valist.regdt, 'YYYYMMDD')                              as DR_DT,/*등록일자*/
+               ''                                                                HJI_DT/*해지일자*/
+        from valist join xchalist x on valist.chacd = x.chacd
+        where valist.fgcd = #{fgcd}
+          and valist.useyn = 'Y'
+                  <![CDATA[
+          and to_char(valist.regdt, 'yyyyMM') = to_char(date_trunc('month', CURRENT_DATE) - interval '1 month', 'yyyyMM');
+        ]]>
+
+    </select>
+
+
+    <select id="selectChaListByChaSt" resultType="map">
+        select
+            distinct chacd as HDR_VAC_ORG_CD_NO
+        from
+            xchalist
+        where
+            chast = 'ST06'
+    </select>
+
+    <insert id="insertMonitoringFileHist">
+        insert into
+            MONITORING_FILE_HIST (
+                                       HIST_SEQ,
+                                       FILE_NM,
+                                       FILE_PATH,
+                                       TRAN_DT,
+                                       RES_YN,
+                                       REG_DT,
+                                       MOD_DT
+                                       )
+        values (
+                nextval('monitering_file_hist_id'),
+                #{fileName},
+                #{filePath},
+                #{tranDt},
+                'N',
+                now(),
+                now()
+                )
+    </insert>
+
+    <update id="updateMonitoringFileHist">
+        update
+            MONITORING_FILE_HIST
+        set RES_YN = #{resYn}, MOD_DT = now()
+        where file_nm = #{fileName}
+          and tran_dt = to_char(now(),'YYYYMMDD')
+    </update>
+
+    <select id="selectMonitoringFileList" resultType="map">
+        select
+            hist_seq,
+            file_nm,
+            file_path,
+            res_yn
+        from MONITORING_FILE_HIST
+        where tran_dt = TO_CHAR(now(),'YYYYMMDD')
+    </select>
+    <insert id="insertMonitoringFileHistDet">
+        insert into monitoring_file_hist_det
+        (hist_seq,
+         hist_det_seq,
+         chacd,
+         res_cd,
+         reg_dt,
+         mod_dt)
+        values (#{histSeq},
+                nextval('monitering_file_hist_det_id'),
+                #{chacd},
+                #{resCd},
+                now(),
+                now());
+    </insert>
+
+    <select id="getChacdByChaOffNoAndChaNameFromChaList" resultType="String">
+        select chacd from xchalist where chaname = #{chaName} and chaoffno = #{chaOffNo}
+    </select>
+
+    <select id="getChacdByChaOffNoAndChaNameFromVaList" resultType="String">
+        select chacd from valist where vano = #{vaNo}
+    </select>
+</mapper>

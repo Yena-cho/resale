@@ -1,0 +1,639 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="NotiDao">	
+	
+<!--	<resultMap type="com.finger.shinhandamoa.org.notimgmt.dto.NotiSendDTO" id="selSmsCusInfomap">-->
+<!--		<result column="CUSHP" property="cusHp" javaType="encrypt" jdbcType="CLOB" />-->
+<!--	</resultMap>-->
+	
+	<!-- sms고지 전송을 위한 사용여부 by YEJ -->
+	<select id="selSmsUseYn" resultType="String">
+		SELECT	A.USESMSYN  AS useSmsYn	-- sms사용여부
+		FROM	XCHALIST	A
+        WHERE 	A.CHACD 	= #{chaCd}
+	</select>
+	
+	<!-- sms 사용유무 수정 -->
+	<update id="updateSmsUseYn">
+		UPDATE	XCHALIST
+		SET		USESMSYN 	 = 'W'
+			,   SMS_SEND_TEL = #{smsSendTel}
+			,	MAKER 	 	 = #{chaCd}
+			,	MAKEDT	 	 = NOW()
+		WHERE	CHACD	 	 = #{chaCd}
+	</update>
+
+	<!-- SMS고지 전송을 위한 납부자정보 by YEJ  -->
+	<select id="selSmsCusInfo" resultType="com.finger.shinhandamoa.org.notimgmt.dto.NotiSendDTO">
+		SELECT A.CUSNAME        AS cusName
+				, A.CUSHP        AS cusHp
+				, B.NOTIMASCD    AS notiMasCd
+		  FROM XCUSMAS A
+			 , XNOTIMAS B
+		WHERE A.VANO = B.VANO
+		  AND A.CUSHP IS NOT NULL
+		  AND A.CHACD = #{chaCd}
+        <if test="strList.size > 0">
+		  AND B.NOTIMASCD IN
+			<foreach collection="strList" item="item" index="index" separator="," open="(" close=")">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+
+	<!-- SMS고지 전송을 위한 발송번호 by YEJ -->
+	<select id="selSmsSendNo" resultType="com.finger.shinhandamoa.org.notimgmt.dto.NotiSendDTO">
+		SELECT (REGEXP_MATCHES(SMS_SEND_TEL, '[^,]+', 'g'))[1] AS smsSendTel
+		FROM 	(SELECT SMS_SEND_TEL 
+				 FROM 	XCHALIST
+				 WHERE 	CHACD  = #{chaCd}
+				 ) T
+		WHERE 	SMS_SEND_TEL IS NOT NULL
+	</select>
+	
+	<!-- SMS고지 전송을 위한 문구정보 by YEJ -->
+	<select id="selSmsMasInfo" resultType="com.finger.shinhandamoa.org.notimgmt.dto.NotiSendDTO">
+		SELECT	USESMSYN 		AS useSmsYn		-- sms사용여부
+			,	NOTSMSYN		AS notSmsYn		-- 청구
+			, 	RCPSMSYN		AS rcpSmsYn 	-- 입금
+			,   NOTSMS			AS notSms		-- 청구메세지
+			,	RCPSMS			AS rcpSms		-- 입금메세지
+			,   NOTSMS2     	AS notiSms2		-- 미납메세지
+            ,   SMS_MSG_DEF1 	AS smsMsgDef1	-- 기본메세지1
+            ,   SMS_MSG_DEF2 	AS smsMsgDef2	-- 기본메세지2
+		FROM	XCHALIST
+		WHERE	CHACD 			= #{chaCd}
+	</select>
+	
+	<!-- 문자메시지 서비스 이용 등록을 위한 기관 정보 -->
+	<select id="selOrgInfo" resultType="com.finger.shinhandamoa.org.notimgmt.dto.NotiSendDTO">
+		SELECT	CHANAME		AS chaName
+			, 	OWNERTEL	AS ownerTel
+		FROM	XCHALIST
+		WHERE	CHACD 		= #{chaCd}
+	</select>
+	
+	<!-- 문자메시지 서비스 이용 등록 -->
+	<insert id="insertFormInfo">
+		INSERT 	INTO 
+		BOARD 	(NO, 			BBS, 			NUM
+			, 	STEP, 			ID, 			PASSWORD, 		WRITER, 		EMAIL
+			, 	TITLE, 			CONTENTS, 		FILENAME, 		FILESIZE, 		IP
+			, 	ISHTML, 		ISFIX, 			CODE, 			FILE_ID,		FILE_EXT)
+		VALUES (NEXTVAL('board_seq'), 			#{bbs}, 		(SELECT COALESCE(MAX(NUM), 0) + 1 FROM BOARD WHERE BBS = #{bbs})
+			, 	#{step}, 		#{chaCd}, 		#{password}, 	#{writer}, 		#{email}
+			, 	#{title}, 		#{contents}, 	#{fileName}, 	#{fileSize}, 	''
+			, 	#{isHtml}, 		#{isFix}, 		#{chaCd},		#{fileid},		#{fileext})
+	</insert>
+	
+		<!-- 문자메시지 서비스 이용 재등록 -->
+	<update id="updateFormInfo">
+		UPDATE BOARD 
+		SET FILENAME = #{fileName},
+		    FILESIZE = #{fileSize},
+		    FILE_ID = #{fileid},
+		    FILE_EXT = #{fileext}
+		WHERE BBS = #{bbs}
+		AND NO = #{fileno}
+		AND TITLE = #{title}
+	</update>
+	
+		<!-- sms 사용유무 수정 -->
+	<update id="updateSmsRegStAdm">
+		UPDATE	XCHALIST
+		SET	USESMSYN = 'W'
+			,MAKER = #{chacd}
+			,MAKEDT = NOW()
+		WHERE	CHACD = #{chacd}
+	</update>
+	
+	<!-- 고객명 확인 -->
+	<select id="selCusName" resultType="com.finger.shinhandamoa.org.notimgmt.dto.NotiSendDTO">
+		SELECT	CUSNAME AS cusName
+			, 	CUSHP 	AS cusHp
+		FROM	XCUSMAS
+		WHERE	CHACD = #{chaCd}
+		AND		CUSHP = #{cusHp}
+	</select>
+
+	<!-- sms 발송 후처리 -->
+	<insert id="insertSmsReq">
+		INSERT INTO 
+		SMSREQ( SMSREQCD
+			,	FICD,			CHACD,			PHONE,		CALLBACK,	STATUS
+			,	REQDATE,		REPORTDATE,		RSLT,		MSG,		TYPE
+			,	SENDCNT,		SMSREQST,		MAKEDT,		MAKER,		REGDT
+			,	CHATRTY,		NOTIMASCD)
+		 VALUES( #{smsReqCd}
+			,	#{fiCd},		#{chaCd},		#{cusHp},	#{telNo},	#{status}
+			,	NOW(),			NOW(),			#{rslt},	#{msg},		#{type}
+			,	#{sendCnt},		#{smsReqSt},	NOW(),		#{chaCd},	NOW()
+			,	#{chatrTy},		#{notiMasCd})
+	</insert>
+	
+<!--	<resultMap id="sendSmsListResultMap" type="com.finger.shinhandamoa.org.notimgmt.dto.NotiSendDTO">
+		<result column="PHONE" property="phone" javaType="encrypt" />
+	</resultMap>-->
+	
+	<!-- sms 발송이력 -->
+	<select id="sendSmsList" resultType="com.finger.shinhandamoa.org.notimgmt.dto.NotiSendDTO">
+		<include refid="paging_header"/>
+		SELECT TO_CHAR(A.REQDATE, 'YYYY.MM.DD HH24:MI:SS')                           					AS reqDate,
+				A.SMSREQCD																				AS smsReqCd,
+				CASE A.TYPE  WHEN '0' THEN  'SMS'  WHEN '1' THEN  'LMS' END								AS type,
+				COALESCE(B.CUSNAME, ' ')																AS cusName,
+				A.PHONE																					AS phone,
+				A.MSG																					AS msg,
+				CASE A.STATUS  WHEN '0' THEN  '발송대기'  WHEN '1' THEN  '발송중'  WHEN '2' THEN  '발송완료'  WHEN '3' THEN  '발송실패'  WHEN '4' THEN  ' ' END AS status
+		  FROM SMSREQ A LEFT OUTER JOIN XNOTIMAS B ON A.CHACD = B.CHACD AND A.NOTIMASCD = B.NOTIMASCD
+		 WHERE A.PAYMASCD IS NULL
+		   AND A.CHACD = #{chaCd}
+		   AND TO_CHAR(A.REGDT, 'YYYYMMDD') BETWEEN #{stDt} AND #{edDt}
+		<if test="keyword != null and keyword != ''">
+			<if test="selGubn != null and selGubn == 'cusName'">
+		   AND B.CUSNAME LIKE '%' || #{keyword} || '%'
+			</if>
+			<if test="selGubn != null and selGubn == 'phone'">
+		   AND A.PHONE LIKE '%' || #{keyword} || '%'
+			</if>
+			<if test="selGubn != null and selGubn == 'msg'">
+		   AND A.MSG LIKE '%' || #{keyword} || '%'
+			</if>
+		</if>
+		<if test="status != 'ALL'">
+			AND A.STATUS = #{status}
+		</if>
+
+		<include refid="orderByNotiMgmtSm"/>
+		<include refid="paging_footer"/>
+	</select>
+
+	<select id="excelSendSmsListDownload" resultType="com.finger.shinhandamoa.org.notimgmt.dto.NotiSendDTO">
+		SELECT TO_CHAR(A.REQDATE, 'YYYY.MM.DD HH24:MI:SS')										AS reqDate,
+				A.SMSREQCD																		AS smsReqCd,
+				CASE A.TYPE  WHEN '0' THEN  'SMS'  WHEN '1' THEN  'LMS' END						AS type,
+				COALESCE(B.CUSNAME, ' ')														AS cusName,
+				A.PHONE																			AS phone,
+				A.MSG																			AS msg,
+				CASE A.STATUS  WHEN '0' THEN  '발송대기'  WHEN '1' THEN  '발송중'  WHEN '2' THEN  '발송완료'  WHEN '3' THEN  '발송실패'  WHEN '4' THEN  ' ' END AS status
+		FROM SMSREQ A LEFT OUTER JOIN XNOTIMAS B
+			ON A.CHACD = B.CHACD AND A.NOTIMASCD = B.NOTIMASCD
+		WHERE A.PAYMASCD IS NULL
+		  AND A.CHACD = #{chaCd}
+		  AND TO_CHAR(A.REGDT, 'YYYYMMDD') BETWEEN #{stDt} AND #{edDt}
+		<if test="keyword != null and keyword != ''">
+			<if test="selGubn != null and selGubn == 'cusName'">
+				AND B.CUSNAME LIKE '%' || #{keyword} || '%'
+			</if>
+			<if test="selGubn != null and selGubn == 'phone'">
+				AND A.PHONE LIKE '%' || #{keyword} || '%'
+			</if>
+			<if test="selGubn != null and selGubn == 'msg'">
+				AND A.MSG LIKE '%' || #{keyword} || '%'
+			</if>
+		</if>
+		<if test="status != 'ALL'">
+			AND A.STATUS = #{status}
+		</if>
+
+		<include refid="orderByNotiMgmtSm"/>
+	</select>
+
+	<!-- ORDER BY -->
+	<sql id="orderByNotiMgmtSm">
+		<choose>
+			<when test="search_orderBy == 'reqDt'"> 
+				ORDER BY A.REQDATE DESC, A.STATUS ASC, B.CUSNAME ASC
+			</when>
+			<when test="search_orderBy == 'cusName'">
+				ORDER BY B.CUSNAME ASC, A.STATUS ASC, A.REQDATE DESC
+			</when>
+			<when test="search_orderBy == 'status'">
+				ORDER BY A.STATUS ASC, A.REQDATE DESC, B.CUSNAME ASC
+			</when>
+		</choose>
+	</sql>
+	<!-- 페이징을 위한 header -->
+	<sql id="paging_header">
+		select *
+		from (
+		    select (ROW_NUMBER() OVER()) as rn, C.*
+		    from (	
+	</sql>
+	<!-- 페이징을 위한 footer -->
+	<sql id="paging_footer">
+		    ) C
+		) X where rn between #{start} and #{end}
+	</sql>
+	
+	<!-- sms 발송이력 total count -->
+	<select id="sendSmsTotalCount" resultType="int">
+		SELECT COUNT(*) AS cnt
+		  FROM SMSREQ A LEFT OUTER JOIN XNOTIMAS B
+		  		ON A.CHACD = B.CHACD AND A.NOTIMASCD = B.NOTIMASCD
+		 WHERE A.PAYMASCD IS NULL
+		   AND A.CHACD = #{chaCd}
+		   AND TO_CHAR(A.REGDT, 'YYYYMMDD') BETWEEN #{stDt} AND #{edDt}
+
+		<if test="keyword != null and keyword != ''">
+			<if test="selGubn != null and selGubn == 'cusName'">
+				AND B.CUSNAME LIKE '%' || #{keyword} || '%'
+			</if>
+			<if test="selGubn != null and selGubn == 'phone'">
+				AND A.PHONE LIKE '%' || #{keyword} || '%'
+			</if>
+			<if test="selGubn != null and selGubn == 'msg'">
+				AND A.MSG LIKE '%' || #{keyword} || '%'
+			</if>
+		</if>
+
+		<if test="status != 'ALL'">
+			AND A.STATUS = #{status}
+		</if>
+	</select>
+	
+	<!-- sms 발송 진행상태 update를 위한 데이터 추출 -->
+	<select id="selSendList" resultType="com.finger.shinhandamoa.org.notimgmt.dto.NotiSendDTO">
+		SELECT 	SMSREQCD AS smsReqCd,
+		        STATUS AS status
+		FROM 	SMSREQ
+		WHERE 	CHACD 	= #{chaCd}
+		AND 	STATUS 	IN ('0', '1', '3')	
+	</select>
+	
+	<!-- sms 발송 진행상태 update -->
+	<update id="sendStatus">
+		UPDATE	SMSREQ
+		SET		STATUS	 = #{status}
+			,	MAKEDT	 = NOW()
+			,	MAKER	 = #{chaCd}
+		WHERE   SMSREQCD = #{smsReqCd}
+	</update>
+	
+	<!-- EMAIL 전송을 위한 템플릿 유무  -->
+	<select id="selEmailUseYn" resultType="int">
+		SELECT	COUNT(*) AS cnt
+		FROM	XBILLFORM
+		WHERE 	CHACD 		= #{chaCd}
+	</select>
+	
+	<!-- EMAIL 전송을 위한 납부자정보 by YEJ  -->
+	<select id="selEmailCusInfo" resultType="com.finger.shinhandamoa.org.notimgmt.dto.NotiSendDTO"> 
+		SELECT	A.CUSNAME 	AS cusName
+			, 	SUBSTR(A.CUSMAIL, 0, POSITION('@' in A.CUSMAIL) - 1) 				AS cusMail
+            , 	SUBSTR(A.CUSMAIL, POSITION('@' in A.CUSMAIL) + 1, LENGTH(A.CUSMAIL)) AS mail
+            , 	B.NOTIMASCD AS notiMasCd
+		FROM	XCUSMAS 	A
+        	, 	XNOTIMAS 	B
+		WHERE	A.VANO 		= B.VANO
+        AND 	A.CHACD 	= #{chaCd}
+        <if test="strList.size > 0">
+		AND 	B.NOTIMASCD IN
+			<foreach collection="strList" item="str" index="index" separator="," open="(" close=")">
+				#{str}
+			</foreach>
+		</if>
+		<include refid="orderByNotiMgmt" />
+	</select>
+			<!-- ORDER BY -->
+	<sql id="orderByNotiMgmt">
+		<choose>
+			<when test="search_orderBy == 'date'"> 
+				ORDER BY B.STARTDATE DESC, B.ENDDATE DESC, A.CUSNAME ASC
+			</when>
+			<when test="search_orderBy == 'masDate'">
+				ORDER	BY B.REGDT DESC, B.NOTIMASCD DESC
+			</when>
+			<when test="search_orderBy == 'vaNo'">
+				ORDER BY A.VANO DESC, B.REGDT DESC
+			</when>
+			<otherwise>
+				ORDER BY A.CUSNAME asc, B.REGDT DESC
+			</otherwise>
+		</choose>
+	</sql>
+	<!-- 안내문구 -->
+	<select id="selBillName" resultType="com.finger.shinhandamoa.org.notimgmt.dto.NotiSendDTO">
+		SELECT 	BILLNAME	AS billName
+			, 	BILLGUBN	AS billGubn
+			,	BILLCONT1	AS billCont
+		FROM 	XBILLFORM
+		WHERE 	CHACD 		= #{chaCd}
+		AND		BILLGUBN	= #{billGubn}
+	</select>
+<!-- 				, 	REPLACE(D.OWNERTEL, '-', '') 		AS ownerTel -->
+	<select id="selMailCont" resultType="com.finger.shinhandamoa.org.notimgmt.dto.NotiSendDTO">
+		SELECT 	C.CUSNAME
+			, 	A.NOTICHANAME 					AS CHANAME
+			, 	D.CHAADDRESS1 || ' ' || D.CHAADDRESS2 AS addr
+			, 	D.OWNERTEL						AS ownerTel
+			, 	D.CHRMAIL 						AS chrMail
+			, 	A.BILLNAME						AS subject
+			, 	A.CUSALS 						AS cusals
+			, 	C.CUSGUBN1 						AS cusGubn
+			, 	A.BILLCONT1 					AS contents
+			,	B.ENDDATE						AS endDate
+			,   B.PRINTDATE             		AS printDate
+			, 	TO_CHAR(TO_DATE(B.MASMONTH, 'YYYYMM'), 'YYYY') 	AS masYear
+			, 	TO_CHAR(TO_DATE(B.MASMONTH, 'YYYYMM'), 'MM') 	AS masMonth
+			, 	(SELECT SUM(PAYITEMAMT) FROM XNOTIDET WHERE NOTIMASCD = #{notiMasCd} AND NOTI_CAN_YN  = 'N') AS payAmt
+			, 	A.CHACD || '.jpg' 				AS logoNm
+			,	C.VANO							AS vano
+			,   COALESCE(B.REMARK, ' ') 		AS remark
+			,	COALESCE(A.BILLCONT2, ' ')		AS billCont2
+			,	A.TELNO AS telNo
+		FROM 	XBILLFORM 	A
+			, 	XNOTIMAS 	B
+			, 	XCUSMAS 	C
+			, 	XCHALIST 	D
+		WHERE 	A.CHACD 	= B.CHACD
+		AND 	A.CHACD 	= C.CHACD
+		AND 	B.VANO 		= C.VANO
+		AND  	A.CHACD 	= D.CHACD
+		AND 	A.CHACD 	= #{chaCd}
+		AND 	A.BILLGUBN 	= #{billGubn}
+		AND 	B.NOTIMASCD = #{notiMasCd}
+		AND     B.NOTI_CAN_YN  = 'N'
+	</select>
+	
+	<!-- 이메일고지서 발송 - 고객구분 -->
+	<select id="selCusGubn" resultType="com.finger.shinhandamoa.org.notimgmt.dto.NotiSendDTO">
+		SELECT 	COALESCE(CUSGUBN1, ' ') AS cusGubn1
+			,  	COALESCE(CUSGUBN2, ' ') AS cusGubn2
+			,  	COALESCE(CUSGUBN3, ' ') AS cusGubn3
+			,  	COALESCE(CUSGUBN4, ' ') AS cusGubn4
+		FROM 	XCUSMAS
+		WHERE 	VANO 	= #{vano}
+	</select>
+	
+	<!-- 이메일고지서 발송 - 청구항목 -->
+	<select id="selEmailItem" resultType="com.finger.shinhandamoa.org.notimgmt.dto.NotiSendDTO">
+		SELECT 	COALESCE(PAYITEMNAME, '') AS itemName
+			,   PAYITEMAMT 	AS itemAmt
+			,   COALESCE(PTRITEMREMARK, '') AS ptrName
+		FROM 	XNOTIDET
+		WHERE 	NOTIMASCD 	= #{notiMasCd}
+			AND NOTI_CAN_YN  = 'N'
+	</select>
+
+			<!-- ORDER BY -->
+	<sql id="orderByNotiMgmtEm">
+		<choose>
+			<when test="search_orderBy == 'reqDt'"> 
+				ORDER BY B.REQ_DT DESC, A.RECEIVER_NM ASC
+			</when>
+			<otherwise>
+				ORDER BY A.RECEIVER_NM ASC, A.SEQ DESC
+			</otherwise>
+		</choose>
+	</sql>
+	
+	<sql id="searchEmail">
+		<if test="selGubn != null and selGubn == 'cusName'">
+		AND 	A.RECEIVER_NM 	LIKE '%' || #{keyword} || '%'
+		</if>
+		<if test="selGubn != null and selGubn == 'email'">
+		AND 	A.RECEIVER 		LIKE '%' || #{keyword} || '%'
+		</if>
+	</sql>
+
+	<!-- 이메일 발송 - seq 생성 -->
+	<select id="selEmailSeq" resultType="String">
+		SELECT	FN_EMAIL_SEQ(#{ecareNo}) AS seq
+	</select>
+	
+	<insert id="insertEmailHist">
+		INSERT	INTO
+		EMAIL_HIST(
+				SEQ
+			,	ECARE_NO
+			,	SLOT1
+			,	SLOT2
+			,	SUBJECT
+			,	RECEIVER_ID
+			,	RECEIVER_NM
+			,	RECEIVER
+			,	CHACD
+			,	SENDER)
+		VALUES(
+				#{seq}
+			,	#{ecareNo}
+			,   #{masMonth}
+			,	#{slot2}
+			,	#{subject}
+			,	#{receiverId}
+			,	#{receiverNm}
+			,	#{receiver}
+			,	#{chaCd}
+			,	#{sender})
+	</insert>
+	
+	<!-- 이메일수정 -->
+	<update id="emailInfoUpdate">
+		UPDATE 	XCUSMAS
+		SET 	CUSMAIL = #{cusMail}
+			,	MAKEDT 	= NOW()
+			,	MAKER 	=  #{chaCd}
+		WHERE 	VANO 	= (SELECT 	VANO
+						   FROM 	XNOTIMAS
+						   WHERE 	NOTIMASCD = #{notiMasCd})	
+	</update>
+
+	<!-- 알림톡고지 전송을 위한 사용여부 -->
+	<select id="selAtUseYn" resultType="String">
+		SELECT	ATYN
+		FROM	XCHALIST
+        WHERE 	CHACD = #{chaCd}
+	</select>
+
+	<select id="selAtChaInfo" resultType="com.finger.shinhandamoa.org.notimgmt.dto.NotiSendDTO">
+		SELECT COALESCE(ATCHANAME, CHANAME) AS chaName
+			   , OWNERTEL              		AS chaTelNo
+		  FROM XCHALIST
+		 WHERE CHACD = #{chaCd}
+	</select>
+
+	<!-- 알림톡 신청 -->
+	<update id="atCertificateIns">
+		UPDATE XCHALIST
+		   SET ATYN = 'W'
+		   	   , ATREGDT = NOW()
+		   	   , ATACPTDT = null
+		   	   , ATCNCLDT = null
+		   	   , ATCHANAME = null
+		 WHERE CHACD = #{chaCd}
+	</update>
+
+	<!-- 알림톡 신청 히스토리 -->
+	<insert id="atApply">
+		INSERT INTO ATHIS (NO, CHACD, ATCHANAME, ATREGDT, ATYN)
+		VALUES (TO_CHAR(NOW(), 'YYMMDDHH24MISS') || SUBSTR(#{chaCd}, 5, 4), #{chaCd}, #{atChaName}, NOW(), 'W')
+	</insert>
+
+	<!-- 알림톡 발송 후 저장 -->
+	<insert id="insertAtReq">
+		INSERT INTO ATREQ (
+				  CMID
+                 , TRXKEY
+                 , CHACD
+                 , CHATELNO
+                 , CUSTELNO
+                 , SENDMSG
+                 , MSGTYPE
+                 , SENDSTATUSCD
+       			 , SENDRESULTCD
+                 , SENDDATE
+                 , NOTIMASCD
+                 , PAYMASCD
+                 , MAKEDT
+                 , MAKER
+                 , REPORTDATE )
+		  VALUES ( #{cmid}
+		  	     , #{trxKey}
+			     , #{chaCd}
+			     , #{chaTelNo}
+			     , #{cusTelNo}
+			     , #{sendMsg}
+			     , #{msgType}
+			     , #{sendStatusCd}
+			     , #{sendResultCd}
+			     , NOW()
+			     , #{notimasCd}
+			     , #{paymasCd}
+			     , NOW()
+			     , #{maker}
+			     , #{reportDate})
+	</insert>
+
+	<select id="sendAtTotalCount" resultType="int">
+		SELECT COUNT(*) AS cnt
+		  FROM ATREQ A LEFT OUTER JOIN XNOTIMAS B ON A.CHACD = B.CHACD AND A.NOTIMASCD = B.NOTIMASCD
+				LEFT OUTER JOIN ATREQCODE C ON A.SENDRESULTCD = C.CODE
+		 WHERE 1 = 1
+		   AND A.PAYMASCD IS NULL
+		   AND A.CHACD = #{chaCd}
+		   AND TO_CHAR(A.SENDDATE, 'YYYYMMDD') BETWEEN #{stDt} AND #{edDt}
+		<if test="keyword != null and keyword != ''">
+			<if test="selGubn != null and selGubn == 'cusName'">
+				AND B.CUSNAME LIKE '%' || #{keyword} || '%'
+			</if>
+			<if test="selGubn != null and selGubn == 'cusTelNo'">
+				AND A.CUSTELNO LIKE '%' || #{keyword} || '%'
+			</if>
+		</if>
+		<if test="status != 'ALL'">
+			AND A.SENDSTATUSCD = #{status}
+		</if>
+		<if test="msgType != 'ALL'">
+			AND A.MSGTYPE = #{msgType}
+		</if>
+	</select>
+
+	<select id="sendAtList" resultType="com.finger.shinhandamoa.org.notimgmt.dto.NotiSendDTO">
+		<include refid="paging_header"/>
+		SELECT A.SENDDATE
+			, CASE A.MSGTYPE  WHEN '0' THEN  '청구'  WHEN '1' THEN  '미납'  WHEN '2' THEN  '입금' END AS MSGTYPE
+			, B.CUSNAME
+			, A.CUSTELNO
+			, A.SENDMSG
+			, CASE A.SENDSTATUSCD  WHEN '0' THEN  '발송대기'  WHEN '1' THEN  '발송완료'  WHEN '2' THEN  '발송실패' END AS SENDSTATUSCD
+			, COALESCE(C.CODE, '0')     		AS RESULTCODE
+			, COALESCE(C.DESCRIPTION, ' ')   	AS DESCRIPTION
+		 FROM ATREQ A
+		     LEFT OUTER JOIN XNOTIMAS 	B ON A.CHACD = B.CHACD AND A.NOTIMASCD = B.NOTIMASCD
+			 LEFT OUTER JOIN ATREQCODE 	C ON A.SENDRESULTCD = C.CODE
+		WHERE A.PAYMASCD IS NULL
+		   AND A.CHACD = #{chaCd}
+		   AND TO_CHAR(A.SENDDATE, 'YYYYMMDD') BETWEEN #{stDt} AND #{edDt}
+		<if test="keyword != null and keyword != ''">
+			<if test="selGubn != null and selGubn == 'cusName'">
+				AND B.CUSNAME LIKE '%' || #{keyword} || '%'
+			</if>
+			<if test="selGubn != null and selGubn == 'cusTelNo'">
+				AND A.CUSTELNO LIKE '%' || #{keyword} || '%'
+			</if>
+		</if>
+		<if test="status != 'ALL'">
+			AND A.SENDSTATUSCD = #{status}
+		</if>
+		<if test="msgType != 'ALL'">
+			AND A.MSGTYPE = #{msgType}
+		</if>
+
+		<include refid="orderByAtList"/>
+		<include refid="paging_footer"/>
+	</select>
+
+	<sql id="orderByAtList">
+		<choose>
+			<when test="search_orderBy == 'sendDate'">
+				ORDER BY A.SENDDATE DESC, B.CUSNAME ASC, A.SENDSTATUSCD ASC
+			</when>
+			<when test="search_orderBy == 'cusName'">
+				ORDER BY B.CUSNAME ASC, A.SENDDATE DESC, A.SENDSTATUSCD ASC
+			</when>
+			<when test="search_orderBy == 'sendStatusCd'">
+				ORDER BY  A.SENDSTATUSCD ASC, B.CUSNAME ASC, A.SENDDATE DESC
+			</when>
+			<otherwise>
+				ORDER BY A.SENDDATE DESC, B.CUSNAME ASC, A.SENDSTATUSCD ASC
+			</otherwise>
+		</choose>
+	</sql>
+
+	<select id="setAtMsg" resultType="com.finger.shinhandamoa.org.notimgmt.dto.NotiSendDTO">
+		SELECT SENDMSG
+				, TEMPLATECODE
+				, MSGTYPE
+		  FROM ATMSG
+		ORDER BY MSGTYPE ASC
+	</select>
+
+	<select id="selectDailySentCount" resultType="int">
+		SELECT COUNT(*) AS cnt
+		FROM SMSREQ
+		WHERE CHACD = #{chaCd}
+		AND TO_CHAR(REGDT, 'YYYYMMDD') = TO_CHAR(NOW(), 'YYYYMMDD')
+		AND SMSREQST = 'ST10'
+	</select>
+
+	<select id="selectDailyRepeatedCount" resultType="int">
+		SELECT COUNT(*) AS cnt
+		  FROM SMSREQ
+		  WHERE PHONE = #{cusHp}
+		  AND CHACD = #{chaCd}
+		  AND TO_CHAR(REGDT, 'YYYYMMDD') = TO_CHAR(NOW(), 'YYYYMMDD')
+		  AND SMSREQST = 'ST10'
+	</select>
+
+	<select id="selectMonthlyRepeatedMean" resultType="int">
+		SELECT COUNT(*) as cnt
+		FROM
+		  (SELECT SUBSTR(PHONE, 13) 	AS PHONE ,
+		          TO_CHAR(REGDT, 'YYYYMMDD')  AS sentdate,
+				  COUNT(*)                    AS cnt
+		  FROM SMSREQ
+		  WHERE PHONE = #{cusHp}
+		  AND CHACD   = #{chaCd}
+		  AND TO_CHAR(REGDT, 'YYYYMMDD') >= TO_CHAR(NOW() - interval '30 day', 'YYYYMMDD')
+		  AND SMSREQST = 'ST10'
+		  GROUP BY	SUBSTR(PHONE, 13),
+					TO_CHAR(REGDT, 'YYYYMMDD')
+		  ORDER BY cnt DESC
+		  ) T
+		WHERE cnt >= 200
+	</select>
+
+	<!-- 동일한 날짜, 기관, 번호, 내용인 메세지 수-->
+	<select id="selectDailySameMsgCnt" resultType="int">
+		SELECT COUNT(*)
+		FROM SMSREQ
+		WHERE STATUS &lt;&gt; '3'
+		AND TO_CHAR(REGDT, 'YYYYMMDD') = TO_CHAR(NOW(), 'YYYYMMDD')
+		AND CHACD = #{chaCd}
+		AND PHONE = #{cusHp}
+		AND MSG = #{convertedMsg}
+	</select>
+</mapper>

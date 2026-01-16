@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: rcp-cust-test-server
+
+#HTTP Port
+server:
+  port: 12000

@@ -1,0 +1,1220 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ClaimDao">
+
+<!--    <resultMap type="ClaimDTO" id="searchCus">
+        <result column="CUSHP" property="cusHp" javaType="encrypt" jdbcType="CLOB"/>
+    </resultMap>
+
+    <resultMap type="com.finger.shinhandamoa.org.notimgmt.dto.NotiSendDTO" id="autoSmsClaimSendDatamap">
+        <result column="SMS_SEND_TEL" property="telNo" javaType="encrypt" jdbcType="CLOB"/>
+        <result column="CUSHP" property="cusHp" javaType="encrypt" jdbcType="CLOB"/>
+    </resultMap>-->
+
+    <!-- 페이징을 위한 header -->
+    <sql id="paging_header">
+		select *
+		from (
+		    select (ROW_NUMBER() OVER()) as rn, Z.*
+		    from (	
+	</sql>
+    <!-- 페이징을 위한 footer -->
+    <sql id="paging_footer">
+		    ) Z
+		) X where rn between #{start} and #{end}
+	</sql>
+
+    <!-- 청구대상 목록 -->
+    <select id="selectClaimList" resultType="ClaimDTO">
+        <include refid="paging_header"/>
+        SELECT MAS.NOTIMASCD AS notiMasCd
+            , DET.NOTIDETCD AS notiDetCd
+            , MAS.CUSKEY AS cusKey
+            , MAS.CUSNAME AS cusName
+            , MAS.CUSGUBN1 AS cusGubn1
+            , MAS.CUSGUBN2 AS cusGubn2
+            , MAS.CUSGUBN3 AS cusGubn3
+            , MAS.CUSGUBN4 AS cusGubn4
+            , DET.PAYITEMCD AS payItemCd
+            , DET.PAYITEMNAME AS payItemName
+            , DET.PAYITEMAMT AS payItemAmt
+            , DET.PTRITEMNAME AS ptrItemName
+            , DET.PTRITEMREMARK AS ptrItemRemark
+            , CUS.VANO AS vano
+            , TO_CHAR(TO_DATE(MAS.MASMONTH, 'YYYYMM'), 'YYYY.MM') AS masMonth
+            , TO_CHAR(TO_DATE(MAS.MASDAY, 'YYYYMMDD'), 'YYYY.MM.DD') AS masDay
+            , TO_CHAR(TO_DATE(MAS.STARTDATE, 'YYYYMMDD'), 'YYYY.MM.DD') AS startDate
+            , TO_CHAR(TO_DATE(MAS.ENDDATE, 'YYYYMMDD'), 'YYYY.MM.DD') AS endDate
+            , TO_CHAR(TO_DATE(MAS.PRINTDATE, 'YYYYMMDD'), 'YYYY.MM.DD') AS printDate
+            , DET.NOTIDETST AS notiMasSt
+            , MAS.NOTI_CAN_YN AS notiCanYn
+        FROM XNOTIMAS MAS
+            , XNOTIDET DET
+            , XCUSMAS CUS
+        WHERE MAS.NOTIMASCD = DET.NOTIMASCD
+        AND MAS.VANO = CUS.VANO
+        AND MAS.CHACD = #{chaCd}
+        <include refid="search"/>
+        <include refid="orderByClaimReg"/>
+        <include refid="paging_footer"/>
+    </select>
+
+    <!-- search 청구상태 추가 필요-->
+    <sql id="search">
+        <if test="notiMasSt == 'PA00' and notiMasSt != null">
+            AND MAS.NOTIMASST = DET.NOTIDETST
+            AND MAS.NOTIMASST = #{notiMasSt}
+            AND CUS.DISABLED = 'N'
+        </if>
+        <if test="notiMasSt != 'PA00' and notiMasSt != null">
+            AND MAS.NOTIMASST != 'PA00'
+        </if>
+        <if test='selGb == "M" and selGb != null'>
+            AND MAS.MASMONTH = #{masMonth}
+        </if>
+        <if test='selGb == "D" and selGb != null'>
+            AND MAS.MASDAY BETWEEN #{masStDt} AND #{masEdDt}
+        </if>
+
+        <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchValue)'>
+            <if test='cusGubn == "cusName"'>
+                AND
+                <foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+                    MAS.CUSNAME LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+            <if test='cusGubn == "vano"'>
+                AND
+                <foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+                    MAS.VANO LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+        </if>
+
+        <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusGubnValue)'>
+            <if test='seachCusGubn == "all"'>
+                AND
+                <foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+                    ( MAS.CUSGUBN1 LIKE '%' || #{list} || '%' OR MAS.CUSGUBN2 LIKE '%' || #{list} || '%' OR MAS.CUSGUBN3 LIKE '%' || #{list} || '%' OR MAS.CUSGUBN4 LIKE '%' || #{list} || '%' )
+                </foreach>
+            </if>
+            <if test='seachCusGubn == "CUSGUBN1"'>
+                AND
+                <foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+                    MAS.CUSGUBN1 LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+            <if test='seachCusGubn == "CUSGUBN2"'>
+                AND
+                <foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+                    MAS.CUSGUBN2 LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+            <if test='seachCusGubn == "CUSGUBN3"'>
+                AND
+                <foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+                    MAS.CUSGUBN3 LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+            <if test='seachCusGubn == "CUSGUBN4"'>
+                AND
+                <foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+                    MAS.CUSGUBN4 LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+        </if>
+
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(payList)">
+            AND MAS.NOTIMASST IN
+            <foreach collection="payList" item="list" index="index" open="(" close=")" separator=",">
+                #{list}
+            </foreach>
+        </if>
+
+        <if test="payItemCd != null and payItemCd != ''">
+            AND DET.PAYITEMCD = #{payItemCd}
+        </if>
+
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(strList)">
+            AND MAS.NOTI_CAN_YN IN
+            <foreach collection="strList" item="list" index="index" open="(" close=")" separator=",">
+                #{list}
+            </foreach>
+        </if>
+    </sql>
+
+    <!-- ORDER BY -->
+    <sql id="orderByClaimReg">
+        <choose>
+            <when test="search_orderBy == 'masMonth'">
+                ORDER BY MASMONTH DESC, CUSNAME ASC, PAYITEMNAME ASC, MAS.NOTI_CAN_YN DESC
+            </when>
+            <when test="search_orderBy == 'cusName'">
+                ORDER BY CUSNAME ASC, MASMONTH DESC, PAYITEMNAME ASC, MAS.NOTI_CAN_YN DESC
+            </when>
+            <when test="search_orderBy == 'payItemName'">
+                ORDER BY PAYITEMNAME ASC, MASMONTH DESC, CUSNAME ASC, MAS.NOTI_CAN_YN DESC
+            </when>
+            <when test="search_orderBy == 'printDate'">
+                ORDER BY PRINTDATE DESC
+            </when>
+            <when test="search_orderBy == 'masDay'">
+                ORDER BY MASDAY DESC
+            </when>
+            <when test="search_orderBy == 'date'">
+                ORDER BY STARTDATE DESC, ENDDATE DESC
+            </when>
+            <when test="search_orderBy == 'cusGubn'">
+                ORDER BY CUSGUBN1 ASC, CUSGUBN2 ASC, CUSGUBN3 ASC, CUSGUBN4 ASC
+            </when>
+        </choose>
+    </sql>
+
+    <!-- 청구대상 total count -->
+    <select id="selectClaimTotalCnt" resultType="int">
+        SELECT COUNT(*) AS cnt
+        FROM XNOTIMAS MAS --청구서
+            , XNOTIDET DET --청구서 상세항목
+            , XCUSMAS CUS --가상계좌납부자
+        WHERE MAS.NOTIMASCD = DET.NOTIMASCD
+        AND MAS.VANO = CUS.VANO
+        AND MAS.CHACD = #{chaCd}
+        <include refid="search"/>
+    </select>
+
+    <!-- 청구등록 청구건수 count -->
+    <select id="selectClaimClientCnt" resultType="int">
+        SELECT COUNT(DISTINCT MAS.NOTIMASCD) AS cnt
+        FROM XNOTIMAS MAS --청구서
+            , XNOTIDET DET --청구서 상세항목
+            , XCUSMAS CUS --가상계좌납부자
+        WHERE MAS.NOTIMASCD = DET.NOTIMASCD
+        AND MAS.VANO = CUS.VANO
+        AND MAS.CHACD = #{chaCd}
+        <include refid="search"/>
+    </select>
+
+    <!-- 청구월 -->
+    <select id="selectClaimMonth" resultType="String">
+        SELECT COALESCE(MAX(MAS.MASMONTH), TO_CHAR(NOW(), 'YYYYMM')) AS masMonth
+        FROM XNOTIMAS MAS --청구서
+            , XNOTIDET DET --청구서 상세항목
+            , XCUSMAS CUS --가상계좌납부자
+        WHERE MAS.NOTIMASCD = DET.NOTIMASCD
+        AND MAS.VANO = CUS.VANO
+        AND MAS.NOTI_CAN_YN = DET.NOTI_CAN_YN
+        AND MAS.NOTI_CAN_YN = 'N'
+        <if test="notiMasSt == 'PA00' and notiMasSt != null">
+            AND MAS.NOTIMASST = DET.NOTIDETST
+            AND MAS.NOTIMASST = #{notiMasSt}
+        </if>
+        <if test="notiMasSt != 'PA00' and notiMasSt != null">
+            AND MAS.NOTIMASST != 'PA00'
+        </if>
+        AND CUS.DISABLED = 'N'
+        AND MAS.CHACD = #{chaCd}
+    </select>
+
+    <!-- 청구 임시 데이터 삭제 -->
+    <!-- 청구서 -->
+    <delete id="deleteClaimXnotimas">
+        DELETE
+        FROM XNOTIMAS
+        WHERE CHACD = #{chaCd}
+        <if test="notiMasSt == 'PA00' and notiMasSt != null">
+            AND NOTIMASST = #{notiMasSt}
+        </if>
+        <if test="notiMasSt != 'PA00' and notiMasSt != null">
+            AND NOTIMASST != 'PA01'
+        </if>
+    </delete>
+    <!-- 청구서 상세 항목 -->
+    <delete id="deleteClaimXnotidet">
+        DELETE
+        FROM XNOTIDET
+        WHERE NOTIDETST = #{notiMasSt}
+        AND NOTIMASCD IN (SELECT MAS.NOTIMASCD
+                            FROM XNOTIMAS MAS
+                                , XNOTIDET DET
+                            WHERE MAS.NOTIMASCD = DET.NOTIMASCD
+                            <if test="notiMasSt == 'PA00' and notiMasSt != null">
+                                AND MAS.NOTIMASST = DET.NOTIDETST
+                                AND MAS.NOTIMASST = #{notiMasSt}
+                            </if>
+                            <if test="notiMasSt != 'PA00' and notiMasSt != null">
+                                AND MAS.NOTIMASST != 'PA00'
+                                AND DET.NOTIDETST != 'PA00'
+                            </if>
+                            AND MAS.CHACD = #{chaCd} )
+    </delete>
+
+    <!-- 청구 임시 데이터 단건 삭제 -->
+    <!-- 청구서 -->
+    <delete id="selClaimDeleteMas">
+		DELETE	
+		FROM	XNOTIMAS
+		WHERE	NOTIMASCD = #{notiMasCd}
+	</delete>
+    <!-- 청구서 상세 항목 -->
+    <delete id="selClaimDeleteDet">
+		DELETE	
+		FROM	XNOTIDET
+		WHERE	NOTIDETCD = #{notiDetCd}
+	</delete>
+
+    <!-- 청구수정 update 전에 전체삭제 -->
+    <delete id="selClaimDeleteDetAll">
+		DELETE	
+		FROM	XNOTIDET
+		WHERE	NOTIMASCD = #{notiMasCd}
+	</delete>
+
+    <!-- 청구수정 update 전에 det 삭제 -->
+    <delete id="selClaimDeleteDetB">
+        DELETE
+        FROM    XNOTIDET
+        WHERE   NOTIDETST IN ( 'PA00', 'PA02' )
+          AND   NOTIMASCD = #{notiMasCd}
+    </delete>
+
+    <!-- 청구정보 상세 -->
+    <select id="selectDetailClaim" resultType="ClaimDTO">
+		SELECT 	MAS.NOTIMASCD 		AS notiMasCd
+			, 	MAS.CUSKEY 			AS cusKey
+			,	MAS.CUSNAME 		AS cusName
+			,	MAS.CUSHP 			AS cusHp
+			,	MAS.VANO			AS vano
+			,	MAS.MASMONTH 	 	AS masMonth
+			,	TO_CHAR(TO_DATE(MAS.MASDAY, 'YYYYMMDD'), 'YYYY.MM.DD') 			AS masDay
+			,	TO_CHAR(TO_DATE(MAS.STARTDATE, 'YYYYMMDD'), 'YYYY.MM.DD') 		AS startDate
+			,	TO_CHAR(TO_DATE(MAS.ENDDATE, 'YYYYMMDD'), 'YYYY.MM.DD') 		AS endDate
+			,	TO_CHAR(TO_DATE(MAS.PRINTDATE, 'YYYYMMDD'), 'YYYY.MM.DD') 		AS printDate
+			,	MAS.REMARK			AS remark
+		FROM 	XNOTIMAS 	MAS
+		WHERE 	1=1
+		  AND	MAS.NOTIMASCD = #{notiMasCd}
+	</select>
+
+    <!-- 청구정보 상세 - 청구항목 -->
+    <select id="selClaimItem" resultType="ClaimDTO">
+        SELECT PAYITEMCD, PAYITEMNAME, PAYITEMAMT, PAYITEMRCPAMT, NOTIDETCD, PTRITEMREMARK, NOTIDETST
+          FROM ( SELECT NDET.PAYITEMCD,
+                          NDET.PAYITEMNAME,
+                          NDET.PAYITEMAMT       PAYITEMAMT,
+                          SUM(CASE RDET.RCPDETST  WHEN 'PA09' THEN  0  ELSE RDET.PAYITEMAMT END) PAYITEMRCPAMT,
+                          NDET.NOTIDETCD,
+                          NDET.PTRITEMREMARK,
+                          NDET.NOTIDETST,
+                          NDET.PTRITEMORDER
+                    FROM XNOTIDET NDET LEFT OUTER JOIN XRCPDET RDET ON NDET.NOTIDETCD = RDET.NOTIDETCD
+                   WHERE NOTIMASCD = #{notiMasCd}
+                    <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(viewType)'>
+                     AND NOTIDETST != 'PA00'
+                     AND NOTI_CAN_YN = 'N'
+                    </if>
+        GROUP BY NDET.PAYITEMCD, NDET.PAYITEMNAME, NDET.PAYITEMAMT, NDET.NOTIDETCD, NDET.PTRITEMREMARK, NDET.NOTIDETST, NDET.PTRITEMORDER
+                ) A
+        ORDER BY PTRITEMORDER::integer, PAYITEMCD
+    </select>
+
+    <!-- 청구대상 합계금액 -->
+    <select id="selClaimRegSum" resultType="long">
+        SELECT COALESCE(SUM(DET.PAYITEMAMT), 0) AS payAmtSum
+        FROM XNOTIMAS MAS
+            LEFT OUTER JOIN XCUSMAS CUS ON MAS.VANO = CUS.VANO
+            , XNOTIDET DET
+        WHERE MAS.NOTIMASCD = DET.NOTIMASCD
+        AND MAS.CHACD = #{chaCd}
+        <include refid="search"/>
+    </select>
+
+    <!-- 임시저장 -->
+    <update id="updateClaimTempDet">
+        UPDATE XNOTIDET
+        SET MAKEDT = NOW()
+            , MAKER = #{chaCd}
+        <if test="payItemAmt != null and payItemAmt != ''">
+            , PAYITEMAMT = #{payItemAmt}
+        </if>
+        WHERE NOTIDETCD = #{notiDetCd}
+        AND NOTIDETST = 'PA00'
+    </update>
+
+    <update id="updateClaimTempMas">
+        UPDATE XNOTIMAS
+        SET MASMONTH = #{masMonth}
+            , MAKEDT = NOW()
+            , MAKER = #{chaCd}
+        <if test="startDate != null and startDate != ''">
+            , STARTDATE = #{startDate}
+        </if>
+        <if test="endDate != null and endDate != ''">
+            , ENDDATE = #{endDate}
+        </if>
+        <if test="printDate != null and printDate != ''">
+            , PRINTDATE = #{printDate}
+        </if>
+        <if test="printDate == null or printDate == ''">
+            , PRINTDATE = #{endDate}
+        </if>
+        WHERE CHACD = #{chaCd}
+        AND NOTIMASCD = #{notiMasCd}
+        AND NOTIMASST = 'PA00'
+    </update>
+
+    <!-- 일괄적용 -->
+    <update id="updateMasBundle">
+        UPDATE XNOTIMAS
+           SET MAKEDT = NOW()
+        	, MAKER = #{chaCd}
+        <if test="upMonth != null and upMonth != ''">
+            , MASMONTH = #{upMonth}
+        </if>
+        <if test="startDate != null and startDate != ''">
+            , STARTDATE = #{startDate}
+        </if>
+        <if test="endDate != null and endDate != ''">
+            , ENDDATE = #{endDate}
+        </if>
+        <if test="printDate != null and printDate != ''">
+            , PRINTDATE = #{printDate}
+        </if>
+        WHERE NOTIMASCD IN (SELECT NOTIMASCD
+       						  FROM XNOTIMAS
+       						 WHERE CHACD = #{chaCd}
+      						   AND MASMONTH = #{masMonth}
+     						   AND NOTIMASST = 'PA00')
+    </update>
+
+    <update id="updateDetBundle">
+        UPDATE XNOTIDET
+           SET MAKEDT = NOW()
+        	, MAKER = #{chaCd}
+        <if test="payItemAmt != null">
+            , PAYITEMAMT = #{payItemAmt}
+        </if>
+        WHERE NOTIDETCD IN (SELECT NOTIDETCD
+       						 FROM XNOTIMAS A
+        						, XNOTIDET B
+      						WHERE A.NOTIMASCD = B.NOTIMASCD
+        					  AND A.NOTIMASST = B.NOTIDETST
+					          AND A.CHACD = #{chaCd}
+					          AND A.MASMONTH = #{masMonth}
+					          AND B.PAYITEMCD = #{payItemCd}
+					          AND A.NOTIMASST = 'PA00')
+    </update>
+
+    <!-- 청구등록/취소 -->
+    <update id="claimMasUpdate"><!-- 청구서 -->
+        UPDATE XNOTIMAS
+           SET MAKEDT = NOW()
+                , MAKER = #{chaCd}
+          <if test="notiMasSt != null and notiMasSt != ''"><!-- 납부상태 -->
+                , NOTIMASST = #{notiMasSt}
+          </if>
+          <if test="notiCanYn != null and notiCanYn != ''"><!-- 청구상태 -->
+                , NOTI_CAN_YN = #{notiCanYn}
+          </if>
+        WHERE CHACD = #{chaCd}
+          AND NOTIMASCD = #{notiMasCd}
+    </update>
+    <update id="claimDetUpdate"><!-- 청구서 상세 -->
+        UPDATE XNOTIDET
+        SET MAKEDT = NOW()
+        , MAKER = #{chaCd}
+        <if test="notiMasSt != null and notiMasSt != ''"><!-- 납부상태 -->
+            , NOTIDETST = #{notiMasSt}
+        </if>
+        <if test="notiCanYn != null and notiCanYn != ''"><!-- 청구상태 -->
+            , NOTI_CAN_YN = #{notiCanYn}
+        </if>
+        WHERE NOTIMASCD = #{notiMasCd}
+    </update>
+
+    <!-- 청구취소를 위한 데이터 추출 -->
+    <select id="selDetToMasNo" resultType="ClaimDTO">
+		SELECT	B.NOTIMASCD AS notiMasCd
+			, 	B.NOTIDETCD AS notiDetCd
+			,	A.MASMONTH 	AS masMonth
+			,	A.NOTIMASST AS notiMasSt
+		FROM	XNOTIMAS A
+			,	XNOTIDET B
+		WHERE	A.NOTIMASCD = B.NOTIMASCD
+		AND		NOTIDETCD 	= #{notiDetCd}
+	</select>
+    <select id="selMasDetNo" resultType="ClaimDTO">
+        SELECT  B.NOTIMASCD AS notiMasCd
+            ,   B.NOTIDETCD AS notiDetCd
+        FROM    XNOTIMAS A
+            ,   XNOTIDET B
+        WHERE   A.NOTIMASCD = B.NOTIMASCD
+            AND A.CHACD = #{chaCd}
+        <if test="notiMasSt == 'PA00' and notiMasSt != null">
+            AND A.NOTIMASST = B.NOTIDETST
+            AND A.NOTIMASST = #{notiMasSt}
+        </if>
+        <if test="notiMasSt != 'PA00' and notiMasSt != null">
+            AND A.NOTIMASST != 'PA00'
+            AND B.NOTIDETST != 'PA00'
+        </if>
+            AND A.MASMONTH = #{masMonth}
+    </select>
+
+    <!-- 청구일괄취소 -->
+    <update id="updateCancelMas">
+		UPDATE 	XNOTIMAS
+		SET  	NOTI_CAN_YN = #{notiCanYn}
+			,   MAKEDT 	  	= NOW()
+			,   MAKER 	  	= #{chaCd}
+		WHERE 	NOTIMASCD 	IN (SELECT 	DISTINCT A.NOTIMASCD
+        FROM 	XNOTIMAS A
+            , 	XNOTIDET B
+        WHERE 	A.NOTIMASCD = B.NOTIMASCD
+        AND 	A.CHACD		= #{chaCd}
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(masMonth)">
+            AND A.MASMONTH = #{masMonth}
+        </if>
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(masStDt) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(masEdDt)">
+            AND A.MASDAY BETWEEN #{masStDt} AND #{masEdDt}
+        </if>
+        AND 	A.NOTIMASST &lt; 'PA03'
+        AND 	B.NOTIDETST &lt; 'PA03'
+        <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchValue)'>
+            <if test='cusGubn == "cusName"'>
+                AND
+                <foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+                    A.CUSNAME LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+            <if test='cusGubn == "vano"'>
+                AND
+                <foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+                    A.VANO LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+        </if>
+        <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusGubnValue)'>
+            <if test='seachCusGubn == "all"'>
+                AND
+                <foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+                    ( A.CUSGUBN1 LIKE '%' || #{list} || '%' OR A.CUSGUBN2 LIKE '%' || #{list} || '%' OR A.CUSGUBN3 LIKE '%' || #{list} || '%' OR A.CUSGUBN4 LIKE '%' || #{list} || '%' )
+                </foreach>
+            </if>
+            <if test='seachCusGubn == "CUSGUBN1"'>
+                AND
+                <foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+                    A.CUSGUBN1 LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+            <if test='seachCusGubn == "CUSGUBN2"'>
+                AND
+                <foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+                    A.CUSGUBN2 LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+            <if test='seachCusGubn == "CUSGUBN3"'>
+                AND
+                <foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+                    A.CUSGUBN3 LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+            <if test='seachCusGubn == "CUSGUBN4"'>
+                AND
+                <foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+                    A.CUSGUBN4 LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+        </if>
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(strList)">
+            AND A.NOTI_CAN_YN IN
+            <foreach collection="strList" item="list" index="index" open="(" close=")" separator=",">
+                #{list}
+            </foreach>
+        </if>
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(payList)">
+            AND A.NOTIMASST IN
+            <foreach collection="payList" item="list" index="index" open="(" close=")" separator=",">
+                #{list}
+            </foreach>
+        </if>
+        )
+--         AND 	A.NOTIMASST = 'PA02'
+--         AND 	B.NOTIDETST = 'PA02'
+--         AND    A.NOTI_CAN_YN = 'N')
+	</update>
+
+    <update id="updateCancelDet">
+		UPDATE 	XNOTIDET
+		SET  	NOTI_CAN_YN = #{notiCanYn}
+			,   MAKEDT 	  	= NOW()
+			,   MAKER 	  	= #{chaCd}
+		WHERE 	NOTIMASCD 	IN (SELECT 	DISTINCT A.NOTIMASCD
+        FROM 	XNOTIMAS A
+            , 	XNOTIDET B
+        WHERE 	A.NOTIMASCD = B.NOTIMASCD
+            AND A.CHACD		= #{chaCd}
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(masMonth)">
+            AND A.MASMONTH = #{masMonth}
+        </if>
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(masStDt) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(masEdDt)">
+            AND A.MASDAY BETWEEN #{masStDt} AND #{masEdDt}
+        </if>
+            AND A.NOTIMASST &lt; 'PA03'
+            AND B.NOTIDETST &lt; 'PA03'
+        <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(searchValue)'>
+            <if test='cusGubn == "cusName"'>
+                AND
+                <foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+                    A.CUSNAME LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+            <if test='cusGubn == "vano"'>
+                AND
+                <foreach collection="searchValue" item="list" index="index" open="(" close=")" separator="OR">
+                    A.VANO LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+        </if>
+        <if test='@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusGubnValue)'>
+            <if test='seachCusGubn == "all"'>
+                AND
+                <foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+                    ( A.CUSGUBN1 LIKE '%' || #{list} || '%' OR A.CUSGUBN2 LIKE '%' || #{list} || '%' OR A.CUSGUBN3 LIKE '%' || #{list} || '%' OR A.CUSGUBN4 LIKE '%' || #{list} || '%' )
+                </foreach>
+            </if>
+            <if test='seachCusGubn == "CUSGUBN1"'>
+                AND
+                <foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+                    A.CUSGUBN1 LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+            <if test='seachCusGubn == "CUSGUBN2"'>
+                AND
+                <foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+                    A.CUSGUBN2 LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+            <if test='seachCusGubn == "CUSGUBN3"'>
+                AND
+                <foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+                    A.CUSGUBN3 LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+            <if test='seachCusGubn == "CUSGUBN4"'>
+                AND
+                <foreach collection="cusGubnValue" item="list" index="index" open="(" close=")" separator="OR">
+                    A.CUSGUBN4 LIKE '%' || #{list} || '%'
+                </foreach>
+            </if>
+        </if>
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(strList)">
+            AND A.NOTI_CAN_YN IN
+            <foreach collection="strList" item="list" index="index" open="(" close=")" separator=",">
+                #{list}
+            </foreach>
+        </if>
+        <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(payList)">
+            AND A.NOTIMASST IN
+            <foreach collection="payList" item="list" index="index" open="(" close=")" separator=",">
+                #{list}
+            </foreach>
+        </if>
+        )
+--         AND 	A.NOTIMASST = 'PA02'
+--         AND 	B.NOTIDETST = 'PA02'
+--         AND    B.NOTI_CAN_YN = 'N')
+	</update>
+
+    <!-- 개별청구등록 - 고객검색 -->
+    <select id="searchCusName" resultType="ClaimDTO">
+        <include refid="paging_header"/>
+        SELECT A.CUSNAME AS cusName
+	        , A.CUSGUBN1 AS cusGuBn1
+	        , A.CUSGUBN2 AS cusGuBn2
+	        , A.CUSGUBN3 AS cusGuBn3
+	        , A.CUSGUBN4 AS cusGuBn4
+	        , SUBSTR(A.CUSHP, 0, 100) AS cusHp
+	        , A.VANO AS vano
+	        , A.REGDT
+        FROM XCUSMAS A
+        WHERE A.DISABLED = 'N'
+            AND A.RCPGUBN = 'Y'
+            AND A.CHACD = #{chaCd}
+        <if test="selCusCk != null and selCusCk == 'cusNm' and cusName != null and cusName != ''">
+            AND A.CUSNAME LIKE '%' || #{cusName} || '%'
+        </if>
+        <if test="selCusCk != null and selCusCk == 'cusHp' and cusName != null and cusName != ''">
+            AND A.CUSHP = #{cusName}
+        </if>
+        <if test="tbgubn != null and tbgubn == 'new'">
+            AND A.REGDT > NOW() + INTERVAL '-1' MONTH
+        </if>
+        <if test="tbgubn != null and tbgubn == 'old'">
+            AND A.REGDT &lt;= NOW() + INTERVAL '-1' MONTH
+        </if>
+        ORDER BY A.CUSNAME
+        <include refid="paging_footer"/>
+    </select>
+
+    <!-- 개별청구등록 - 고객검색 total count -->
+    <select id="searchCusNameCnt" resultType="int">
+        SELECT COUNT(A.VANO) AS vano
+        FROM XCUSMAS A
+        WHERE A.DISABLED = 'N'
+        AND A.RCPGUBN = 'Y'
+        AND A.CHACD = #{chaCd}
+        <if test="selCusCk != null and selCusCk == 'cusNm' and cusName != null and cusName != ''">
+            AND A.CUSNAME LIKE '%' || #{cusName} || '%'
+        </if>
+        <if test="selCusCk != null and selCusCk == 'cusHp' and cusName != null and cusName != ''">
+            AND A.CUSHP = #{cusName}
+        </if>
+        <if test="tbgubn != null and tbgubn == 'new'">
+            AND A.REGDT > NOW() + INTERVAL '-1' MONTH
+        </if>
+        <if test="tbgubn != null and tbgubn == 'old'">
+            AND A.REGDT &lt;= NOW() + INTERVAL '-1' MONTH
+        </if>
+    </select>
+
+    <!-- 개별청구등록 - 고객정보 조회 -->
+    <select id="selCustomerInfo" resultType="ClaimDTO">
+		SELECT  CUSNAME AS cusName
+			, 	CUSKEY 	AS cusKey
+			, 	CUSHP 	AS cusHp
+			, 	VANO 	AS vano
+			,  CUSGUBN1 AS cusGubn1
+			,  CUSGUBN2 AS cusGubn2
+			,  CUSGUBN3 AS cusGubn3
+			,  CUSGUBN4 AS cusGubn4
+		FROM 	XCUSMAS
+		WHERE 	DISABLED 	= 'N'
+		AND 	CHACD 	 	= #{chaCd}
+		AND 	VANO 	 	= #{vano} 
+	</select>
+
+    <!-- 개별청구등록 - 청구항목 등록 확인 -->
+    <select id="selPayItem" resultType="ClaimDTO">
+		SELECT 	A.NOTIMASCD	AS notiMasCd
+			,	B.PAYITEMCD AS payItemCd
+		FROM 	XNOTIMAS A
+			, 	XNOTIDET B
+		WHERE 	A.NOTIMASCD   = B.NOTIMASCD
+		AND 	A.NOTI_CAN_YN = B.NOTI_CAN_YN
+		AND 	A.NOTI_CAN_YN = 'N'
+		AND 	A.CHACD 	  = #{chaCd}
+		AND 	A.MASMONTH 	  = #{masMonth}
+		AND 	A.VANO 		  = #{vano}
+	</select>
+
+    <!-- 개별청구등록 - 청구서 -->
+    <update id="insClaimRegMas">
+        WITH upsert AS (
+            UPDATE XNOTIMAS A
+            SET MASMONTH	= #{masMonth}
+            ,	STARTDATE	= #{startDate}
+            ,	ENDDATE		= #{endDate}
+            ,	PRINTDATE	= COALESCE(NULLIF(#{printDate}, ''), #{endDate})
+            ,	REMARK		= #{remark}
+            ,	MAKEDT		= NOW()
+            ,	MAKER		= #{chaCd}
+            <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusName)">
+                ,   CUSNAME     = #{cusName}
+            </if>
+            <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusGubn)">
+                ,   CUSGUBN1    = #{cusGubn1}
+                ,   CUSGUBN2    = #{cusGubn2}
+                ,   CUSGUBN3    = #{cusGubn3}
+                ,   CUSGUBN4    = #{cusGubn4}
+            </if>
+            FROM (  SELECT  X.*
+                        ,   Z.AMTCHKTY
+                    FROM   XCUSMAS  X
+                    LEFT OUTER JOIN XNOTIMAS   Y   ON X.CHACD = Y.CHACD AND X.VANO = Y.VANO AND Y.NOTIMASCD = #{notiMasCd}
+                    INNER JOIN      XCHALIST   Z   ON X.CHACD = Z.CHACD
+                    WHERE 	X.CHACD 	  	= #{chaCd}
+                    AND 	X.VANO  	  	= #{vano}
+                 ) B
+            WHERE A.CHACD   			= B.CHACD
+                AND A.VANO 				= B.VANO
+                AND A.VANO 				= #{vano}
+                AND A.NOTIMASCD  		= #{notiMasCd}
+            RETURNING A.*
+        )
+        INSERT INTO XNOTIMAS (NOTIMASCD
+        , 	CHACD, 			VANO, 			MASMONTH, 		MASDAY, 		CUSKEY
+        ,	CUSGUBN1, 		CUSGUBN2, 		CUSGUBN3, 		CUSGUBN4, 		CUSNAME
+        ,	CUSHP, 			CUSMAIL, 		SMSYN, 			MAILYN, 		CUSOFFNO
+        ,	STARTDATE, 		ENDDATE, 		PRINTDATE,  					NOTIMASST,		MAKEDT
+        , 	MAKER, 			REGDT, 			CHATRTY,  		DISABLED,		AMTCHKTY,		REMARK)
+        SELECT #{notiMasCd}
+        , 	#{chaCd}, 		#{vano}, 		#{masMonth}, 	TO_CHAR(NOW(), 'YYYYMMDD'), 	B.CUSKEY
+        <choose>
+            <when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusGubn)">
+                ,	#{cusGubn1}, 	#{cusGubn2}, 	#{cusGubn3}, 	#{cusGubn4}
+            </when>
+            <otherwise>
+                , B.CUSGUBN1 , B.CUSGUBN2 , B.CUSGUBN3 , B.CUSGUBN4
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusName)">
+                , 	#{cusName}
+            </when>
+            <otherwise>
+                , B.CUSNAME
+            </otherwise>
+        </choose>
+        ,	B.CUSHP, 		B.CUSMAIL, 		B.SMSYN, 		B.MAILYN, 		B.CUSOFFNO
+        ,	#{startDate}, 	#{endDate}, 	COALESCE(NULLIF(#{printDate}, ''), #{endDate}),  #{notiMasSt},   NOW()
+        , 	#{chaCd}, 		NOW(), 		'01',  			B.DISABLED,		B.AMTCHKTY,		#{remark}
+        FROM (  SELECT  X.*
+                    ,   Z.AMTCHKTY
+                FROM   XCUSMAS  X
+                LEFT OUTER JOIN XNOTIMAS   Y   ON X.CHACD = Y.CHACD AND X.VANO = Y.VANO AND Y.NOTIMASCD = #{notiMasCd}
+                INNER JOIN      XCHALIST   Z   ON X.CHACD = Z.CHACD
+                WHERE 	X.CHACD     = #{chaCd}
+                AND 	X.VANO      = #{vano}
+            ) B
+        WHERE NOT EXISTS (SELECT * FROM upsert)
+    </update>
+
+    <!-- 개별청구등록 - 청구서 상세 -->
+    <update id="insClaimRegDet">
+        WITH upsert AS (
+            UPDATE XNOTIDET A
+            SET PAYITEMAMT    = #{payItemAmt}
+            ,	PTRITEMREMARK = #{ptrItemRemark}
+            ,	MAKEDT 		  = NOW()
+            ,	MAKER  		  = #{chaCd}
+            FROM (SELECT Z.*
+                       , 	M.NOTIDETCD
+                  FROM 	XPAYITEM Z
+                  LEFT OUTER JOIN	(SELECT *
+                                      FROM 	XNOTIMAS X
+                                         , 	XNOTIDET Y
+                                      WHERE X.NOTIMASCD = Y.NOTIMASCD
+                                        AND 	X.CHACD 	= #{chaCd}
+                                        AND 	X.NOTIMASCD = #{notiMasCd}
+                                        AND 	Y.PAYITEMCD = #{payItemCd}) M ON Z.CHACD = M.CHACD
+                  WHERE 	Z.CHACD 	= #{chaCd}
+                    AND 	Z.PAYITEMCD = #{payItemCd}
+                ) B
+            WHERE A.NOTIDETCD = B.NOTIDETCD
+            RETURNING A.*
+        )
+        INSERT INTO XNOTIDET (NOTIDETCD
+        ,	NOTIMASCD,		PAYITEMCD,		ADJFIREGKEY,	PAYITEMNAME
+        ,	PAYITEMAMT,		PAYITEMSELYN,	RCPITEMYN,		CHAOFFNO
+        ,	PTRITEMNAME,	PTRITEMORDER,	NOTIDETST,		PTRITEMREMARK
+        ,	MAKEDT,			MAKER,			REGDT,			CHATRTY)
+        SELECT NEXTVAL('seqxnotidetcd')
+             ,	#{notiMasCd},	B.PAYITEMCD,	B.ADJFIREGKEY,	B.PAYITEMNAME
+             ,	#{payItemAmt},	B.PAYITEMSELYN,	B.RCPITEMYN,	B.CHAOFFNO
+             ,	B.PTRITEMNAME,	B.PTRITEMORDER,	#{notiDetSt},			#{ptrItemRemark}
+             ,	NOW(),		#{chaCd},		NOW(),		'01'
+        FROM (SELECT Z.*
+                   , 	M.NOTIDETCD
+              FROM 	XPAYITEM Z
+                          LEFT OUTER JOIN	(SELECT *
+                                              FROM 	XNOTIMAS X
+                                                 , 	XNOTIDET Y
+                                              WHERE X.NOTIMASCD = Y.NOTIMASCD
+                                                AND 	X.CHACD 	= #{chaCd}
+                                                AND 	X.NOTIMASCD = #{notiMasCd}
+                                                AND 	Y.PAYITEMCD = #{payItemCd}) M ON Z.CHACD = M.CHACD
+              WHERE 	Z.CHACD 	= #{chaCd}
+                AND 	Z.PAYITEMCD = #{payItemCd}
+            ) B
+        WHERE NOT EXISTS (SELECT * FROM upsert)
+	</update>
+
+    <!-- 개별청구 등록시 기등록여부 확인 -->
+    <select id="selClaimRegConfirm" resultType="int">
+		SELECT  COUNT(*) AS cnt 
+		FROM 	XNOTIMAS MAS
+		   , 	XNOTIDET DET
+		WHERE 	MAS.NOTIMASCD = DET.NOTIMASCD
+		AND 	MAS.CHACD 	  = #{chaCd}
+		AND 	MAS.MASMONTH  = #{masMonth}
+		AND 	MAS.VANO 	  = #{vano}
+		AND		MAS.NOTIMASCD = #{notiMasCd}
+	</select>
+
+    <!-- 청구등록 수정 - 청구항목 삭제 -->
+    <delete id="deleteItem">
+		DELETE	FROM
+		XNOTIDET
+		WHERE	NOTIDETCD = #{notiDetCd}
+	</delete>
+
+    <!-- 청구등록 - 이전청구정보 불러오기(청구월확인) -->
+    <select id="selMasYear" resultType="ClaimDTO">
+		SELECT 	DISTINCT 
+				SUBSTR(MASMONTH, 0, 4) AS year
+		FROM 	XNOTIMAS
+		WHERE 	CHACD 		= #{chaCd}
+		AND 	NOTI_CAN_YN = 'N'
+		AND		NOTIMASST	!= 'PA00'
+		ORDER	BY SUBSTR(MASMONTH, 0, 4) DESC
+	</select>
+    <select id="selMasMonth" resultType="ClaimDTO">
+		SELECT 	DISTINCT 
+				SUBSTR(MASMONTH, 5, 2) AS month
+		FROM 	XNOTIMAS
+		WHERE 	CHACD 				   = #{chaCd}
+		AND		SUBSTR(MASMONTH, 0, 4) = #{year}
+		AND 	NOTI_CAN_YN 		   = 'N'
+		AND		NOTIMASST			   != 'PA00'
+		ORDER	BY SUBSTR(MASMONTH, 5, 2)
+	</select>
+
+    <!-- 청구등록 - 이전청구정보 불러오기 master table -->
+    <insert id="copyXnotimas">
+		INSERT 	INTO 
+		XNOTIMAS(NOTIMASCD
+			,	CHACD,			VANO,			MASMONTH,		MASDAY,			CUSKEY
+			,	CUSGUBN1,		CUSGUBN2,		CUSGUBN3,		CUSGUBN4,		CUSNAME
+			,	CUSHP,			CUSMAIL,		SMSYN,			MAILYN,			CUSOFFNO
+			,	STARTDATE,		ENDDATE,		PRINTDATE,						AMTCHKTY,		NOTIMASST
+			,	MAKEDT,			MAKER,			REGDT,			CHATRTY,		DISABLED,		REMARK)
+            SELECT NEXTVAL('seqxnotimascd'),
+                        A.CHACD,		A.VANO,			#{masMonth},	TO_CHAR(NOW(), 'YYYYMMDD'),         A.CUSKEY
+                    ,	A.CUSGUBN1,		A.CUSGUBN2,		A.CUSGUBN3,		A.CUSGUBN4,		    A.CUSNAME
+                    ,	A.CUSHP,		A.CUSMAIL,		A.SMSYN,		A.MAILYN,		    A.CUSOFFNO
+                    ,	#{startDate},	#{endDate},		COALESCE(NULLIF(#{printDate}, ''), #{endDate}),	A.AMTCHKTY,		'PA00'
+                    ,	NOW(),		    #{chaCd},		NOW(),		    A.CHATRTY,		    A.DISABLED,		A.REMARK
+            FROM XNOTIMAS A
+            WHERE NOTIMASCD IN (
+                SELECT
+                 A.NOTIMASCD
+                FROM XNOTIDET A
+                INNER JOIN XPAYITEM B ON A.PAYITEMCD = B.PAYITEMCD
+                INNER JOIN XNOTIMAS C ON A.NOTIMASCD = C.NOTIMASCD AND B.CHACD = C.CHACD
+                WHERE B.CHACD = #{chaCd} AND C.MASMONTH = #{month}
+                    AND A.NOTI_CAN_YN = 'N'
+                    AND B.PAYITEMST = 'ST01'
+                    AND COALESCE(B.DISABLEDYN,'N') = 'N'
+			)
+	</insert>
+
+    <!-- 청구등록 - 이전청구정보 불러오기 detail table -->
+    <insert id="copyXnotidet">
+		INSERT INTO
+		XNOTIDET(NOTIDETCD
+			,	NOTIMASCD,			PAYITEMCD,			ADJFIREGKEY,		PAYITEMNAME,		PAYITEMAMT
+			,	PAYITEMSELYN,		RCPITEMYN,			CHAOFFNO,			CUSOFFNO,			PTRITEMNAME
+			,	PTRITEMREMARK,		PTRITEMORDER,		NOTIDETST,			MAKEDT,				MAKER
+			,	REGDT,				CHATRTY)
+		SELECT  NEXTVAL('seqxnotidetcd') ,
+                M.NOTIMASCD,		T.PAYITEMCD,		T.ADJFIREGKEY,		T.PAYITEMNAME,		T.PAYITEMAMT
+			,	T.PAYITEMSELYN,		T.RCPITEMYN,		T.CHAOFFNO,			T.CUSOFFNO,			T.PTRITEMNAME
+			,	T.PTRITEMREMARK,	T.PTRITEMORDER,		'PA00',				NOW(),			    #{chaCd}
+			,	NOW(),			    T.CHATRTY
+	    FROM XNOTIDET T
+	    INNER JOIN XPAYITEM B ON T.PAYITEMCD = B.PAYITEMCD
+	    INNER JOIN XNOTIMAS C ON T.NOTIMASCD = C.NOTIMASCD AND B.CHACD = C.CHACD
+        INNER JOIN XNOTIMAS M ON M.VANO = C.VANO AND M.CUSKEY = C.CUSKEY 
+                AND M.CHACD = C.CHACD AND M.NOTIMASST = 'PA00'
+                AND M.MASMONTH = #{masMonth} 
+	    WHERE B.CHACD = #{chaCd} AND C.MASMONTH = #{month}
+	        AND T.NOTI_CAN_YN = 'N'
+            AND T.NOTIDETST != 'PA00'
+	        AND B.PAYITEMST = 'ST01'
+	        AND COALESCE(B.DISABLEDYN,'N') = 'N'
+	</insert>
+
+    <!-- 청구시 sms 자동발송 여부 -->
+    <select id="notSmsYn" resultType="String">
+		SELECT 	NOTSMSYN AS notSmsYn
+		FROM 	XCHALIST
+		WHERE 	CHACD 	= #{chaCd}
+	</select>
+
+    <!-- 청구시 SMS 자동발송 데이터 추출 -->
+    <select id="autoSmsClaimSendData" resultType="com.finger.shinhandamoa.org.notimgmt.dto.NotiSendDTO">
+		SELECT 	A.NOTSMS 		AS msg
+			, 	A.CHACD			AS chaCd
+			,	A.CHANAME		AS writer
+			, 	A.OWNERTEL		AS ownerTel
+			,	A.SMS_SEND_TEL	AS telNo
+			, 	B.NOTIMASCD 	AS notiMasCd
+			, 	D.CUSHP 		AS cusHp
+		FROM 	XCHALIST 		A
+			, 	XNOTIMAS 		B
+			, 	XCUSMAS 		D
+		WHERE 	A.CHACD 		= B.CHACD
+		AND 	B.VANO 			= D.VANO
+		AND 	B.NOTIMASST 	= 'PA00'
+		AND 	A.CHACD 		= #{chaCd}
+		AND 	B.MASMONTH 		= #{masMonth}
+	</select>
+
+    <!-- 청구번호 seq -->
+    <select id="selNotiMasCd" resultType="ClaimDTO">
+		SELECT	NEXTVAL('seqxnotimascd') AS notiMasCd
+	</select>
+
+    <!-- 청구서 원장코드값 가져오기 -->
+    <select id="selectNotiMasCd" resultType="String">
+		SELECT	NOTIMASCD AS notiMasCd
+		FROM	XNOTIMAS
+		WHERE 	CHACD 	  = #{chaCd}
+		AND 	MASMONTH  = #{masMonth}
+		AND 	VANO 	  = #{vano}
+		AND		NOTIMASST = 'PA00'
+		AND 	NOTI_CAN_YN = 'N'
+	</select>
+
+    <!-- 중복 항목 확인 -->
+    <select id="selDupPayItem" resultType="int">
+	SELECT 	COUNT(*) AS cnt
+	FROM 	XNOTIMAS A
+		, 	XNOTIDET B
+	WHERE 	A.NOTIMASCD = B.NOTIMASCD
+	AND 	A.CHACD 	= #{chaCd}
+	AND 	A.MASMONTH 	= #{masMonth}
+	AND 	A.VANO  	= #{vano}
+	AND 	B.PAYITEMCD	= #{payItemCd}
+	AND		A.NOTIMASST = 'PA00'
+	AND     B.NOTI_CAN_YN = 'N'
+	</select>
+
+    <!-- 청구등록 masmonth -->
+    <select id="selctMasMonth" resultType="String">
+		SELECT 	MAX(MASMONTH) AS masMonth
+		FROM 	XNOTIMAS 
+		WHERE 	CHACD 		= #{chaCd} 
+		AND 	NOTIMASST 	= #{masSt}
+	</select>
+
+    <!-- 청구일괄등록 xnotimas -->
+    <update id="updateClaimNotiMas">
+		UPDATE	XNOTIMAS
+		SET		NOTIMASST 	= #{notiMasSt}
+			,	MAKER	  	= #{chaCd}
+			,   MAKEDT	  	= NOW()
+		WHERE	NOTI_CAN_YN = 'N'
+		AND		CHACD	  	= #{chaCd}
+		AND		MASMONTH  	= #{masMonth}
+		AND		NOTIMASST 	= #{masSt}
+	</update>
+
+    <!-- 청구일괄등록 xnotidet -->
+    <update id="updateClaimNotiDet">
+		UPDATE	XNOTIDET
+		SET		NOTIDETST 	= #{notiMasSt}
+			,	MAKER	  	= #{chaCd}
+			,   MAKEDT	  	= NOW()
+		WHERE	NOTIDETCD	IN (SELECT B.NOTIDETCD
+							   FROM   XNOTIMAS 	A
+							   	  ,   XNOTIDET 	B
+							   WHERE  A.NOTIMASCD 	= B.NOTIMASCD
+							   AND 	  A.NOTI_CAN_YN = 'N'
+							   AND    A.CHACD 		= #{chaCd}
+							   AND    A.MASMONTH 	= #{masMonth}
+							   AND    B.NOTIDETST 	= #{masSt})
+	</update>
+
+    <!-- 청구조회 total count -->
+    <select id="selectClaimDetCount" resultType="int">
+        SELECT COUNT(*) AS cnt
+        FROM XNOTIMAS MAS
+        LEFT OUTER JOIN XCUSMAS CUS ON MAS.VANO = CUS.VANO
+        , ( SELECT NOTIMASCD
+                , COUNT(*) AS CNT
+                , SUM(PAYITEMAMT) AS PAYITEMAMT
+            FROM XNOTIDET
+            WHERE NOTIDETST != 'PA00'
+            GROUP BY NOTIMASCD ) DET
+        WHERE MAS.NOTIMASCD = DET.NOTIMASCD
+        AND MAS.CHACD = #{chaCd}
+        <include refid="search"/>
+    </select>
+
+    <!-- 청구조회 일괄취소 count -->
+    <select id="selectClaimCancelCount" resultType="int">
+        SELECT COUNT(*) AS cnt
+        FROM XNOTIMAS MAS
+        LEFT OUTER JOIN XCUSMAS CUS ON MAS.VANO = CUS.VANO
+        , ( SELECT NOTIMASCD
+                , COUNT(*) AS CNT
+                , SUM(PAYITEMAMT) AS PAYITEMAMT
+            FROM XNOTIDET
+            WHERE NOTIDETST != 'PA00'
+            GROUP BY NOTIMASCD ) DET
+        WHERE MAS.NOTIMASCD = DET.NOTIMASCD
+        AND MAS.CHACD = #{chaCd}
+        AND MAS.NOTI_CAN_YN = 'N'
+        AND MAS.NOTIMASST in ('PA02')
+        <include refid="search"/>
+    </select>
+
+    <!-- 청구조회 목록 -->
+    <select id="selectClaimDetList" resultType="ClaimDTO">
+        <include refid="paging_header"/>
+        SELECT MAS.NOTIMASCD AS notiMasCd
+            , MAS.CUSKEY AS cusKey
+            , MAS.CUSNAME AS cusName
+            , MAS.CUSGUBN1 AS cusGubn1
+            , MAS.CUSGUBN2 AS cusGubn2
+            , MAS.CUSGUBN3 AS cusGubn3
+            , MAS.CUSGUBN4 AS cusGubn4
+            , COALESCE(DET.CNT,0) AS cnt
+            , DET.PAYITEMAMT AS payItemAmt
+            , MAS.VANO AS vano
+            , TO_CHAR(TO_DATE(MAS.MASMONTH, 'YYYYMM'), 'YYYY.MM') AS masMonth
+            , TO_CHAR(TO_DATE(MAS.MASDAY, 'YYYYMMDD'), 'YYYY.MM.DD') AS masDay
+            , TO_CHAR(TO_DATE(MAS.STARTDATE, 'YYYYMMDD'), 'YYYY.MM.DD') AS startDate
+            , TO_CHAR(TO_DATE(MAS.ENDDATE, 'YYYYMMDD'), 'YYYY.MM.DD') AS endDate
+            , TO_CHAR(TO_DATE(MAS.PRINTDATE, 'YYYYMMDD'), 'YYYY.MM.DD') AS printDate
+            , MAS.NOTIMASST AS notiMasSt
+            , MAS.NOTI_CAN_YN AS notiCanYn
+            , (SELECT DISABLED FROM XCUSMAS WHERE VANO=MAS.VANO) AS disabled
+        FROM XNOTIMAS MAS
+        , (SELECT NOTIMASCD
+                , COUNT(*) AS CNT
+                , SUM(PAYITEMAMT) AS PAYITEMAMT
+            FROM XNOTIDET
+            WHERE NOTIDETST != 'PA00'
+            GROUP BY NOTIMASCD) DET
+        WHERE MAS.NOTIMASCD = DET.NOTIMASCD
+        AND MAS.CHACD = #{chaCd}
+        <include refid="search"/>
+        <include refid="orderByClaimList"/>
+        <include refid="paging_footer"/>
+    </select>
+
+    <!-- ORDER BY -->
+    <sql id="orderByClaimList">
+        <choose>
+            <when test="search_orderBy == 'masMonth'">
+                ORDER BY MASMONTH DESC, CUSNAME ASC
+            </when>
+            <when test="search_orderBy == 'masDay'">
+                ORDER BY MASDAY DESC, CUSNAME ASC
+            </when>
+            <when test="search_orderBy == 'cusName'">
+                ORDER BY CUSNAME ASC, MASMONTH DESC
+            </when>
+            <when test="search_orderBy == 'date'">
+                ORDER BY STARTDATE DESC, ENDDATE DESC, CUSNAME ASC
+            </when>
+            <when test="search_orderBy == 'cusGubn'">
+                ORDER BY CUSGUBN1 ASC, CUSGUBN2 ASC, CUSGUBN3 ASC, CUSGUBN4 ASC
+            </when>
+        </choose>
+    </sql>
+
+    <!-- 청구조회 청구항목 상세보기 -->
+    <select id="selectPayItemDetailView" resultType="ClaimDTO">
+		SELECT  DET.NOTIDETCD,
+		        DET.PAYITEMNAME									  			        AS "payItemName",
+                COALESCE(SUM(DET.PAYITEMAMT) OVER (PARTITION BY DET.NOTIDETCD), 0)	AS "payItemAmt",
+                COALESCE(SUM(RCP.PAYITEMAMT) OVER (PARTITION BY DET.NOTIDETCD), 0)	AS "rcpAmt",
+		        DET.PTRITEMREMARK									   			    AS "ptrItemRemark",
+		        MAS.VANO
+		FROM XNOTIDET DET
+		INNER JOIN XNOTIMAS MAS ON DET.NOTIMASCD = MAS.NOTIMASCD AND MAS.NOTIMASST != 'PA00'
+		LEFT OUTER JOIN (
+            SELECT RD.NOTIDETCD, SUM(COALESCE(RD.PAYITEMAMT,0)) AS PAYITEMAMT
+            FROM XRCPDET RD 
+            LEFT OUTER JOIN XRCPMAS RM ON RD.RCPMASCD = RM.RCPMASCD AND RM.RCPMASST = 'PA03'
+            WHERE RD.RCPDETST = 'PA03'
+            GROUP BY RD.NOTIDETCD
+        ) RCP ON RCP.NOTIDETCD = DET.NOTIDETCD
+		WHERE 1=1
+		AND COALESCE(DET.NOTI_CAN_YN, 'N') = 'N'
+		AND DET.NOTIMASCD=#{notiMasCd}		  
+	</select>
+
+    <!-- 청구 항목 삭제시, 청구항목건수 확인 -->
+    <select id="selDetCdCnt" resultType="int">
+		SELECT	COUNT(*)	AS cnt
+		FROM	XNOTIDET
+		WHERE 	NOTIMASCD = #{notiMasCd}
+	</select>
+
+    <!-- 이전청구월 선택시 등록 가능한 건수 확인 -->
+    <select id="useClaimCnt" resultType="int">
+		SELECT COUNT(*) 
+		FROM XNOTIMAS 
+		WHERE NOTIMASCD IN (
+		    SELECT 
+		     A.NOTIMASCD
+		    FROM XNOTIDET A
+		    INNER JOIN XPAYITEM B ON A.PAYITEMCD = B.PAYITEMCD
+		    INNER JOIN XNOTIMAS C ON A.NOTIMASCD = C.NOTIMASCD AND B.CHACD = C.CHACD
+		    WHERE B.CHACD = #{chaCd} AND C.MASMONTH = #{month}
+		        AND A.NOTI_CAN_YN = 'N'
+		        AND B.PAYITEMST = 'ST01'
+		        AND COALESCE(B.DISABLEDYN,'N') = 'N' )
+	</select>
+
+    <!-- 납부기한 수정 -->
+    <update id="updateClaimDay">
+        UPDATE XNOTIMAS
+            SET
+              <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(masMonth)">
+              MASMONTH = #{masMonth}
+              </if>
+              <if test="masMonth != null and startDate != null">
+              ,
+              </if>
+              <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startDate)">
+              STARTDATE = #{startDate}
+              </if>
+              <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endDate)">
+              , ENDDATE = #{endDate}
+              </if>
+              <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(printDate)">
+              , PRINTDATE = #{printDate}
+              </if>
+        WHERE NOTIMASCD IN
+              <foreach collection="notiMasCd" item="list" index="index" open="(" close=")" separator=",">
+              #{list}
+              </foreach>
+    </update>
+
+    <update id="updateCusPreClaim">
+        UPDATE XCUSMAS
+          SET CUSNAME = #{cusName}
+          <if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(cusGubn1)">
+          , CUSGUBN1 = #{cusGubn1}
+          , CUSGUBN2 = #{cusGubn2}
+          , CUSGUBN3 = #{cusGubn3}
+          , CUSGUBN4 = #{cusGubn4}
+          </if>
+          WHERE VANO = #{vano}
+          AND CHACD = #{chaCd}
+    </update>
+
+    <!-- 청구 시 알림톡 자동발송 여부 -->
+    <select id="notAtYn" resultType="String">
+		SELECT 	NOTATYN AS notAtYn
+          FROM 	XCHALIST
+		 WHERE 	CHACD 	= #{chaCd}
+	</select>
+
+    <!-- 청구시 알림톡 자동발송 데이터 추출 -->
+    <select id="autoAtClaimSendData" resultType="com.finger.shinhandamoa.org.notimgmt.dto.NotiSendDTO">
+		SELECT A.CHACD                                              AS chaCd
+             , COALESCE(A.ATCHANAME, A.CHANAME)                     AS chaName
+             , A.OWNERTEL                                           AS chaTelNo
+             , B.NOTIMASCD                                          AS notiMasCd
+             , C.CUSHP                                              AS cusHp
+             , (SELECT SENDMSG FROM ATMSG WHERE MSGTYPE = '0')        AS sendMsg
+             , (SELECT TEMPLATECODE FROM ATMSG WHERE MSGTYPE = '0')   AS templateCode
+             , '0' MSGTYPE
+          FROM XCHALIST A
+           , XNOTIMAS B
+           , XCUSMAS C
+         WHERE A.CHACD = B.CHACD
+           AND B.VANO = C.VANO
+           AND B.NOTIMASST = 'PA00'
+           AND A.CHACD = #{chaCd}
+           AND B.MASMONTH = #{masMonth}
+	</select>
+</mapper>

@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SysCust">	
+
+	<resultMap type="SysCustDTO" id="CustResultMap">
+		<result	column="data1" property="data1" javaType="encrypt" jdbcType="CLOB"/>
+	</resultMap>
+
+	<!-- 페이징을 위한 header -->
+	<sql id="paging_header">
+		select *
+		from (
+		    select row_number() over() as rn, A.*
+		    from (	
+	</sql>
+	<!-- 페이징을 위한 footer -->
+	<sql id="paging_footer">
+		    ) A
+		) X where rn between #{start} and #{end}
+	</sql>
+
+	<!-- 사이 날짜 조회 -->
+	<sql id="day_dt_between">
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(startday) and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(endday)">
+			AND 	TO_CHAR(DAY, 'YYYYMMDD') BETWEEN #{startday} AND #{endday}
+		</if>
+	</sql>
+
+	<!-- 고객상담 대기건수 -->
+	<select id="custWaitingCount"  resultType="int">
+		SELECT  COUNT(*)
+		FROM 	BOARD BRD
+		LEFT OUTER JOIN WEBUSER WEB ON ( BRD.CODE = WEB.CHACD OR BRD.CODE = WEB.LOGINID )
+		WHERE BRD.BBS	= 9
+		AND 	DATA4	= '1'
+		<include refid="day_dt_between" />
+		<include refid="search" />
+		<include refid="searchstatus" />
+	</select>
+	
+	<!-- 고객상담 COUNT -->
+	<select id="custTotalCount"  resultType="int">
+		SELECT 	COUNT(*)
+		FROM 	BOARD BRD
+		LEFT OUTER JOIN WEBUSER WEB ON ( BRD.CODE = WEB.CHACD OR BRD.CODE = WEB.LOGINID )
+		WHERE BRD.BBS	= 9
+		<include refid="day_dt_between" />
+		<include refid="search" />
+		<include refid="searchstatus" />
+	</select>
+	
+	<!-- 고객상담 관리 리스트 가져오기 -->
+	<select id="custListAll" resultType="SysCustDTO">
+		<include refid="paging_header" />
+		SELECT	BRD.NO
+				,	BRD.BBS
+				,	to_char(BRD.DAY, 'yyyy-mm-dd hh24:mi:ss') as DAY
+				,	BRD.CODE as userClass
+				,	BRD.ID
+				,	BRD.WRITER
+				,	BRD.DATA1
+				,	BRD.DATA2
+				,	BRD.DATA3
+				,	BRD.DATA4
+				,	to_char(BRD.DAY1, 'yyyy.mm.dd') as DAY1
+				,	BRD.DATA5
+				,	BRD.CONTENTS
+				, WEB.LOGINNAME
+				, WEB.CHACD
+		FROM 	BOARD BRD
+		LEFT OUTER JOIN WEBUSER WEB ON ( BRD.CODE = WEB.CHACD OR BRD.CODE = WEB.LOGINID )
+		WHERE BRD.BBS	= 9
+		<include refid="day_dt_between" />
+		<include refid="search" />
+		<include refid="searchstatus" />
+		<include refid="searchOrderBy"/>
+		<include refid="paging_footer" />
+	</select>
+	
+	<!-- 고객상담 관리 리스트 가져오기 -->
+	<select id="custListModal" resultType="SysCustDTO">
+		SELECT	BRD.NO
+				,	BRD.BBS
+				,	to_char(BRD.DAY, 'yyyy-mm-dd hh24:mi:ss') as DAY
+				,	BRD.CODE as userClass
+				,	BRD.ID
+				,	BRD.WRITER
+				,	BRD.DATA1
+				,	BRD.DATA2
+				,	BRD.DATA3
+				,	BRD.DATA4
+				,	to_char(BRD.DAY1, 'yyyy.mm.dd') as DAY1
+				,	BRD.DATA5
+				,	BRD.TITLE
+				,	BRD.CONTENTS
+				, WEB.LOGINNAME
+				, WEB.CHACD
+		FROM 	BOARD BRD
+			LEFT OUTER JOIN WEBUSER WEB ON ( BRD.CODE = WEB.CHACD OR BRD.CODE = WEB.LOGINID )
+		WHERE BRD.BBS	= 9
+		AND 	no 	= #{no}
+	</select>
+	<!-- 검색구분 조회 조건 -->
+	<sql id="search">
+		<choose>
+			<!-- 검색구분 조회 -->
+			<when test="searchOption == 'data1' and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(keyword) ">
+			    AND DATA1 = #{keyword}
+			</when>
+			<when test="searchOption == 'contents' and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(keyword) ">
+			    AND	CONTENTS like '%'|| #{keyword} ||'%'			
+			</when>
+			<when test="searchOption == 'writer' and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(keyword) ">
+			    AND	WRITER like '%'||#{keyword}||'%'			
+			</when>
+			<when test="searchOption == 'loginName' and @com.finger.shinhandamoa.common.CmmnUtils@notEmpty(keyword) ">
+				AND	WEB.LOGINNAME like '%'||#{keyword}||'%'
+			</when>
+			<otherwise>
+				<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(keyword)">
+				AND (WRITER like '%'|| #{keyword} ||'%'
+			        OR CONTENTS like '%'|| #{keyword} ||'%'
+			        OR WEB.LOGINNAME like '%'|| #{keyword} ||'%')
+			    </if>
+			</otherwise>
+		</choose>
+		<!-- 신청구분 조건 이용기관 = 1, 납부자/신규 = 2 -->
+		<if test="userClass != null and userClass == 1">
+			AND 	CODE IS NOT NULL
+		</if>
+		<if test="userClass != null and userClass == 2">
+			AND 	CODE IS NULL
+		</if>
+		<if test="@com.finger.shinhandamoa.common.CmmnUtils@notEmpty(id) ">
+		    AND (WEB.CHACD like '%'|| #{id} ||'%' OR WEB.LOGINID like '%'|| #{id} ||'%')
+		</if>
+	</sql>
+	
+	<!-- 상태 조건 -->
+	<sql id="searchstatus">
+		<choose>
+			<when test="data4 == 1">
+			    AND DATA4 = '1'
+			</when>
+			<when test="data4 == 2">
+			    AND DATA4 = '2'
+			</when>
+			<when test="data4 == 3 ">
+			    AND DATA4 = '3'
+			</when>
+			<when test="data4 == 4 ">
+			    AND (DATA4 = '1' OR DATA4 = '2')
+			</when>
+			<when test="data4 == 5 ">
+			    AND (DATA4 = '1' OR DATA4 = '3')
+			</when>
+			<when test="data4 == 6 ">
+			    AND (DATA4 = '2' OR DATA4 = '3')
+			</when>
+		</choose>
+	</sql>
+	
+	<!-- 검색어 조건 -->
+	<sql id="searchOrderBy">
+		<choose>
+			<when test="searchOrderBy == 'data4'">
+			ORDER 	BY DATA4 desc	
+			</when>
+			<when test="searchOrderBy == 'day1'">
+			ORDER 	BY DAY1 desc
+			</when>
+			<otherwise>
+			ORDER 	BY DAY desc
+			</otherwise>
+		</choose>
+	</sql>
+
+	<update id="updateCust">
+		UPDATE 	BOARD
+		SET 	NO		 = #{no}
+			, 	DATA2	 = #{data2}
+			, 	DATA3	 = #{data3}
+			, 	DATA5	 = #{data5}
+			, 	DAY1	 = now()
+			, 	CODE	 = #{id}
+			, 	DATA4	 = #{data4}
+			, 	WRITER	 = #{writer}
+			, 	DATA1 	 = #{data1}
+			, 	TITLE	 = #{title}
+			, 	CONTENTS = #{contents}
+		WHERE 	bbs		 = 9
+		AND 	no 		 = #{no}
+	</update>
+
+	<insert id="insertCust">
+		INSERT INTO BOARD (NO, BBS, NUM, FROMNO, STEP, ISHTML, ISFIX, DATA2, DATA3, DATA5, DAY1, DATA4, WRITER, DATA1, TITLE, CONTENTS, CODE, ID)
+		VALUES (NEXTVAL('board_seq'), '9', COALESCE((SELECT MAX(num)
+                                     			FROM board
+                                     		WHERE bbs = 9), 0) + 1, NULL, '0', '0', '0'
+                                     		, #{data2}, #{data3}, #{data5}, now(), #{data4}, #{writer}, #{data1}, #{title},#{contents}, #{chaCd}, #{id})
+	</insert>
+
+	<delete id="deleteCust">
+		DELETE 	FROM 
+		BOARD
+		WHERE 	bbs = 9 
+		AND 	no  = #{no}
+	</delete>
+
+	<insert id="insertExcelCust">
+		INSERT INTO BOARD (NO, BBS, NUM, FROMNO, STEP, ISHTML, ISFIX, DATA2, DATA3, DATA5, DAY, DAY1, DATA4, WRITER, DATA1, TITLE, CONTENTS, CODE, ID)
+		VALUES (NEXTVAL('board_seq'), '9', COALESCE((SELECT MAX(num)
+													FROM board
+													WHERE bbs = 9), 0) + 1, NULL, '0', '0', '0'
+                                     		, #{data2}, #{data3}, #{data5}, TO_DATE(#{day}, 'YYYY-MM-DD HH24:MI:SS'), TO_DATE(#{day}, 'YYYY-MM-DD HH24:MI:SS'), #{data4}, #{writer}, #{data1}, #{title}, #{contents}, #{chaCd}, #{id})
+	</insert>
+</mapper>

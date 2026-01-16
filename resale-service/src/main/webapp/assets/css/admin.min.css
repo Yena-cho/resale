@@ -1,0 +1,285 @@
+@charset "UTF-8";
+/*
+**
+** admin.min.css
+** Author : 이영주
+** Create date : 2018.05.04
+** Description : 신한 다모아 admin 용 css , admin.scss 에서 관리됨
+**
+*/
+/*******************
+********************
+Global
+********************
+*******************/
+/* 기본설정 */
+textarea {
+  resize: none; }
+
+.input-group-select {
+  display: table-cell;
+  width: 200px; }
+  .input-group-select:last-child > .select {
+    margin-left: -1px; }
+
+.page-description {
+  margin-top: .5rem;
+  margin-bottom: .5rem; }
+
+.table-align-center th, .table-align-center td {
+  text-align: center; }
+
+table.white-bg tr th {
+  background-color: #F5F5F6; }
+
+/* Buttons */
+.btn.btn-link.btn-file-download {
+  text-decoration: underline; }
+
+/* Dropzone */
+.dropzone {
+  min-height: 60px;
+  border: 2px dashed #cacaca;
+  border-width: thick; }
+  .dropzone .dz-default.dz-message {
+    background-size: 100%;
+    width: 214px;
+    height: 60px;
+    margin-left: -107px;
+    margin-top: -30px; }
+
+.has-ellipsis .title, .has-ellipsis .context {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap; }
+
+.has-ellipsis .title {
+  max-width: 6rem; }
+
+.has-ellipsis .context {
+  max-width: 10rem;
+  text-decoration: underline; }
+  .has-ellipsis .context:hover {
+    cursor: pointer; }
+
+/* Section title */
+.section-title-area label {
+  vertical-align: bottom; }
+  .section-title-area label.title {
+    font-weight: 100;
+    font-size: 2rem; }
+
+.section-title-area span {
+  vertical-align: bottom; }
+
+/*******************
+*******************
+navbar
+*******************
+ *******************/
+.nav-header .logo {
+  margin: 0 auto;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 400;
+  color: #009eff; }
+
+.nav-header .logo strong {
+  font-size: 40px; }
+
+.mini-navbar .nav-header .logo {
+  display: none; }
+
+/*******************
+********************
+Dashboard
+********************
+*******************/
+/* 월 선택 */
+.month-controller {
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-weight: 700; }
+  .month-controller h3 {
+    display: inline-block;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    vertical-align: bottom;
+    font-size: 3rem; }
+  .month-controller button {
+    vertical-align: bottom;
+    font-size: 3rem; }
+    .month-controller button:hover {
+      cursor: pointer; }
+
+.dashboard-item {
+  text-align: center; }
+  .dashboard-item .counter span {
+    margin-right: .5rem;
+    font-size: 4rem; }
+  .dashboard-item .dashboard-title {
+    font-size: 3rem;
+    margin-top: 1.4rem;
+    margin-bottom: 1.9rem; }
+
+/*******************
+********************
+Simple utility
+********************
+*******************/
+.graph-wrap {
+  width: 100%;
+  height: auto;
+  margin-left: auto;
+  margin-right: auto;
+  overflow: hidden; }
+
+.spinner-area {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 9999; }
+  .spinner-area .sk-spinner {
+    position: relative;
+    top: 50%;
+    margin-top: -15px;
+    z-index: 9999; }
+  .spinner-area .modal-backdrop-back-spinner {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 9999;
+    opacity: .5;
+    background-color: #000; }
+
+/*******************
+********************
+Modal
+********************
+*******************/
+.memo-box {
+  border: 1px solid #ccc;
+  width: 100%; }
+
+.email-list {
+  height: 415px;
+  overflow-y: scroll; }
+  .email-list ul {
+    margin: 0;
+    padding: 0; }
+    .email-list ul li {
+      margin: .125rem 0;
+      padding: .25rem;
+      list-style: none;
+      cursor: pointer; }
+      .email-list ul li:nth-child(even) {
+        background: #fff; }
+      .email-list ul li .email-name {
+        font-weight: bold;
+        font-size: .875rem; }
+      .email-list ul li .email-address {
+        font-size: .875rem; }
+
+.sms-list {
+  height: 415px;
+  overflow-y: scroll; }
+  .sms-list ul {
+    margin: 0;
+    padding: 0; }
+    .sms-list ul li {
+      margin: .125rem 0;
+      padding: .25rem;
+      list-style: none;
+      cursor: pointer; }
+      .sms-list ul li:nth-child(even) {
+        background: #fff; }
+      .sms-list ul li .sms-name {
+        font-weight: bold;
+        font-size: 1.3rem; }
+      .sms-list ul li .sms-address {
+        font-size: 1.2rem; }
+
+/*******************
+********************
+Form
+********************
+*******************/
+.form-mobile-num input.form-control {
+  max-width: 100px; }
+
+.form-email input.form-control {
+  max-width: 200px; }
+
+.form-email select.form-control {
+  width: 50%;
+  max-width: 200px; }
+
+/*******************
+********************
+float
+********************
+*******************/
+.float-left {
+  float: left !important; }
+
+.float-right {
+  float: right !important; }
+
+/*******************
+********************
+common
+********************
+*******************/
+/* 날짜 월 검색 */
+.daterange-setMonth {
+  float: left;
+  margin-left: 10px; }
+
+/* 목록 order by */
+.form-searchOrderBy {
+  text-align: right;
+  margin-top: -8px; }
+
+/* 검색 박스 input, select */
+.input-group input[name=chacd] {
+  height: 34px; }
+
+/* 모달 */
+.modal-big {
+  width: 1100px; }
+
+.tel-input {
+  float: left;
+  width: 30%; }
+
+.tel-bar {
+  float: left;
+  line-height: 2.5;
+  margin: 0 5px; }
+
+.email-input {
+  float: left;
+  width: calc((100% / 2) - 11px); }
+
+.postNo-input {
+  float: left;
+  width: 25%; }
+
+.postTxt-input {
+  float: left;
+  width: 50%; }
+
+.price-input-w110 {
+  float: left;
+  width: 110px !important; }
+
+.price-input-w140 {
+  float: left;
+  width: 140px !important; }
+
+.readOnly {
+  background-color: #e8e8e8; }

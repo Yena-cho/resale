@@ -1,0 +1,106 @@
+# 전문xml 위치 정보. resources 밑에 둔다.
+message:
+  format:
+    fileName: message.xml
+
+# springboot 관리화면...
+management:
+  security:
+    enabled: false
+
+# 전문서버기본정보.
+info:
+  name: 가상계좌 재판매 프로젝트
+  version: 0.1
+  profiles: 개발
+
+netty:
+  #전문수신서버 정보
+  server:
+    transferHost: 10.10.10.204
+    transferPort: 19070
+    threadCountBoss: 10
+    threadCountWorker: 10
+    logLevelPipeline: INFO
+    readerIdleTimeSeconds: 300
+
+  #전문송신클라이언트 정보
+  client:
+    transferHost: 10.10.10.101
+    transferPort: 19080   # 소켓라우터의 재판매 수신용 포트 : 소켓라우터서버에 설정된 재판매용 통신 포트
+    threadCountWorker: 10
+    connectionTimeoutMills: 10000
+    logLevelPipeline: INFO
+    writerIdleTimeSeconds: 300
+    period: 1000
+    # 전문송신클라이언트풀 정보
+    pool:
+      maxTotal: 1
+      maxIdle: 1
+      minIdle: 1
+      timeBetweenEvictionRunsMillis: 10000
+  # 비동기처리시 타임아웃
+  req-res:
+    timeout: 3000  # 요청,응답 timeout
+  message:
+    charset: KSC5601
+
+
+#HTTP 서버 정보
+server:
+  port: 19061
+  tomcat:
+    min-spare-threads: 3
+    max-threads: 9
+  address: 0.0.0.0
+#dataSource 정보
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://10.10.10.207:5432/varesaledb
+    username: varesaledb
+    password: varesaledb2021@
+  devtools:
+    livereload:
+      enabled: false
+mybatis:
+  configuration:
+    aggressive-lazy-loading: true
+    cache-enabled: false
+    jdbc-type-for-null: varchar
+    call-setters-on-nulls: true
+    default-executor-type: batch
+    database-id: postgresql
+  mapper-locations:
+    - classpath:kr/co/finger/damoa/shinhan/agent/mapper/DamoaMapper.xml
+    - classpath:mybatis/mapper/table/*.xml
+
+okhttp:
+  readTimeout: 1000
+  connectTimeout: 1000
+  maxIdleConnections: 3
+  keepAliveDuration: 60000
+
+damoa:
+  queue:
+    size: 2
+    timeout: 10000
+  shinhanCode: '021'
+  rangeMessage:
+    mode: REAL
+  corpCode: 20007481
+  threaPool: 5
+  maximumPoolSize: 10
+  keepAliveTime: 60000
+
+sms:
+  server:
+    host: 10.10.20.102
+    port: 80
+  accessToken: DTpF1yuI2hMg8AuUGeU5HxiPYZtxY6gN
+
+at:
+  server:
+    host: https://talk.fingerservice.co.kr/fat
+    serviceKey: vLVpVAtEK8AHiyN+z86oCfkXI6OdGeuTBBnN4NMTfpg=
+

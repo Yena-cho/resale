@@ -1,0 +1,47 @@
+﻿@charset "utf-8";
+
+/* Layout */
+#body {text-align:center; min-width:960px;} 
+#body .wrap_body {margin:0 auto; padding:150px 0 0; width:680px;} 
+#header {width:100%; text-align:center;}  
+#container {width:100%; text-align:center;}
+#container:after {display:block; clear:both; content:'';}
+#footer {width:100%; text-align:left;} 
+
+/* header ----- */
+#header {}
+
+/* logo */	
+#header h1 {width:210px; height:40px; margin:0 auto 20px; background:transparent url(../images/logo_main.png) no-repeat center 0;}
+#header h2 {width:410px; height:34px; margin:0 auto 30px; background:transparent url(../images/logo_mtitle.png) no-repeat center 0;} 
+#header h1 span,
+#header h2 span {display:block; font-size:0; overflow:hidden; height:0; width:0; position:relative; z-index:-1;} /* 글씨 안보이게 */
+
+
+/* footer ----- */
+#footer {clear:both; overflow:hidden; border-top:1px solid #ddd; padding-top:20px;}
+#footer em {float:left; width:auto; font-style:normal; font-size:13px;}
+#footer span {float:right; width:auto; text-align:right; font-size:13px;}
+
+/* container ----- */
+#container {}
+.contents {background:transparent url(../images/bg_login.jpg) no-repeat 0 0; overflow:hidden;}
+
+.wrap_login {width:495px; height:137px; margin:55px auto 20px; text-align:left;}
+.input_login {float:left; width:365px;}
+.input_login li {}
+.input_login li.input_id label,
+.input_login li.input_pw label {float:left; color:#fff; font-weight:bold; font-size:16px; width:90px; height:34px; line-height:34px;  padding-left:30px;}
+.input_login li.input_id label {background:transparent url(../images/ico_id.png) no-repeat 0 3px;}
+.input_login li.input_pw label {background:transparent url(../images/ico_pw.png) no-repeat 0 3px;}
+.input_login li.input_id input,
+.input_login li.input_pw input {float:left; width:215px; height:34px; padding:0 10px; font-size:15px; line-height:34px; color:#555;  background-color:#fff; border:1px solid #fff; margin-bottom:10px; outline:none; -webkit-border-radius:0;}
+
+.btn_login {float:right; display:block; width:112px; height:84px; text-align:center;}
+.btn_login a {display:block; width:100%; line-height:84px; font-size:20px; color:#fff; font-weight:bold; background-color:#0056b9;} 
+.btn_login a:hover {text-decoration:none;}  
+
+.wrap_bnnr {clear:both; overflow:hidden; margin-bottom:10px; letter-spacing:-0.05em; text-align:center;}
+.wrap_bnnr strong {font-size:15px; color:#333;padding-right:20px;}
+.wrap_bnnr span {margin-bottom:4px; font-weight:bold; font-size:15px; color:#0056b9; padding-right:20px; }
+.wrap_bnnr em {font-size:13px; font-style:normal; color:#555;}

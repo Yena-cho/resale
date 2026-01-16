@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon May 19 13:26:13 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MessageDao">	
+
+	<insert id="insertMsgSendHist">
+		INSERT INTO TB_MSG_SEND_HIST (
+				MSG_SEND_HIST_ID
+			,	MSG_SEND_MONTH
+			,	MSG_SEND_DTTM
+			,	SMS_LMS_IND
+			,	USE_AMT
+			,	MSG_CONTENT
+			,	RECV_NUM
+			,	SEND_NUM
+			,	SUCCESS_YN
+			,	REG_USER_ID
+			,	MSG_ID
+		) VALUES (
+				TO_CHAR(SYSDATE, 'YYYYMMDD')||LPAD(SEQ_MSG_SEND_HIST_ID.NEXTVAL, 5,'0')
+			,	TO_CHAR(SYSDATE, 'YYYYMM')
+			,	TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+			,	#{smsLmsInd}
+			,	#{useAmt}
+			,	#{msgContent}
+			,	#{recvNum}
+			,	#{sendNum}
+			,	#{successYn}
+			,	#{regUserId}
+			,	#{msgId}
+		)
+	</insert>
+
+</mapper>
